@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const avatar = document.createElement("div");
     avatar.className = "msg-avatar";
-    avatar.textContent = isUser ? "Bạn" : "AN";
+    avatar.textContent = isUser ? "🌱" : "🕊️";
 
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";

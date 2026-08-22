@@ -7,7 +7,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "all_or_nothing",
         "name": "Tư duy Trắng - Đen (All-or-Nothing)",
-        "icon": "[01]",
+        "icon": "⚖️",
         "description": "Nhìn nhận mọi việc theo hai cực tuyệt đối: hoàn hảo hoặc thất bại hoàn toàn, không có vùng xám ở giữa.",
         "example": "'Nếu mình không đạt điểm tối đa môn này, mình là kẻ vô dụng hoàn toàn.'",
         "reframing": "Cuộc sống có nhiều sắc độ. Việc chưa đạt điểm tuyệt đối không phủ nhận toàn bộ nỗ lực và giá trị của bạn."
@@ -15,7 +15,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "catastrophizing",
         "name": "Thảm kịch hóa (Catastrophizing)",
-        "icon": "[02]",
+        "icon": "🌋",
         "description": "Tự động dự đoán kịch bản tồi tệ nhất có thể xảy ra và phóng đại hậu quả của nó vượt xa thực tế.",
         "example": "'Mình làm bài thuyết trình bị vấp một câu, chắc chắn cả lớp sẽ cười nhạo và thầy sẽ đánh trượt mình.'",
         "reframing": "Hãy tự hỏi: Điều tồi tệ nhất thực tế có thể xảy ra là gì? Và nếu nó xảy ra, mình có cách nào khắc phục không?"
@@ -23,7 +23,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "mind_reading",
         "name": "Đọc suy nghĩ người khác (Mind Reading)",
-        "icon": "[03]",
+        "icon": "🔮",
         "description": "Tự suy diễn người khác đang có suy nghĩ tiêu cực hoặc phán xét về mình mà không có bằng chứng cụ thể.",
         "example": "'Họ không trả lời tin nhắn ngay, chắc là họ ghét mình lắm rồi.'",
         "reframing": "Người khác có thể đang bận rộn hoặc mệt mỏi. Bạn không thể biết chính xác suy nghĩ của họ nếu chưa hỏi trực tiếp."
@@ -31,7 +31,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "emotional_reasoning",
         "name": "Lý luận theo cảm xúc (Emotional Reasoning)",
-        "icon": "[04]",
+        "icon": "💭",
         "description": "Tin rằng cảm xúc tiêu cực của mình là sự thật khách quan ('Mình cảm thấy lo sợ nên chắc chắn việc này rất nguy hiểm').",
         "example": "'Mình cảm thấy mình bất tài, vậy nên mình thật sự là người kém cỏi.'",
         "reframing": "Cảm xúc là phản ứng tự nhiên tạm thời của não bộ, không phải là sự thật bất biến về năng lực của bạn."
@@ -39,7 +39,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "should_statements",
         "name": "Mệnh lệnh 'Phải / Nên' (Should Statements)",
-        "icon": "[05]",
+        "icon": "📜",
         "description": "Tạo áp lực khắt khe lên bản thân hoặc người khác bằng những quy chuẩn cứng nhắc ('Mình phải luôn mạnh mẽ', 'Mình không được phép sai sót').",
         "example": "'Mình không bao giờ được để điểm số tụt dốc, mình phải luôn đứng đầu.'",
         "reframing": "Thay 'mình phải' bằng 'mình mong muốn' hoặc 'mình sẽ cố gắng hết sức trong khả năng hôm nay'."
@@ -47,7 +47,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "personalization",
         "name": "Tự quy trách nhiệm (Personalization)",
-        "icon": "[06]",
+        "icon": "🎯",
         "description": "Tự gánh hết trách nhiệm về những sự việc tiêu cực nằm ngoài tầm kiểm soát của bản thân.",
         "example": "'Nhóm không hoàn thành tốt bài tập lớn là do lỗi của một mình mình.'",
         "reframing": "Một kết quả là sự tác động của nhiều yếu tố và nhiều cá nhân. Bạn chỉ chịu trách nhiệm cho phần việc của chính bạn."
@@ -55,7 +55,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "overgeneralization",
         "name": "Khái quát hóa quá mức (Overgeneralization)",
-        "icon": "[07]",
+        "icon": "🌐",
         "description": "Xem một biến cố tiêu cực đơn lẻ là khuôn mẫu thất bại vĩnh viễn không thể thay đổi.",
         "example": "'Mình vừa rớt phỏng vấn, từ nay chắc mình chẳng bao giờ xin được việc đâu.'",
         "reframing": "Một lần từ chối chỉ là một trải nghiệm học hỏi, không định nghĩa tương lai của bạn."
@@ -63,7 +63,7 @@ COGNITIVE_DISTORTIONS = [
     {
         "id": "mental_filter",
         "name": "Màng lọc tiêu cực (Mental Filter)",
-        "icon": "[08]",
+        "icon": "🔍",
         "description": "Chỉ chăm chú nhìn vào một chi tiết tiêu cực nhỏ và phớt lờ toàn bộ những mặt tích cực khác.",
         "example": "'Nhận được 9 lời khen và 1 lời góp ý, nhưng cả ngày chỉ dằn vặt về lời góp ý đó.'",
         "reframing": "Hãy lùi lại một bước để nhìn toàn cảnh bức tranh, ghi nhận cả những điểm tích cực bạn đã làm tốt."
