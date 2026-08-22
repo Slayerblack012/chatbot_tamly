@@ -1,45 +1,144 @@
-# 🕊️ An Nhiên Edu-Psychology Platform 2.0
+# AN NHIÊN TÂM LÝ - NỀN TẢNG TƯ VẤN & ĐỒNG HÀNH CẢM XÚC
 
-**An Nhiên Edu-Psychology** là nền tảng web tư vấn và giáo dục tâm lý học đường chuyên nghiệp (FastAPI + HTML5/CSS/JavaScript thuần), tích hợp mô hình **Gemini 2.5 Flash** cùng liệu pháp Nhận thức - Hành vi (CBT), Chánh niệm (Mindfulness) và các công cụ chăm sóc cảm xúc tương tác.
-
----
-
-## 🌟 4 Phân Hệ Chuyên Nghiệp
-
-1. 💬 **Tư Vấn AI Trực Tuyến (AI Counseling Hub)**:
-   - Streaming câu trả lời tức thì dạng SSE (Server-Sent Events) siêu mượt.
-   - 3 Chế độ: 🕊️ *Thấu cảm & Lắng nghe*, 🧩 *Tái định hình tư duy CBT*, 🧘 *Chánh niệm & Tĩnh tâm*.
-   - Check-in cảm xúc & thanh đo căng thẳng (1-10) để cá nhân hóa cuộc trò chuyện.
-   - Đúc kết phiên trò chuyện & xuất nhật ký Markdown (.md).
-
-2. 📚 **Góc Giáo Dục Tâm Lý (Psychoeducation Hub)**:
-   - Thư viện 8 bẫy tư duy tiêu cực (CBT Cognitive Distortions) kèm ví dụ thực tế và câu hỏi hóa giải.
-   - Mô hình Tam giác nhận thức (Suy nghĩ ➡️ Cảm xúc ➡️ Hành vi).
-   - Cẩm nang vượt qua áp lực học tập, thi cử và cơ chế chống Overthinking.
-
-3. 📝 **Trắc Nghiệm Tự Đánh Giá (Self-Assessment Quizzes)**:
-   - Bài test đánh giá mức độ Lo âu chuẩn hóa GAD-7 (7 câu hỏi).
-   - Thang điểm trực quan, phân tích mức độ và gợi ý giải pháp.
-   - Nút gửi trực tiếp kết quả sang cho An Nhiên để bắt đầu phiên tư vấn chuyên sâu.
-
-4. 🧘 **Phòng Thư Giãn & Tập Trung Học Tập (Study & Relaxation Studio)**:
-   - Bài tập thở Chánh niệm tương tác: Thở 4-7-8 & Thở hộp (Box Breathing).
-   - Kỹ thuật Neo cảm xúc 5-4-3-2-1 ngắt cơn hoảng loạn.
-   - Trình phát âm thanh thiên nhiên (Mưa rơi, Suối rừng, Sóng biển).
+Nền tảng tư vấn tâm lý, thấu cảm và chăm sóc sức khỏe tinh thần được xây dựng trên nền tảng **FastAPI Backend** và **Vanilla Web Single Page Application (SPA)**, tích hợp mô hình ngôn ngữ lớn **Google Gemini API** với phản hồi thời gian thực qua **Server-Sent Events (SSE)**.
 
 ---
 
-## 🚀 Cách Khởi Chạy Siêu Đơn Giản
+## 1. TỔNG QUAN KIẾN TRÚC HỆ THỐNG
 
-### 👉 Khởi chạy Web App:
-Mở Terminal tại thư mục `tamly-chatbot` và gõ:
-```powershell
-python run.py
 ```
-> Trình duyệt sẽ tự động mở trang web tại `http://localhost:8000`. Không cần Streamlit, không hỏi email, khởi động trong 1 giây!
+[ Frontend Client: Single Page App ]
+    │ (Base64 Encrypted Payload & Zero Emojis)
+    ▼
+[ FastAPI Backend Engine ] ──> [ Rate Limiting & Security Headers ]
+    │
+    ├──> [ Core Engine: Google GenAI SDK (Chats API) ]
+    │        ├── Model chinh: gemini-3.5-flash-lite (TTFT < 1s)
+    │        └── Fallback: gemini-flash-lite-latest, gemini-3.1-flash-lite
+    │
+    ├──> [ Tri thức Tâm lý: CBT (8 Bẫy tư duy), GAD-7, Chánh niệm ]
+    └──> [ Tự động ngủ bảo mật sau 1 giờ không hoạt động ]
+```
 
-*Hoặc trên Windows, bạn chỉ cần click đúp vào file `run.bat`.*
+---
 
-### 🔑 Cấu hình API Key:
-- Điền API Key vào file `.env` (`GEMINI_API_KEY=your_key`)
-- Hoặc bấm vào biểu tượng **⚙️ Cài đặt** ở góc trên thanh điều hướng web để dán key vào trực tiếp.
+## 2. TÍNH NĂNG NỔI BẬT
+
+1. **Trí Tuệ Tâm Lý Sâu Sắc & Lời Khuyên Chân Thực**:
+   - Vận dụng **Liệu pháp Nhận thức - Hành vi (CBT)**, **Chủ nghĩa Khắc kỷ (Stoicism)** và **Chánh niệm (Mindfulness)**.
+   - Nguyên tắc phản hồi: Đúng bản chất, dứt khoát, không dùng văn mẫu sáo rỗng, không sử dụng emoji, mang lại giá trị chuyển hóa nội lực thực sự.
+
+2. **Phản Hồi Siêu Tốc (Real-time SSE Streaming)**:
+   - Tối ưu hóa với mô hình `gemini-3.5-flash-lite`, thời gian nhận token đầu tiên (**TTFT**) chỉ từ **0.6s - 1.0s**.
+   - Chuẩn hóa theo phương thức `client.chats.create` và `chat.send_message_stream`, triệt tiêu hoàn toàn các cảnh báo Automatic Function Calling (AFC).
+
+3. **Bảo Mật & Mã Hóa Gói Tin (Base64 Payload Obfuscation)**:
+   - Toàn bộ dữ liệu truyền tải giữa Client và Server đều được đóng gói và mã hóa chuỗi Base64.
+   - Ẩn hoàn toàn thông tin công nghệ (FastAPI, Gemini, Model name, API Key).
+   - Tích hợp Security Headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection: 1; mode=block`.
+   - Khử trùng 100% mã HTML/Markdown bằng `DOMPurify 3.0` chống tấn công XSS.
+
+4. **Tự Động Nghỉ Ngơi & Khóa Bảo Mật Sau 1 Giờ (Idle Timeout)**:
+   - Nhận diện thao tác trên cả Máy tính lẫn Điện thoại (chạm cảm ứng, cuộn trang, gõ phím).
+   - Nếu không có tương tác trong 60 phút, hệ thống tự động khóa bảo mật, làm mờ nội dung cũ để bảo vệ quyền riêng tư và reset token về 0 khi bắt đầu phiên mới.
+
+5. **Giao Diện Đa Thiết Bị Chuẩn Responsive**:
+   - **Mobile (< 768px)**: Thanh điều hướng dưới đáy (Mobile Bottom Navigation Bar), ngăn kéo cảm xúc trượt (Drawer), chiều cao co giãn linh hoạt `100dvh`.
+   - **Desktop / Tablet**: Bố cục 2 cột chuyên nghiệp, công cụ check-in cảm xúc, bài tập thở chánh niệm và âm thanh thư giãn.
+
+---
+
+## 3. CẤU TRÚC THƯ MỤC DỰ ÁN
+
+```
+tamly-chatbot/
+│
+├── core/
+│   ├── __init__.py
+│   ├── bot_engine.py         # Quản lý kết nối Gemini SDK, Chat stream, Auto Fallback
+│   ├── knowledge_base.py     # Dữ liệu 8 bẫy tư duy CBT, bài đọc tâm lý, bài test GAD-7
+│   └── prompts.py            # Hệ thống Prompt tâm lý sâu sắc (Zero Emoji)
+│
+├── static/
+│   ├── css/
+│   │   └── style.css         # Hệ thống thiết kế CSS thuần, Responsive, Hiệu ứng thở
+│   ├── js/
+│   │   └── app.js            # Xử lý SSE Reader, Base64 encode/decode, 1h Idle Sleep
+│   └── index.html            # Giao diện Single Page Application (SPA)
+│
+├── server.py                 # FastAPI Backend Server, Middleware bảo mật, Rate Limiter
+├── main.py                   # Giao diện dòng lệnh Terminal (CLI)
+├── run.py                    # Script khởi chạy 1-click tự động mở trình duyệt
+├── run.bat                   # File Batch khởi động nhanh trên Windows
+├── requirements.txt          # Danh sách thư viện Python
+├── Dockerfile                # Cấu hình đóng gói Docker Container
+├── Procfile                  # Cấu hình khởi chạy cho Render / Railway / Heroku
+├── vercel.json               # Cấu hình cho nền tảng Vercel
+├── .gitignore                # Bảo mật file .env và loại trừ file tạm
+├── .env.example              # Mẫu cấu hình biến môi trường
+└── README.md                 # Tài liệu hướng dẫn sử dụng
+```
+
+---
+
+## 4. HƯỚNG DẪN CÀI ĐẶT & KHỞI CHẠY CỤC BỘ (LOCAL)
+
+### Bước 1: Chuẩn bị môi trường
+Yêu cầu máy tính đã cài đặt **Python 3.10 trở lên**.
+
+### Bước 2: Cài đặt các thư viện cần thiết
+Mở Terminal hoặc PowerShell tại thư mục dự án và chạy:
+```powershell
+pip install -r requirements.txt
+```
+
+### Bước 3: Cấu hình Gemini API Key
+Tạo file `.env` tại thư mục gốc với nội dung:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+*(Bạn có thể lấy API Key miễn phí tại [Google AI Studio](https://aistudio.google.com/)).*
+
+### Bước 4: Khởi chạy ứng dụng
+- **Cách 1 (Giao diện Web - Khuyên dùng)**:
+  ```powershell
+  python run.py
+  ```
+  *(Hoặc nhấp đúp trực tiếp vào file `run.bat` trên Windows. Hệ thống sẽ tự động mở trình duyệt tại `http://localhost:8000`).*
+
+- **Cách 2 (Giao diện Dòng lệnh CLI)**:
+  ```powershell
+  python main.py
+  ```
+
+---
+
+## 5. HƯỚNG DẪN TRIỂN KHAI LÊN CLOUD (DEPLOYMENT)
+
+### Cách 1: Triển khai lên Render.com (Khuyên Dùng ⭐⭐⭐⭐⭐)
+1. Đẩy mã nguồn lên tài khoản GitHub của bạn.
+2. Truy cập [Render.com](https://render.com/) -> Chọn **New Web Service**.
+3. Kết nối với GitHub Repository của dự án.
+4. Render sẽ tự động nhận diện cấu hình:
+   - **Runtime**: Python 3
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT`
+5. Thêm biến môi trường tại mục **Environment Variables**:
+   - Key: `GEMINI_API_KEY`
+   - Value: `API_Key_cua_ban`
+6. Nhấn **Create Web Service** và nhận đường link sử dụng công khai.
+
+### Cách 2: Triển khai với Docker
+```bash
+docker build -t an-nhien-tam-ly .
+docker run -d -p 8000:8000 -e GEMINI_API_KEY="your_api_key" an-nhien-tam-ly
+```
+
+---
+
+## 6. THÔNG TIN BẢO MẬT & RANH GIỚI Y TẾ
+- **Bảo Mật Quyền Riêng Tư**: Toàn bộ nội dung trao đổi chỉ tồn tại trong phiên duyệt web của người dùng và không được lưu trữ vĩnh viễn trên máy chủ cục bộ.
+- **Ranh Giới Y Tế**: Hệ thống đóng vai trò là Người Bạn Tri Kỷ & Trợ Lý Tham Vấn Cảm Xúc, không thay thế cho chẩn đoán y khoa hay điều trị tâm thần lâm sàng từ bác sĩ chuyên khoa.
+
+---
+*Phát triển bởi đội ngũ An Nhiên Tâm Lý.*

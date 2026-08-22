@@ -1,5 +1,5 @@
 /**
- * AN NHIÊN - EDU-PSYCHOLOGY APP (BASE64 ENCRYPTED PAYLOAD & F12 PROTECTION)
+ * AN NHIEN TAM LY - APP SCRIPT (ZERO EMOJI & BASE64 PAYLOAD ENCRYPTED)
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,11 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
     messages: [
       {
         role: "model",
-        content: "Chào bạn, mình là **An Nhiên Tâm Lý** 🌿. Không gian ở đây hoàn toàn an toàn và riêng tư. Dù bạn đang gặp áp lực học tập, chuyện tình cảm hay những băn khoăn khó nói, mình luôn ở đây để lắng nghe và cùng bạn tháo gỡ thật dứt khoát. Hôm nay bạn đang bận lòng chuyện gì, hãy chia sẻ cùng mình nhé!"
+        content: "Chào bạn, mình là **An Nhiên Tâm Lý**. Không gian ở đây hoàn toàn an toàn và riêng tư. Dù bạn đang gặp áp lực học tập, chuyện tình cảm hay những băn khoăn khó nói, mình luôn ở đây để lắng nghe và cùng bạn tháo gỡ dứt khoát. Hôm nay bạn đang bận lòng chuyện gì, hãy chia sẻ cùng mình nhé."
       }
     ],
     mode: "empathy",
-    currentMood: "🌸 Bình yên",
+    currentMood: "Bình yên",
     stressLevel: 4,
     isStreaming: false,
     quizState: {
@@ -64,10 +64,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Greeting
   function initGreeting() {
     const hour = new Date().getHours();
-    let text = "Chào buổi sáng an lành ☀️";
-    if (hour >= 12 && hour < 18) text = "Chào buổi chiều dịu êm 🍃";
-    else if (hour >= 18 && hour < 22) text = "Chào buổi tối ấm áp 🌙";
-    else if (hour >= 22 || hour < 5) text = "Đêm đã về khuya rồi 🌌";
+    let text = "Chào buổi sáng an lành.";
+    if (hour >= 12 && hour < 18) text = "Chào buổi chiều dịu êm.";
+    else if (hour >= 18 && hour < 22) text = "Chào buổi tối ấm áp.";
+    else if (hour >= 22 || hour < 5) text = "Đêm đã về khuya.";
     if (chatGreetingTitle) chatGreetingTitle.textContent = text;
   }
   initGreeting();
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const avatar = document.createElement("div");
     avatar.className = "msg-avatar";
-    avatar.textContent = isUser ? "🌱" : "🕊️";
+    avatar.textContent = isUser ? "Bạn" : "AN";
 
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
@@ -252,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.messages = [
       {
         role: "model",
-        content: "Chào bạn, mình đã sẵn sàng cho một phiên trò chuyện mới. Hãy chia sẻ bất kỳ điều gì bạn muốn nhé!"
+        content: "Chào bạn, mình đã sẵn sàng cho một phiên trò chuyện mới. Hãy chia sẻ bất kỳ điều gì bạn muốn nhé."
       }
     ];
     renderMessages();
@@ -262,11 +262,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Summarize Session with Base64
   document.getElementById("btn-summarize").addEventListener("click", async () => {
     if (state.messages.length < 3) {
-      alert("Hãy trò chuyện thêm một vài câu để An Nhiên có thể đúc kết cho bạn nhé!");
+      alert("Hãy trò chuyện thêm một vài câu để An Nhiên có thể đúc kết cho bạn nhé.");
       return;
     }
     const btn = document.getElementById("btn-summarize");
-    btn.textContent = "⏳ Đang đúc kết...";
+    btn.textContent = "Đang đúc kết...";
     try {
       const rawPayload = JSON.stringify({ messages: state.messages });
       const res = await fetch("/api/summary", {
@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const summaryText = decodeB64(data.d);
         state.messages.push({
           role: "model",
-          content: `### 💌 Đúc Kết Phiên Trò Chuyện:\n\n${summaryText}`
+          content: `### Đúc Kết Phiên Trò Chuyện:\n\n${summaryText}`
         });
         renderMessages();
         if (chatSidebar) chatSidebar.classList.remove("open");
@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) {
       alert("Không thể tạo đúc kết lúc này.");
     } finally {
-      btn.textContent = "📝 Đúc Kết Lời Nhắn Nhủ";
+      btn.textContent = "Đúc Kết Lời Nhắn Nhủ";
     }
   });
 
@@ -305,12 +305,12 @@ document.addEventListener("DOMContentLoaded", () => {
         grid.innerHTML = data.distortions.map(d => `
           <div class="distortion-card">
             <div>
-              <div class="dist-badge">${d.icon} <span class="dist-title">${d.name}</span></div>
+              <div class="dist-badge"><span class="dist-icon-label">${d.icon}</span> <span class="dist-title">${d.name}</span></div>
               <p class="dist-desc">${d.description}</p>
               <div class="dist-example"><strong>Ví dụ:</strong> ${d.example}</div>
             </div>
             <div class="dist-reframe">
-              <strong>💡 Góc nhìn hóa giải:</strong> ${d.reframing}
+              <strong>Góc nhìn hóa giải:</strong> ${d.reframing}
             </div>
           </div>
         `).join("");
@@ -322,7 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div style="background:white; border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow-sm);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
               <span style="background:var(--primary-light); color:var(--primary); font-size:0.8rem; font-weight:700; padding:4px 12px; border-radius:var(--radius-full);">${a.category}</span>
-              <span style="font-size:0.8rem; color:var(--text-muted);">⏱️ ${a.readTime} đọc</span>
+              <span style="font-size:0.8rem; color:var(--text-muted);">${a.readTime}</span>
             </div>
             <h3 style="font-family:var(--font-heading); font-size:1.25rem; color:var(--indigo-dark); margin-bottom:12px;">${a.title}</h3>
             <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:14px;">${a.summary}</p>
@@ -417,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("quiz-level-text").textContent = bracket.level;
     document.getElementById("quiz-level-text").style.color = bracket.color;
     document.getElementById("quiz-advice-text").innerHTML = `
-      <strong>💡 Lời khuyên & Định hướng:</strong><br>${bracket.advice}
+      <strong>Lời khuyên & Định hướng:</strong><br>${bracket.advice}
     `;
 
     document.getElementById("btn-discuss-result").onclick = () => {
@@ -461,14 +461,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function startBreathing() {
     state.breathingActive = true;
-    btnToggleBreathe.textContent = "⏹️ Dừng Bài Tập Thở";
+    btnToggleBreathe.textContent = "Dừng Bài Tập Thở";
     runBreathingCycle();
   }
 
   function stopBreathing() {
     state.breathingActive = false;
     clearTimeout(state.breathingInterval);
-    btnToggleBreathe.textContent = "▶️ Bắt Đầu Bài Tập Thở";
+    btnToggleBreathe.textContent = "Bắt Đầu";
     circleBreathe.className = "circle-breathe";
     breatheActionText.textContent = "Sẵn sàng";
     breatheTimerText.textContent = "Nhấn Bắt Đầu";
@@ -479,19 +479,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (state.breathingMode === "478") {
       circleBreathe.className = "circle-breathe inhale";
-      breatheActionText.textContent = "Hít vào 👃";
+      breatheActionText.textContent = "Hít vào";
       breatheTimerText.textContent = "4 giây";
 
       state.breathingInterval = setTimeout(() => {
         if (!state.breathingActive) return;
         circleBreathe.className = "circle-breathe hold";
-        breatheActionText.textContent = "Giữ hơi thở 🛑";
+        breatheActionText.textContent = "Giữ hơi thở";
         breatheTimerText.textContent = "7 giây";
 
         state.breathingInterval = setTimeout(() => {
           if (!state.breathingActive) return;
           circleBreathe.className = "circle-breathe exhale";
-          breatheActionText.textContent = "Thở ra êm 🌬️";
+          breatheActionText.textContent = "Thở ra êm";
           breatheTimerText.textContent = "8 giây";
 
           state.breathingInterval = setTimeout(() => runBreathingCycle(), 8000);
@@ -499,25 +499,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 4000);
     } else {
       circleBreathe.className = "circle-breathe inhale";
-      breatheActionText.textContent = "Hít vào 👃";
+      breatheActionText.textContent = "Hít vào";
       breatheTimerText.textContent = "4 giây";
 
       state.breathingInterval = setTimeout(() => {
         if (!state.breathingActive) return;
         circleBreathe.className = "circle-breathe hold";
-        breatheActionText.textContent = "Giữ 🛑";
+        breatheActionText.textContent = "Giữ";
         breatheTimerText.textContent = "4 giây";
 
         state.breathingInterval = setTimeout(() => {
           if (!state.breathingActive) return;
           circleBreathe.className = "circle-breathe exhale";
-          breatheActionText.textContent = "Thở ra 🌬️";
+          breatheActionText.textContent = "Thở ra";
           breatheTimerText.textContent = "4 giây";
 
           state.breathingInterval = setTimeout(() => {
             if (!state.breathingActive) return;
             circleBreathe.className = "circle-breathe";
-            breatheActionText.textContent = "Nghỉ ngơi 🌱";
+            breatheActionText.textContent = "Nghỉ ngơi";
             breatheTimerText.textContent = "4 giây";
 
             state.breathingInterval = setTimeout(() => runBreathingCycle(), 4000);
@@ -563,7 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.messages = [
       {
         role: "model",
-        content: "Chào bạn, mình là **An Nhiên Tâm Lý** 🌿. Phiên trò chuyện mới đã sẵn sàng. Bạn đang cảm thấy thế nào rồi?"
+        content: "Chào bạn, mình là **An Nhiên Tâm Lý**. Phiên trò chuyện mới đã sẵn sàng. Bạn đang cảm thấy thế nào rồi?"
       }
     ];
     renderMessages();

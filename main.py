@@ -1,17 +1,16 @@
 """
-Giao diện dòng lệnh (CLI) cho An Nhiên Edu-Psychology Platform.
-Để chạy giao diện Web chuyên nghiệp, vui lòng chạy lệnh:
+Giao dien dong lenh (CLI) cho An Nhien Tam Ly.
+De chay giao dien Web, vui long chay lenh:
     python run.py
 """
 
 import sys
 import os
+import io
 from core.bot_engine import CounselorEngine, DEFAULT_MODEL
 from core.prompts import get_time_greeting
 
-import io
-
-# Cấu hình UTF-8 cho Windows Terminal
+# Cau hinh UTF-8 cho Windows Terminal
 if sys.stdout.encoding != 'utf-8':
     try:
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -20,12 +19,12 @@ if sys.stdout.encoding != 'utf-8':
 
 WELCOME_BANNER = f"""
 {'=' * 65}
-   🌿 AN NHIÊN TÂM LÝ - Người Bạn Đồng Hành Cảm Xúc
+   AN NHIEN TAM LY - Nguoi Ban Dong Hanh Cam Xuc
    {get_time_greeting()}
    
-   💡 Mẹo: Chạy 'python run.py' để mở Giao Diện Web 'An Nhiên Tâm Lý' cực đẹp!
-   - Gõ 'thoat' hoặc 'exit' để kết thúc.
-   - Gõ 'mode empathy', 'mode cbt', hoặc 'mode mindfulness' để đổi phong cách.
+   [Goi y]: Chay 'python run.py' de mo Giao Dien Web.
+   - Go 'thoat' hoac 'exit' de ket thuc.
+   - Go 'mode empathy', 'mode cbt', hoac 'mode mindfulness' de doi phong cach.
 {'=' * 65}
 """
 
@@ -33,8 +32,8 @@ WELCOME_BANNER = f"""
 def main() -> None:
     engine = CounselorEngine()
     if not engine.is_ready():
-        print("\n[Lỗi] Chưa tìm thấy GEMINI_API_KEY trong môi trường hoặc file .env.")
-        print("Hướng dẫn: tạo file .env cùng thư mục với nội dung:")
+        print("\n[Loi] Chua tim thay GEMINI_API_KEY trong moi truong hoac file .env.")
+        print("Huong dan: tao file .env cung thu muc voi noi dung:")
         print("GEMINI_API_KEY=your_gemini_api_key_here\n")
         return
 
@@ -46,14 +45,14 @@ def main() -> None:
         try:
             user_input = input("\nBạn: ").strip()
         except (KeyboardInterrupt, EOFError):
-            print("\n\nAn Nhiên: Chúc bạn luôn an yên và nhẹ lòng. Hẹn gặp lại bạn nhé! 🕊️")
+            print("\n\nAn Nhiên: Chúc bạn luôn an yên và nhẹ lòng. Hẹn gặp lại bạn nhé.")
             break
 
         if not user_input:
             continue
 
         if user_input.lower() in ("thoat", "thoát", "exit", "quit"):
-            print("\nAn Nhiên: Tạm biệt bạn, chúc bạn một ngày thật nhiều bình an và yêu thương! 🕊️")
+            print("\nAn Nhiên: Tạm biệt bạn, chúc bạn một ngày thật nhiều bình an.")
             break
 
         if user_input.lower().startswith("mode"):

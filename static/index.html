@@ -18,7 +18,7 @@
   <header class="app-navbar">
     <div class="nav-container">
       <div class="brand-wrapper">
-        <div class="brand-icon">🌿</div>
+        <div class="brand-icon">AN</div>
         <div>
           <h1 class="brand-title">An Nhiên Tâm Lý</h1>
           <div class="brand-subtitle">Người Bạn Đồng Hành</div>
@@ -27,10 +27,10 @@
 
       <!-- Desktop Navigation Tabs -->
       <nav class="nav-tabs" aria-label="Điều hướng chính">
-        <button class="nav-tab-btn active" data-tab="tab-chat">💬 Trò Chuyện</button>
-        <button class="nav-tab-btn" data-tab="tab-edu">📚 Hiểu Về Cảm Xúc</button>
-        <button class="nav-tab-btn" data-tab="tab-quiz">📝 Tự Đánh Giá</button>
-        <button class="nav-tab-btn" data-tab="tab-studio">🧘 Thư Giãn & Tĩnh Tâm</button>
+        <button class="nav-tab-btn active" data-tab="tab-chat">Trò Chuyện</button>
+        <button class="nav-tab-btn" data-tab="tab-edu">Hiểu Về Cảm Xúc</button>
+        <button class="nav-tab-btn" data-tab="tab-quiz">Tự Đánh Giá</button>
+        <button class="nav-tab-btn" data-tab="tab-studio">Thư Giãn & Tĩnh Tâm</button>
       </nav>
 
       <!-- Clean Status Header -->
@@ -52,37 +52,34 @@
         
         <!-- Mobile Sidebar Toggle -->
         <button class="mobile-sidebar-toggle" id="btn-toggle-sidebar">
-          🌿 <span>Cảm Xúc & Tùy Chọn Trò Chuyện</span>
+          <span>Cảm Xúc & Tùy Chọn Trò Chuyện</span>
         </button>
 
         <!-- Chat Sidebar / Mobile Drawer -->
         <aside class="chat-sidebar" id="chat-sidebar">
           
           <div class="sidebar-header-mobile">
-            <h3>🌿 Cảm Xúc Của Bạn</h3>
-            <button class="btn-close-drawer" id="btn-close-sidebar">✕</button>
+            <h3>Cảm Xúc Của Bạn</h3>
+            <button class="btn-close-drawer" id="btn-close-sidebar">Đóng</button>
           </div>
 
           <!-- Mode Selector -->
           <div>
-            <div class="sidebar-section-title">🎭 Cách Trò Chuyện</div>
+            <div class="sidebar-section-title">Cách Trò Chuyện</div>
             <div class="mode-selector-list">
               <div class="mode-item active" data-mode="empathy">
-                <span class="mode-item-icon">🕊️</span>
                 <div class="mode-item-info">
                   <h4>Lắng nghe & Đồng cảm</h4>
                   <p>Xoa dịu, thấu hiểu trọn vẹn</p>
                 </div>
               </div>
               <div class="mode-item" data-mode="cbt">
-                <span class="mode-item-icon">🧩</span>
                 <div class="mode-item-info">
                   <h4>Phân tích & Tháo gỡ nút thắt</h4>
                   <p>Đi thẳng vào gốc rễ vấn đề</p>
                 </div>
               </div>
               <div class="mode-item" data-mode="mindfulness">
-                <span class="mode-item-icon">🧘</span>
                 <div class="mode-item-info">
                   <h4>Tĩnh tâm & Thả lỏng</h4>
                   <p>Quay về với sự bình an</p>
@@ -93,22 +90,22 @@
 
           <!-- Mood Selector -->
           <div>
-            <div class="sidebar-section-title">🌿 Cảm Xúc Lúc Này</div>
+            <div class="sidebar-section-title">Cảm Xúc Lúc Này</div>
             <div class="mood-grid">
-              <button class="mood-btn active" data-mood="🌸 Bình yên" title="Bình yên">🌸</button>
-              <button class="mood-btn" data-mood="😊 Vui vẻ" title="Vui vẻ">😊</button>
-              <button class="mood-btn" data-mood="😔 Buồn bã" title="Buồn bã">😔</button>
-              <button class="mood-btn" data-mood="😰 Lo âu" title="Lo âu">😰</button>
-              <button class="mood-btn" data-mood="😫 Kiệt sức" title="Kiệt sức">😫</button>
-              <button class="mood-btn" data-mood="😡 Bực bội" title="Bực bội">😡</button>
-              <button class="mood-btn" data-mood="🌫️ Trống rỗng" title="Trống rỗng">🌫️</button>
-              <button class="mood-btn" data-mood="✨ Hy vọng" title="Hy vọng">✨</button>
+              <button class="mood-btn active" data-mood="Bình yên" title="Bình yên">Bình yên</button>
+              <button class="mood-btn" data-mood="Vui vẻ" title="Vui vẻ">Vui vẻ</button>
+              <button class="mood-btn" data-mood="Buồn bã" title="Buồn bã">Buồn bã</button>
+              <button class="mood-btn" data-mood="Lo âu" title="Lo âu">Lo âu</button>
+              <button class="mood-btn" data-mood="Kiệt sức" title="Kiệt sức">Kiệt sức</button>
+              <button class="mood-btn" data-mood="Bực bội" title="Bực bội">Bực bội</button>
+              <button class="mood-btn" data-mood="Trống rỗng" title="Trống rỗng">Trống rỗng</button>
+              <button class="mood-btn" data-mood="Hy vọng" title="Hy vọng">Hy vọng</button>
             </div>
 
             <div class="stress-slider-wrapper">
               <div class="stress-label">
                 <span>Mức độ áp lực:</span>
-                <span id="stress-val-display" style="color:var(--primary);">4 / 10</span>
+                <span id="stress-val-display" style="color:var(--primary); font-weight:700;">4 / 10</span>
               </div>
               <input type="range" id="stress-slider" min="1" max="10" value="4" aria-label="Mức độ áp lực">
             </div>
@@ -116,8 +113,8 @@
 
           <!-- Session Actions -->
           <div class="sidebar-actions-box">
-            <button class="chip-btn" id="btn-summarize" style="width:100%; padding:10px; background:#F8FAFC;">📝 Đúc Kết Lời Nhắn Nhủ</button>
-            <button class="chip-btn" id="btn-clear-chat" style="width:100%; padding:10px; color:#EF4444; border-color:#FCA5A5;">🗑️ Bắt Đầu Lại</button>
+            <button class="chip-btn" id="btn-summarize" style="width:100%; padding:10px; background:#F8FAFC;">Đúc Kết Lời Nhắn Nhủ</button>
+            <button class="chip-btn" id="btn-clear-chat" style="width:100%; padding:10px; color:#EF4444; border-color:#FCA5A5;">Bắt Đầu Lại</button>
           </div>
 
         </aside>
@@ -127,7 +124,7 @@
           
           <div class="chat-header">
             <div class="chat-header-info">
-              <h3 id="chat-greeting-title">Chào bạn 🌿</h3>
+              <h3 id="chat-greeting-title">Chào bạn</h3>
               <p>Không gian an toàn, chia sẻ chân thành và bảo mật</p>
             </div>
           </div>
@@ -139,18 +136,18 @@
 
           <!-- Quick Topic Chips -->
           <div class="quick-chips">
-            <button class="chip-btn" data-prompt="Dạo này mình thường xuyên cảm thấy bồn chồn lo âu và ngực ngột ngạt, hãy phân tích kỹ giúp mình lý do và cách xử lý dứt khoát nhé...">🍃 Lo âu, ngột ngạt</button>
-            <button class="chip-btn" data-prompt="Mình cảm thấy kiệt sức vì áp lực học tập và công việc, mất hết động lực. Hãy cho mình lời khuyên cụ thể và thẳng thắn nhé...">💼 Áp lực học tập & thi cử</button>
-            <button class="chip-btn" data-prompt="Đêm nào mình cũng nghĩ ngợi miên man không thể ngủ được, nguyên nhân sâu xa là gì và mình nên làm gì để dừng lại?">🛌 Khó ngủ, overthinking</button>
-            <button class="chip-btn" data-prompt="Mình vừa trải qua chuyện buồn tình cảm và thấy cô đơn, trống rỗng. Hãy chia sẻ thật lòng cùng mình nhé...">💔 Tổn thương tình cảm</button>
-            <button class="chip-btn" data-prompt="An Nhiên ơi, hãy chia sẻ cho mình cách thả lỏng tâm trí và làm chủ cảm xúc thật hiệu quả nhé!">🧘 Cách tĩnh tâm và thả lỏng</button>
+            <button class="chip-btn" data-prompt="Dạo này mình thường xuyên cảm thấy bồn chồn lo âu và ngực ngột ngạt, hãy phân tích kỹ giúp mình lý do và cho mình lời khuyên đúng đắn, dứt khoát nhất...">Lo âu, ngột ngạt</button>
+            <button class="chip-btn" data-prompt="Mình cảm thấy kiệt sức vì áp lực học tập và công việc, mất hết động lực. Hãy cho mình lời khuyên cụ thể và thẳng thắn...">Áp lực học tập & thi cử</button>
+            <button class="chip-btn" data-prompt="Đêm nào mình cũng nghĩ ngợi miên man không thể ngủ được, nguyên nhân sâu xa từ tâm lý là gì và đâu là giải pháp dứt khoát?">Khó ngủ, suy nghĩ miên man</button>
+            <button class="chip-btn" data-prompt="Mình vừa trải qua chuyện buồn tình cảm và thấy cô đơn, trống rỗng. Hãy chia sẻ thật lòng cùng mình...">Tổn thương tình cảm</button>
+            <button class="chip-btn" data-prompt="An Nhiên ơi, hãy chia sẻ cho mình nguyên lý để làm chủ tâm trí và xây dựng nội lực vững vàng trước mọi áp lực...">Cách tĩnh tâm và làm chủ</button>
           </div>
 
           <!-- Input Bar -->
           <form class="chat-input-wrapper" id="chat-form">
             <input type="text" id="chat-input" class="chat-input" placeholder="Hãy chia sẻ điều bạn đang bận lòng cùng An Nhiên Tâm Lý..." autocomplete="off">
             <button type="submit" class="btn-send" id="btn-send" aria-label="Gửi tin nhắn">
-              <span>Gửi</span> <span>🕊️</span>
+              <span>Gửi</span>
             </button>
           </form>
 
@@ -162,18 +159,18 @@
     <!-- ==================== TAB 2: PSYCHOEDUCATION ==================== -->
     <section class="tab-pane" id="tab-edu">
       <div class="edu-header">
-        <h2>📚 Hiểu Về Cảm Xúc & Tâm Lý</h2>
-        <p>Nhận diện các bẫy suy nghĩ vô hình để thấu hiểu chính mình và sống nhẹ nhàng hơn mỗi ngày.</p>
+        <h2>Hiểu Về Cảm Xúc & Tâm Lý</h2>
+        <p>Nhận diện các bẫy suy nghĩ để thấu hiểu chính mình và sống nhẹ nhàng hơn mỗi ngày.</p>
       </div>
 
       <!-- 8 CBT Cognitive Distortions Section -->
-      <h3 style="font-family:var(--font-heading); margin-bottom:16px; font-size:1.3rem;">🧠 8 Bẫy Suy Nghĩ Thường Gặp</h3>
+      <h3 style="font-family:var(--font-heading); margin-bottom:16px; font-size:1.3rem;">8 Bẫy Suy Nghĩ Thường Gặp (CBT Distortions)</h3>
       <div class="distortion-grid" id="distortion-grid">
         <!-- Injected by JavaScript -->
       </div>
 
       <!-- Articles Section -->
-      <h3 style="font-family:var(--font-heading); margin-bottom:16px; font-size:1.3rem;">📖 Góc Nhìn Tâm Lý Sâu Sắc</h3>
+      <h3 style="font-family:var(--font-heading); margin-bottom:16px; font-size:1.3rem;">Góc Nhìn Tâm Lý Ứng Dụng</h3>
       <div id="articles-container" style="display:flex; flex-direction:column; gap:20px;">
         <!-- Injected by JavaScript -->
       </div>
@@ -185,14 +182,13 @@
         
         <div id="quiz-intro-view">
           <div style="text-align:center; margin-bottom:24px;">
-            <div style="font-size:3rem; margin-bottom:10px;">📝</div>
             <h2 style="font-family:var(--font-heading); color:var(--indigo-dark); font-size:1.6rem;">Tự Đánh Giá Mức Độ Căng Thẳng & Lo Âu</h2>
             <p style="color:var(--text-muted); font-size:0.95rem; margin-top:8px;">
-              Bảng tự phản tư giúp bạn nhìn nhận rõ mức độ áp lực bạn đang trải qua trong 2 tuần gần nhất.
+              Bảng tự phản tư chuẩn hóa giúp bạn nhìn nhận rõ mức độ áp lực bạn đang trải qua trong 2 tuần gần nhất.
             </p>
           </div>
           <button class="btn-send" id="btn-start-quiz" style="width:100%; justify-content:center; padding:14px; font-size:1.05rem;">
-            Bắt Đầu (7 Câu Hỏi) 🚀
+            Bắt Đầu (7 Câu Hỏi)
           </button>
         </div>
 
@@ -218,7 +214,6 @@
 
         <!-- Quiz Result View -->
         <div id="quiz-result-view" style="display:none;" class="quiz-result-card">
-          <div style="font-size:2.5rem; margin-bottom:12px;">📊</div>
           <h2 style="font-family:var(--font-heading); margin-bottom:8px;">Kết Quả Nhìn Nhận Của Bạn</h2>
           <div class="score-badge" id="quiz-score-badge">Điểm: 0 / 21</div>
           <h3 id="quiz-level-text" style="color:var(--primary); margin-bottom:16px;">Mức độ: Bình thường</h3>
@@ -229,10 +224,10 @@
 
           <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
             <button class="btn-send" id="btn-discuss-result">
-              💬 Trò Chuyện Cùng An Nhiên Về Kết Quả Này
+              Trò Chuyện Cùng An Nhiên Về Kết Quả Này
             </button>
             <button class="chip-btn" id="btn-retake-quiz" style="padding:12px 20px;">
-              🔄 Làm Lại
+              Làm Lại
             </button>
           </div>
         </div>
@@ -246,7 +241,7 @@
         
         <!-- Breathing Exercise Card -->
         <div class="studio-card">
-          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:8px;">🌬️ Thở Chậm & Tĩnh Tâm</h3>
+          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:8px;">Thở Chậm & Tĩnh Tâm</h3>
           <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">
             Thả lỏng đôi vai, nhịp thở sâu và chậm sẽ giúp cơ thể bạn hạ nhịp tim và tìm lại sự bình yên ngay lúc này.
           </p>
@@ -262,14 +257,14 @@
               <span id="breathe-timer-text" style="font-size:0.9rem; opacity:0.8; margin-top:4px;">Nhấn Bắt Đầu</span>
             </div>
             <button class="btn-send" id="btn-toggle-breathe" style="margin-top:28px;">
-              ▶️ Bắt Đầu
+              Bắt Đầu
             </button>
           </div>
         </div>
 
         <!-- 5-4-3-2-1 Grounding & Ambient Sounds Card -->
         <div class="studio-card">
-          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:8px;">🎵 Không Gian Âm Thanh Thư Giãn</h3>
+          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:8px;">Không Gian Âm Thanh Thư Giãn</h3>
           <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">
             Bật âm thanh thiên nhiên êm dịu để đồng hành cùng bạn khi đọc sách, học bài hay nghỉ ngơi:
           </p>
@@ -277,7 +272,7 @@
           <div class="sound-list">
             <div class="sound-item">
               <div>
-                <strong>🌧️ Tiếng Mưa Rơi Bên Cửa Sổ</strong>
+                <strong>Tiếng Mưa Rơi Bên Cửa Sổ</strong>
                 <div style="font-size:0.75rem; color:var(--text-muted);">Âm thanh êm dịu giúp dễ ngủ</div>
               </div>
               <audio controls src="https://cdn.freesound.org/previews/237/237729_42106-lq.mp3" style="height:32px; max-width:160px;"></audio>
@@ -285,7 +280,7 @@
 
             <div class="sound-item">
               <div>
-                <strong>🌲 Tiếng Suối Rừng & Chim Hót</strong>
+                <strong>Tiếng Suối Rừng & Chim Hót</strong>
                 <div style="font-size:0.75rem; color:var(--text-muted);">Thanh lọc tâm trí và giảm áp lực</div>
               </div>
               <audio controls src="https://cdn.freesound.org/previews/517/517409_4780368-lq.mp3" style="height:32px; max-width:160px;"></audio>
@@ -293,7 +288,7 @@
 
             <div class="sound-item">
               <div>
-                <strong>🌊 Tiếng Sóng Biển Rì Rào</strong>
+                <strong>Tiếng Sóng Biển Rì Rào</strong>
                 <div style="font-size:0.75rem; color:var(--text-muted);">Giai điệu vỗ về từng hơi thở</div>
               </div>
               <audio controls src="https://cdn.freesound.org/previews/399/399828_7672288-lq.mp3" style="height:32px; max-width:160px;"></audio>
@@ -301,7 +296,7 @@
           </div>
 
           <div style="margin-top:24px; padding:16px; background:#F8FAFC; border-radius:var(--radius-md); border:1px solid #E2E8F0;">
-            <h4 style="font-family:var(--font-heading); font-size:0.95rem; margin-bottom:6px;">🌿 Kỹ Thuật Neo Cảm Xúc 5-4-3-2-1</h4>
+            <h4 style="font-family:var(--font-heading); font-size:0.95rem; margin-bottom:6px;">Kỹ Thuật Neo Cảm Xúc 5-4-3-2-1</h4>
             <p style="font-size:0.85rem; color:var(--text-muted);">
               Khi tâm trí bị cuốn đi quá xa, hãy kết nối lại với 5 giác quan: <strong>5</strong> vật nhìn thấy, <strong>4</strong> vật chạm được, <strong>3</strong> âm thanh nghe được, <strong>2</strong> mùi hương và <strong>1</strong> vị nếm được.
             </p>
@@ -316,19 +311,15 @@
   <!-- ==================== MOBILE BOTTOM NAVIGATION ==================== -->
   <nav class="mobile-bottom-nav">
     <button class="mobile-nav-btn active" data-tab="tab-chat">
-      <span class="nav-icon">💬</span>
       <span class="nav-label">Trò Chuyện</span>
     </button>
     <button class="mobile-nav-btn" data-tab="tab-edu">
-      <span class="nav-icon">📚</span>
       <span class="nav-label">Cảm Xúc</span>
     </button>
     <button class="mobile-nav-btn" data-tab="tab-quiz">
-      <span class="nav-icon">📝</span>
       <span class="nav-label">Đánh Giá</span>
     </button>
     <button class="mobile-nav-btn" data-tab="tab-studio">
-      <span class="nav-icon">🧘</span>
       <span class="nav-label">Tĩnh Tâm</span>
     </button>
   </nav>
@@ -336,16 +327,15 @@
   <!-- ==================== SLEEP & PRIVACY OVERLAY (1H TIMEOUT) ==================== -->
   <div id="sleep-overlay" class="sleep-overlay" style="display: none;">
     <div class="sleep-card">
-      <div class="sleep-icon">🌙</div>
       <h2 class="sleep-title">An Nhiên Đang Tạm Nghỉ</h2>
       <p class="sleep-desc">
         Vì bạn đã không thao tác trong hơn 1 giờ, hệ thống đã tự động khóa phiên để bảo vệ sự riêng tư và tối ưu hóa tài nguyên cho bạn.
       </p>
       <div class="sleep-tip">
-        🌿 <em>Hãy hít một hơi thật sâu và quay lại bất cứ khi nào bạn sẵn sàng nhé.</em>
+        <em>Hãy hít một hơi thật sâu và quay lại bất cứ khi nào bạn sẵn sàng nhé.</em>
       </div>
       <button class="btn-send" id="btn-wake-up" style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem; margin-top: 16px;">
-        ✨ Đánh Thức An Nhiên & Bắt Đầu Phiên Mới
+        Đánh Thức An Nhiên & Bắt Đầu Phiên Mới
       </button>
     </div>
   </div>

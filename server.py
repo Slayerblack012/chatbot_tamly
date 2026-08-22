@@ -154,7 +154,7 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
         except Exception as exc:
             err_str = str(exc).lower()
             if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
-                err_msg = b64_encode_text("☕ **An Nhiên xin lỗi bạn nhé...**\n\nHiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng lượng do số lượng cuộc trò chuyện trong phiên vượt quá giới hạn của hệ thống.\n\n🌿 Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua tab **🧘 Thư Giãn & Tĩnh Tâm** để thả lỏng một chút nhé. Mình sẽ sớm quay lại cùng bạn! 💛✨")
+                err_msg = b64_encode_text("**An Nhiên xin lỗi bạn nhé.**\n\nHiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng lượng do số lượng cuộc trò chuyện trong phiên vượt quá giới hạn của hệ thống.\n\nTrong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua mục Thư Giãn & Tĩnh Tâm để thả lỏng một chút nhé. Mình sẽ sớm quay lại cùng bạn.")
             else:
                 err_msg = b64_encode_text("\n\n*(An Nhiên đang gặp gián đoạn kết nối tạm thời. Bạn hãy thử gửi lại sau giây lát nhé.)*")
             yield f"data: {json.dumps({'d': err_msg, 'f': 1})}\n\n"

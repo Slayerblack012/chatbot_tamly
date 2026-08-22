@@ -142,13 +142,13 @@ class CounselorEngine:
         # Kiểm tra xem có phải lỗi do hết Quota / Rate limit không
         err_str = str(last_err).lower() if last_err else ""
         if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
-            yield """☕ **An Nhiên xin lỗi bạn nhé...**
+            yield """**An Nhiên xin lỗi bạn nhé.**
 
 Hiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng lượng do số lượng cuộc trò chuyện trong phiên vượt quá giới hạn token của hệ thống.
 
-🌿 Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua tab **🧘 Thư Giãn & Tĩnh Tâm** để thả lỏng cơ thể một chút nhé.
+Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua mục Thư Giãn & Tĩnh Tâm để thả lỏng cơ thể một chút nhé.
 
-Mình sẽ sớm hồi phục và quay lại đồng hành cùng bạn ngay sau vài phút nữa! 💛✨"""
+Mình sẽ sớm hồi phục và quay lại đồng hành cùng bạn ngay sau vài phút nữa."""
         else:
             yield "\n\n*(An Nhiên đang gặp gián đoạn kết nối tạm thời. Bạn hãy thử gửi lại sau giây lát nhé.)*"
 
