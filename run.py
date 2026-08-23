@@ -33,5 +33,5 @@ if __name__ == "__main__":
     # Mo trinh duyet trong luong rieng
     threading.Thread(target=open_browser, daemon=True).start()
 
-    # Chay Uvicorn server voi server_header=False
-    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=False, log_level="info", server_header=False)
+    # Chay Uvicorn server voi reload=True de tu dong cap nhat code/prompt
+    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=True, log_level="info", server_header=False)
