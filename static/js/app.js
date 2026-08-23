@@ -2,7 +2,7 @@
  * AN NHIÊN TÂM LÝ - CLIENT SCRIPT
  * Bảo mật: DOMPurify Fail-closed, UTF-8 Base64 Obfuscation, Role Alternation Auto-Recovery,
  * Can thiệp Khủng hoảng (Crisis Alert & PHQ-9 Item 9 trigger), GAD-7 & PHQ-9, Real Health Check,
- * Dark Mode Toggle, Stop Stream AbortController, Smart Scroll & Drawer Backdrop.
+ * Dark Mode Toggle, Stop Stream AbortController, Smart Scroll, Drawer Backdrop & Feature Popups.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -56,7 +56,64 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 1. B1 & C1: DARK MODE THEME CONTROLLER
+  // 1. UNIVERSAL POPUP MODAL SYSTEM
+  // =========================================================================
+  const appModal = document.getElementById("app-modal");
+  const modalIcon = document.getElementById("modal-icon");
+  const modalTitle = document.getElementById("modal-title");
+  const modalSubtitle = document.getElementById("modal-subtitle");
+  const modalBody = document.getElementById("modal-body");
+  const modalCloseBtn = document.getElementById("modal-close-btn");
+  const modalPrimaryBtn = document.getElementById("modal-primary-btn");
+
+  let currentModalAction = null;
+
+  function openModal({ icon, title, subtitle, bodyHtml, primaryBtnText, onPrimaryClick }) {
+    if (modalIcon) modalIcon.textContent = icon || "🌿";
+    if (modalTitle) modalTitle.textContent = title || "An Nhiên Tâm Lý";
+    if (modalSubtitle) modalSubtitle.textContent = subtitle || "";
+    if (modalBody) modalBody.innerHTML = bodyHtml || "";
+    if (modalPrimaryBtn) {
+      modalPrimaryBtn.textContent = primaryBtnText || "Đã Hiểu ✨";
+      currentModalAction = onPrimaryClick || null;
+    }
+    if (appModal) {
+      appModal.style.display = "flex";
+      document.body.style.overflow = "hidden";
+    }
+  }
+
+  function closeModal() {
+    if (appModal) {
+      appModal.style.display = "none";
+      document.body.style.overflow = "";
+    }
+  }
+
+  if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
+  if (modalPrimaryBtn) {
+    modalPrimaryBtn.addEventListener("click", () => {
+      if (typeof currentModalAction === "function") {
+        currentModalAction();
+      }
+      closeModal();
+    });
+  }
+
+  if (appModal) {
+    appModal.addEventListener("click", (e) => {
+      if (e.target === appModal) closeModal();
+    });
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && appModal && appModal.style.display === "flex") {
+      closeModal();
+    }
+  });
+
+  // =========================================================================
+  // 2. B1 & C1: DARK MODE THEME CONTROLLER
   // =========================================================================
   const THEME_STORAGE_KEY = "an_nhien_theme_mode";
   const btnThemeToggle = document.getElementById("btn-theme-toggle");
@@ -87,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 2. CRISIS KEYWORD DETECTION
+  // 3. CRISIS KEYWORD DETECTION
   // =========================================================================
   const CRISIS_KEYWORDS = [
     "tự tử", "tu tu", "muốn chết", "muon chet", "kết thúc cuộc sống", "ket thuc cuoc song",
@@ -111,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 3. APP STATE & PERSISTENCE
+  // 4. APP STATE & PERSISTENCE
   // =========================================================================
   const STORAGE_KEY = "an_nhien_chat_session_v1";
 
@@ -255,7 +312,162 @@ document.addEventListener("DOMContentLoaded", () => {
   if (drawerBackdrop) drawerBackdrop.addEventListener("click", closeSidebar);
 
   // =========================================================================
-  // 4. CHAT FLOW & SMART STREAMING (B2: NÚT DỪNG, B4: SMART SCROLL)
+  // 5. FEATURE GUIDE POPUP HANDLERS
+  // =========================================================================
+  const btnGuideChat = document.getElementById("btn-guide-chat");
+  if (btnGuideChat) {
+    btnGuideChat.addEventListener("click", () => {
+      openModal({
+        icon: "💬",
+        title: "Hướng Dẫn Trò Chuyện Cùng An Nhiên",
+        subtitle: "Không gian lắng nghe thấu cảm & tư vấn tâm lý cá nhân hóa",
+        bodyHtml: `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="background:var(--primary-light); padding:12px 14px; border-radius:var(--radius-md); border-left:3px solid var(--primary);">
+              <strong>🌿 3 Phong Cách Trò Chuyện Linh Hoạt:</strong>
+              <ul style="margin-left:18px; margin-top:6px; font-size:0.88rem;">
+                <li><strong>🕊️ Lắng nghe & Đồng cảm:</strong> Phù hợp khi bạn cần sự an ủi, thấu hiểu và xoa dịu cảm xúc tức thì.</li>
+                <li><strong>🧩 Phân tích & Tháo gỡ nút thắt (CBT):</strong> Phân tích logic bẫy suy nghĩ và đưa ra giải pháp dứt khoát.</li>
+                <li><strong>🧘 Tĩnh tâm & Thả lỏng:</strong> Hướng dẫn quay về hơi thở và tìm lại sự bình an trong tâm trí.</li>
+              </ul>
+            </div>
+            <div>
+              <strong>🎯 Cá nhân hóa theo tâm trạng:</strong>
+              <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+                Bạn có thể chọn biểu tượng cảm xúc và kéo thanh <em>Mức độ áp lực (1 - 10)</em> bên thanh bên trái để An Nhiên điều chỉnh giọng điệu phù hợp nhất với bạn.
+              </p>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid var(--border-color); padding:12px 14px; border-radius:var(--radius-md); font-size:0.85rem;">
+              🔒 <strong>Bảo mật tuyệt đối:</strong> Cuộc trò chuyện được lưu cục bộ trên máy của bạn và không chia sẻ cho bên thứ ba.
+            </div>
+          </div>
+        `,
+        primaryBtnText: "Bắt Đầu Trò Chuyện ✨"
+      });
+    });
+  }
+
+  const btnGuideEdu = document.getElementById("btn-guide-edu");
+  if (btnGuideEdu) {
+    btnGuideEdu.addEventListener("click", () => {
+      openModal({
+        icon: "📚",
+        title: "Liệu Pháp Nhận Thức Hành Vi (CBT)",
+        subtitle: "Công cụ tâm lý học thực chứng giúp bạn làm chủ cảm xúc",
+        bodyHtml: `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <p>
+              <strong>Liệu pháp CBT (Cognitive Behavioral Therapy)</strong> khẳng định rằng: <em>Không phải hoàn cảnh làm ta tổn thương, mà chính là cách ta diễn giải hoàn cảnh đó.</em>
+            </p>
+            <div style="background:#F0FDFA; padding:14px; border-radius:var(--radius-md); border:1px solid #CCFBF1;">
+              <h4 style="color:#0F766E; margin-bottom:6px;">Tam Giác Nhận Thức CBT:</h4>
+              <p style="font-size:0.88rem; line-height:1.6;">
+                <strong>Suy Nghĩ</strong> (Bẫy nhận thức) ➔ <strong>Cảm Xúc</strong> (Lo âu, buồn bã) ➔ <strong>Hành Vi</strong> (Trì hoãn, thu mình). Khi thay đổi suy nghĩ, cảm xúc của bạn sẽ tự nhiên bình an trở lại.
+              </p>
+            </div>
+            <p style="font-size:0.88rem; color:var(--text-muted);">
+              👉 Hãy nhấp vào từng thẻ <strong>8 Bẫy Suy Nghĩ Thường Gặp</strong> bên dưới để nhận diện và học cách hóa giải ngay lập tức!
+            </p>
+          </div>
+        `,
+        primaryBtnText: "Đã Hiểu CBT ✨"
+      });
+    });
+  }
+
+  const btnGuideQuiz = document.getElementById("btn-guide-quiz");
+  if (btnGuideQuiz) {
+    btnGuideQuiz.addEventListener("click", () => {
+      openModal({
+        icon: "📝",
+        title: "Ý Nghĩa Thang Đo Tự Đánh Giá (GAD-7 & PHQ-9)",
+        subtitle: "Bộ công cụ trắc nghiệm chuẩn hóa y khoa quốc tế",
+        bodyHtml: `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="background:#F8FAFC; padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+              <strong>📊 Thang đo GAD-7 (Generalized Anxiety Disorder 7):</strong>
+              <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+                Đo lường mức độ lo âu, bồn chồn và căng thẳng trong 2 tuần qua qua 7 câu hỏi tiêu chuẩn.
+              </p>
+            </div>
+            <div style="background:#F8FAFC; padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+              <strong>🌧️ Thang đo PHQ-9 (Patient Health Questionnaire 9):</strong>
+              <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+                Sàng lọc mức độ trầm cảm và suy giảm năng lượng với 9 câu hỏi lâm sàng.
+              </p>
+            </div>
+            <div style="background:#FEF2F2; border:1px solid #FCA5A5; padding:12px 14px; border-radius:var(--radius-md); color:#991B1B; font-size:0.85rem;">
+              ⚠️ <em>Lưu ý quan trọng:</em> Bảng tự đánh giá mang tính chất tham khảo và phản tư cảm xúc, không thay thế chẩn đoán y khoa chính thức của bác sĩ chuyên khoa tâm thần.
+            </div>
+          </div>
+        `,
+        primaryBtnText: "Tiến Hành Làm Bài 🚀"
+      });
+    });
+  }
+
+  const btnGuideStudio = document.getElementById("btn-guide-studio");
+  if (btnGuideStudio) {
+    btnGuideStudio.addEventListener("click", () => {
+      openModal({
+        icon: "🧘",
+        title: "Khoa Học Về Nhịp Thở & Tĩnh Tâm",
+        subtitle: "Kích hoạt hệ thần kinh phó giao cảm để giảm stress tức thì",
+        bodyHtml: `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <strong>🌬️ Phương Pháp Thở 4-7-8 (Tiến sĩ Andrew Weil):</strong>
+              <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+                <strong>Hít vào 4 giây</strong> qua mũi ➔ <strong>Giữ hơi thở 7 giây</strong> ➔ <strong>Thở ra êm 8 giây</strong> qua miệng. Kỹ thuật này giúp hạ nhịp tim, giảm lượng cortisol và đưa não bộ vào trạng thái thư thái sâu.
+              </p>
+            </div>
+            <div>
+              <strong>📦 Kỹ Thuật Thở Vuông (Box Breathing - Navy SEALs):</strong>
+              <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+                <strong>Hít 4s - Giữ 4s - Thở 4s - Nghỉ 4s</strong>. Giúp tái tạo sự tập trung sắc bén và làm chủ tâm trí khi chịu áp lực cao.
+              </p>
+            </div>
+          </div>
+        `,
+        primaryBtnText: "Tập Thở Ngay 🍃"
+      });
+    });
+  }
+
+  const btnGroundingCard = document.getElementById("btn-grounding-card");
+  if (btnGroundingCard) {
+    btnGroundingCard.addEventListener("click", () => {
+      openModal({
+        icon: "🌿",
+        title: "Kỹ Thuật Neo Cảm Xúc 5-4-3-2-1",
+        subtitle: "Cắt đứt cơn hoảng loạn và suy nghĩ miên man bằng 5 giác quan",
+        bodyHtml: `
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem;">
+            <p>Khi cảm xúc dâng trào hoặc tâm trí bị cuốn vào lo âu, hãy nhìn xung quanh và lần lượt thực hiện:</p>
+            <div style="background:#F0FDFA; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid var(--primary);">
+              <strong>👀 5 ĐIỀU BẠN NHÌN THẤY:</strong> Một chiếc lá, vệt nắng, cây bút, bức tường...
+            </div>
+            <div style="background:#F8FAFC; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #38BDF8;">
+              <strong>🖐️ 4 ĐIỀU BẠN CẢM NHẬN ĐƯỢC:</strong> Độ mịn của áo, sự vững chắc của mặt sàn dưới chân...
+            </div>
+            <div style="background:#F0FDFA; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #10B981;">
+              <strong>👂 3 ÂM THANH BẠN NGHE THẤY:</strong> Tiếng quạt, tiếng xe ngoài phố, tiếng thở của chính bạn...
+            </div>
+            <div style="background:#F8FAFC; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #F59E0B;">
+              <strong>👃 2 MÙI HƯƠNG BẠN NGỬI THẤY:</strong> Mùi cà phê, mùi không khí trong phòng...
+            </div>
+            <div style="background:#F0FDFA; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #6366F1;">
+              <strong>👅 1 VỊ BẠN NẾM ĐƯỢC:</strong> Vị nước mát trong miệng, hay một ngụm trà ấm...
+            </div>
+          </div>
+        `,
+        primaryBtnText: "Đã Bình Tâm ✨"
+      });
+    });
+  }
+
+  // =========================================================================
+  // 6. CHAT FLOW & SMART STREAMING (B2: NÚT DỪNG, B4: SMART SCROLL)
   // =========================================================================
   function renderMessages() {
     chatMessagesEl.innerHTML = "";
@@ -286,7 +498,6 @@ document.addEventListener("DOMContentLoaded", () => {
     chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
   }
 
-  // B4: Smart Scroll - chỉ auto-scroll nếu người dùng đang ở gần đáy (~140px)
   function smartScrollToBottom() {
     const threshold = 140;
     const distanceToBottom = chatMessagesEl.scrollHeight - chatMessagesEl.scrollTop - chatMessagesEl.clientHeight;
@@ -352,7 +563,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let fullText = "";
 
     try {
-      // Giới hạn 20 tin nhắn gần nhất để payload không bị phình to
       const payloadMessages = state.messages.slice(-20);
 
       const rawPayload = JSON.stringify({
@@ -554,7 +764,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderMessages();
 
   // =========================================================================
-  // 5. KNOWLEDGE & PSYCHOEDUCATION (B5: SKELETON REPLACEMENT)
+  // 7. KNOWLEDGE & PSYCHOEDUCATION (POPUP CHI TIẾT KHI CLICK THẺ)
   // =========================================================================
   async function loadKnowledge() {
     try {
@@ -563,11 +773,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = JSON.parse(decodeB64(dataJson.d));
       state.allQuizzes = data.quizzes;
 
-      // Render Distortion Cards with Escaped Values
+      // Render Distortion Cards with Clickable Popup Details
       const grid = document.getElementById("distortion-grid");
       if (grid && data.distortions) {
-        grid.innerHTML = data.distortions.map(d => `
-          <div class="distortion-card">
+        grid.innerHTML = data.distortions.map((d, idx) => `
+          <div class="distortion-card" data-dist-idx="${idx}">
             <div>
               <div class="dist-badge">
                 <span class="dist-icon-label">${escapeHTML(d.icon)}</span> 
@@ -581,16 +791,54 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
         `).join("");
+
+        // Gắn sự kiện click mở Popup chi tiết cho từng bẫy suy nghĩ
+        grid.querySelectorAll(".distortion-card").forEach(card => {
+          card.addEventListener("click", () => {
+            const idx = parseInt(card.getAttribute("data-dist-idx"));
+            const dist = data.distortions[idx];
+            if (!dist) return;
+
+            openModal({
+              icon: dist.icon,
+              title: dist.name,
+              subtitle: "Nhận diện & Hóa giải bẫy nhận thức CBT",
+              bodyHtml: `
+                <div style="display:flex; flex-direction:column; gap:16px;">
+                  <div style="font-size:0.95rem; line-height:1.6;">
+                    ${escapeHTML(dist.description)}
+                  </div>
+                  <div style="background:#FFFBEB; border:1px solid #FDE68A; padding:14px; border-radius:var(--radius-md);">
+                    <strong style="color:#92400E;">🔍 Biểu hiện thường gặp trong cuộc sống:</strong>
+                    <p style="font-size:0.9rem; color:#78350F; margin-top:4px;">"${escapeHTML(dist.example)}"</p>
+                  </div>
+                  <div style="background:#F0FDFA; border:1px solid #99F6E4; padding:14px; border-radius:var(--radius-md);">
+                    <strong style="color:#0F766E;">🌿 Cách tái cấu trúc nhận thức (Cognitive Reframing):</strong>
+                    <p style="font-size:0.9rem; color:#115E59; margin-top:4px;">${escapeHTML(dist.reframing)}</p>
+                  </div>
+                  <div style="font-size:0.85rem; color:var(--text-muted);">
+                    💡 <em>Bạn có đang gặp phải bẫy suy nghĩ này không? Hãy nhấn nút bên dưới để cùng An Nhiên tháo gỡ nhé!</em>
+                  </div>
+                </div>
+              `,
+              primaryBtnText: "💬 Thực Hành Hóa Giải Cùng An Nhiên",
+              onPrimaryClick: () => {
+                activateTab("tab-chat");
+                sendMessage(`Mình vừa tìm hiểu về bẫy suy nghĩ "${dist.name}". An Nhiên có thể giúp mình phân tích và thực hành hóa giải bẫy suy nghĩ này trong các tình huống thực tế được không?`);
+              }
+            });
+          });
+        });
       }
 
-      // Render Articles
+      // Render Articles with Full Reading Popup
       const artContainer = document.getElementById("articles-container");
       if (artContainer && data.articles) {
-        artContainer.innerHTML = data.articles.map(a => `
-          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow-sm);">
+        artContainer.innerHTML = data.articles.map((a, idx) => `
+          <div class="article-card" data-art-idx="${idx}" style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow-sm); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
               <span style="background:var(--primary-light); color:var(--primary); font-size:0.8rem; font-weight:700; padding:4px 12px; border-radius:var(--radius-full);">${escapeHTML(a.category)}</span>
-              <span style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(a.readTime)}</span>
+              <span style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(a.readTime)} • 🔍 Nhấp để đọc</span>
             </div>
             <h3 style="font-family:var(--font-heading); font-size:1.25rem; color:var(--indigo-dark); margin-bottom:12px;">${escapeHTML(a.title)}</h3>
             <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:14px;">${escapeHTML(a.summary)}</p>
@@ -599,6 +847,35 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
         `).join("");
+
+        // Hover effect for article cards
+        artContainer.querySelectorAll(".article-card").forEach(card => {
+          card.addEventListener("mouseenter", () => card.style.boxShadow = "var(--shadow-md)");
+          card.addEventListener("mouseleave", () => card.style.boxShadow = "var(--shadow-sm)");
+          card.addEventListener("click", () => {
+            const idx = parseInt(card.getAttribute("data-art-idx"));
+            const art = data.articles[idx];
+            if (!art) return;
+
+            openModal({
+              icon: "📖",
+              title: art.title,
+              subtitle: `${art.category} • Thời gian đọc: ${art.readTime}`,
+              bodyHtml: `
+                <div style="display:flex; flex-direction:column; gap:16px;">
+                  <div style="font-size:0.95rem; line-height:1.8;">
+                    ${renderSafeMarkdown(art.content)}
+                  </div>
+                </div>
+              `,
+              primaryBtnText: "💬 Thảo Luận Bài Viết Này",
+              onPrimaryClick: () => {
+                activateTab("tab-chat");
+                sendMessage(`Mình vừa đọc bài viết "${art.title}" trong mục Góc Nhìn Tâm Lý. An Nhiên có thể đúc kết cho mình những hành động cụ thể để áp dụng bài học này vào cuộc sống không?`);
+              }
+            });
+          });
+        });
       }
 
       // Setup initial Quiz Data
@@ -610,7 +887,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadKnowledge();
 
   // =========================================================================
-  // 6. SELF-ASSESSMENT QUIZ (A2: NO DOUBLE ESCAPE, C4: PHQ-9 CÂU 9 >= 1)
+  // 8. SELF-ASSESSMENT QUIZ (A2: NO DOUBLE ESCAPE, C4: PHQ-9 CÂU 9 >= 1)
   // =========================================================================
   const quizIntroView = document.getElementById("quiz-intro-view");
   const quizIntroTitle = document.getElementById("quiz-intro-title");
@@ -751,7 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 7. RELAXATION BREATHING
+  // 9. RELAXATION BREATHING
   // =========================================================================
   const circleBreathe = document.getElementById("circle-breathe");
   const breatheActionText = document.getElementById("breathe-action-text");
@@ -848,7 +1125,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 8. AUTO-IDLE & PRIVACY SLEEP MODE (1 HOUR TIMEOUT)
+  // 10. AUTO-IDLE & PRIVACY SLEEP MODE (1 HOUR TIMEOUT)
   // =========================================================================
   const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
   let lastActiveTimestamp = Date.now();

@@ -159,6 +159,10 @@
               <h3 id="chat-greeting-title">Chào bạn 🌿</h3>
               <p>Không gian an toàn, chia sẻ chân thành và bảo mật</p>
             </div>
+            <!-- Guide Button on Chat -->
+            <button class="btn-feature-guide" id="btn-guide-chat" title="Xem hướng dẫn sử dụng">
+              💡 Hướng Dẫn
+            </button>
           </div>
 
           <!-- Message Flow Area -->
@@ -191,12 +195,20 @@
     <!-- ==================== TAB 2: PSYCHOEDUCATION ==================== -->
     <section class="tab-pane" id="tab-edu">
       <div class="edu-header">
-        <h2>📚 Hiểu Về Cảm Xúc & Tâm Lý</h2>
-        <p>Nhận diện các bẫy suy nghĩ để thấu hiểu chính mình và sống nhẹ nhàng hơn mỗi ngày.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
+          <h2>📚 Hiểu Về Cảm Xúc & Tâm Lý</h2>
+          <button class="btn-feature-guide" id="btn-guide-edu" title="Tìm hiểu về Liệu pháp CBT">
+            💡 Tìm Hiểu Liệu Pháp CBT
+          </button>
+        </div>
+        <p>Nhận diện các bẫy suy nghĩ nhận thức để thấu hiểu chính mình và làm chủ cảm xúc mỗi ngày.</p>
       </div>
 
       <!-- 8 CBT Cognitive Distortions Section -->
-      <h3 style="font-family:var(--font-heading); margin-bottom:16px; font-size:1.3rem;">🧠 8 Bẫy Suy Nghĩ Thường Gặp (CBT Distortions)</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-family:var(--font-heading); font-size:1.3rem;">🧠 8 Bẫy Suy Nghĩ Thường Gặp (CBT Distortions)</h3>
+        <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">✨ Nhấn vào thẻ để xem phân tích chi tiết</span>
+      </div>
       <div class="distortion-grid" id="distortion-grid">
         <!-- B5: Skeleton Loading State -->
         <div class="distortion-card skeleton-card">
@@ -250,6 +262,11 @@
             <p style="color:var(--text-muted); font-size:0.92rem; margin-top:8px;" id="quiz-intro-subtitle">
               Bảng tự phản tư chuẩn hóa giúp bạn nhìn nhận rõ mức độ áp lực bạn đang trải qua trong 2 tuần gần nhất.
             </p>
+            <div style="margin-top: 14px;">
+              <button class="btn-feature-guide" id="btn-guide-quiz" style="display:inline-flex;">
+                💡 Tìm Hiểu Về Ý Nghĩa Thang Đo
+              </button>
+            </div>
           </div>
           <button class="btn-send" id="btn-start-quiz" style="width:100%; justify-content:center; padding:14px; font-size:1.05rem;">
             Bắt Đầu Tự Đánh Giá 🚀
@@ -307,7 +324,10 @@
         
         <!-- Breathing Exercise Card -->
         <div class="studio-card">
-          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:8px;">🌬️ Thở Chậm & Tĩnh Tâm</h3>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="font-family:var(--font-heading); font-size:1.25rem;">🌬️ Thở Chậm & Tĩnh Tâm</h3>
+            <button class="btn-feature-guide" id="btn-guide-studio">💡 Lợi Ích Bài Thở</button>
+          </div>
           <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">
             Thả lỏng đôi vai, nhịp thở sâu và chậm sẽ giúp cơ thể bạn hạ nhịp tim và tìm lại sự bình yên ngay lúc này.
           </p>
@@ -361,8 +381,11 @@
             </div>
           </div>
 
-          <div style="margin-top:24px; padding:16px; background:#F8FAFC; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-            <h4 style="font-family:var(--font-heading); font-size:0.95rem; margin-bottom:6px;">🌿 Kỹ Thuật Neo Cảm Xúc 5-4-3-2-1</h4>
+          <div style="margin-top:24px; padding:16px; background:#F8FAFC; border-radius:var(--radius-md); border:1px solid var(--border-color); cursor:pointer;" id="btn-grounding-card" title="Nhấn để xem bài tập 5-4-3-2-1 chi tiết">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <h4 style="font-family:var(--font-heading); font-size:0.95rem;">🌿 Kỹ Thuật Neo Cảm Xúc 5-4-3-2-1</h4>
+              <span style="font-size:0.75rem; color:var(--primary); font-weight:700;">🔍 Xem hướng dẫn</span>
+            </div>
             <p style="font-size:0.85rem; color:var(--text-muted);">
               Khi tâm trí bị cuốn đi quá xa, hãy kết nối lại với 5 giác quan: <strong>5</strong> vật nhìn thấy, <strong>4</strong> vật chạm được, <strong>3</strong> âm thanh nghe được, <strong>2</strong> mùi hương và <strong>1</strong> vị nếm được.
             </p>
@@ -393,6 +416,30 @@
       <span class="nav-label">Tĩnh Tâm</span>
     </button>
   </nav>
+
+  <!-- ==================== UNIVERSAL POPUP MODAL ==================== -->
+  <div id="app-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-card" id="modal-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-icon" id="modal-icon">🌿</div>
+          <div>
+            <h3 class="modal-title" id="modal-title">Tiêu Đề</h3>
+            <div class="modal-subtitle" id="modal-subtitle">Phụ đề</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Đóng cửa sổ">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Dynamic content injected by JS -->
+      </div>
+      <div class="modal-footer" id="modal-footer">
+        <button class="btn-send" id="modal-primary-btn" style="padding: 10px 22px; font-size: 0.92rem;">
+          Đã Hiểu ✨
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ==================== SLEEP & PRIVACY OVERLAY (1H TIMEOUT) ==================== -->
   <div id="sleep-overlay" class="sleep-overlay" style="display: none;">
