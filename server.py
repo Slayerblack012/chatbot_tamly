@@ -61,13 +61,13 @@ async def security_and_privacy_headers(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-    # Header Content-Security-Policy (CSP)
+    # Header Content-Security-Policy (CSP) - Đã siết chặt theo chuẩn Self-hosted
     csp_directives = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+        "script-src 'self'",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
-        "media-src 'self' https://cdn.freesound.org https://actions.google.com https://cdn.pixabay.com data: blob:",
+        "media-src 'self' https://cdn.pixabay.com data: blob:",
         "img-src 'self' data: https:",
         "connect-src 'self'",
         "frame-ancestors 'self'",

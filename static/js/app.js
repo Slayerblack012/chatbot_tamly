@@ -154,12 +154,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (themeColorMeta) {
       themeColorMeta.setAttribute("content", theme === "dark" ? "#0F172A" : "#F8FAFC");
     }
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch (e) {}
+  let savedTheme = "light";
+  try {
+    savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
+  } catch (e) {
+    savedTheme = "light";
   }
-
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
   applyTheme(savedTheme);
 
   if (btnThemeToggle) {
@@ -557,12 +557,12 @@ document.addEventListener("DOMContentLoaded", () => {
   async function sendMessage(text) {
     if (!text || !text.trim()) return;
 
+    // N3: Nếu đang stream mà có tin nhắn mới hoặc bấm chip -> ngắt stream cũ và gửi ngay tin mới
     if (state.isStreaming) {
       if (currentAbortController) {
         currentAbortController.abort();
       }
       setStreamingState(false);
-      return;
     }
 
     const trimmedText = text.trim();
@@ -673,11 +673,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (state.isStreaming) {
+    const textVal = chatInput.value.trim();
+    if (state.isStreaming && !textVal) {
       if (currentAbortController) currentAbortController.abort();
       setStreamingState(false);
-    } else {
-      sendMessage(chatInput.value);
+    } else if (textVal) {
+      sendMessage(textVal);
     }
   });
 
