@@ -4,10 +4,10 @@ De chay giao dien Web, vui long chay lenh:
     python run.py
 """
 
-import sys
-import os
 import io
-from core.bot_engine import CounselorEngine, DEFAULT_MODEL
+import sys
+
+from core.bot_engine import CounselorEngine
 from core.prompts import get_time_greeting
 
 # Cau hinh UTF-8 cho Windows Terminal
@@ -21,7 +21,7 @@ WELCOME_BANNER = f"""
 {'=' * 65}
    AN NHIEN TAM LY - Nguoi Ban Dong Hanh Cam Xuc
    {get_time_greeting()}
-   
+
    [Goi y]: Chay 'python run.py' de mo Giao Dien Web.
    - Go 'thoat' hoac 'exit' de ket thuc.
    - Go 'mode empathy', 'mode cbt', hoac 'mode mindfulness' de doi phong cach.

@@ -1,6 +1,6 @@
 """
 Co so du lieu kien thuc giao duc tam ly (Psychoeducation), bay tu duy CBT va bo cau hoi danh gia.
-Toan bo du lieu duoc chuan hoa, khong su dung emoji.
+Toan bo du lieu duoc chuan hoa, khong su dung emoji trong noi dung tham van.
 """
 
 COGNITIVE_DISTORTIONS = [
@@ -129,8 +129,9 @@ Hạch hạnh nhân (Amygdala) - trung tâm cảnh báo nguy hiểm trong não -
 
 ASSESSMENT_QUIZZES = {
     "gad7": {
-        "title": "Bảng Đánh Giá Mức Độ Lo Âu & Áp Lực",
-        "subtitle": "Dựa trên thang đo chuẩn hóa quốc tế GAD-7 (Generalized Anxiety Disorder)",
+        "id": "gad7",
+        "title": "Bảng Đánh Giá Mức Độ Lo Âu (GAD-7)",
+        "subtitle": "Thang đo chuẩn hóa quốc tế Generalized Anxiety Disorder 7-item",
         "description": "Trong 2 tuần qua, bạn có thường xuyên bị làm phiền bởi những vấn đề sau đây không?",
         "options": [
             {"label": "Hoàn toàn không", "score": 0},
@@ -149,28 +150,83 @@ ASSESSMENT_QUIZZES = {
         ],
         "brackets": [
             {
-                "range": (0, 4),
+                "range": [0, 4],
                 "level": "Mức độ Lo âu Tối thiểu (Bình thường)",
                 "color": "#10B981",
                 "advice": "Tâm lý của bạn đang ở trạng thái ổn định và cân bằng. Hãy tiếp tục duy trì lối sống lành mạnh, ăn ngủ điều độ và dành thời gian cho sở thích cá nhân."
             },
             {
-                "range": (5, 9),
+                "range": [5, 9],
                 "level": "Mức độ Lo âu Nhẹ",
                 "color": "#F59E0B",
                 "advice": "Bạn đang có một chút áp lực và bồn chồn. Hãy thử áp dụng bài tập thở chậm 4-7-8, giảm bớt caffeine và chia sẻ cùng An Nhiên hoặc bạn bè."
             },
             {
-                "range": (10, 14),
+                "range": [10, 14],
                 "level": "Mức độ Lo âu Trung bình",
                 "color": "#F97316",
                 "advice": "Mức độ căng thẳng đang ảnh hưởng rõ rệt đến chất lượng cuộc sống. Hãy dành nhiều thời gian hơn để nghỉ ngơi, thực hành chánh niệm và cùng An Nhiên tháo gỡ từng vấn đề."
             },
             {
-                "range": (15, 21),
+                "range": [15, 21],
                 "level": "Mức độ Lo âu Đáng Chú Ý (Cao)",
                 "color": "#EF4444",
                 "advice": "Bạn đang phải chịu đựng áp lực rất lớn. Ngoài việc thực hành các bài tập thư giãn với An Nhiên, bạn nên cân nhắc chia sẻ với người thân đáng tin cậy hoặc tham vấn chuyên gia tâm lý học đường/y tế."
+            }
+        ]
+    },
+    "phq9": {
+        "id": "phq9",
+        "title": "Bảng Đánh Giá Nguy Cơ Trầm Cảm (PHQ-9)",
+        "subtitle": "Thang đo chuẩn hóa quốc tế Patient Health Questionnaire 9-item",
+        "description": "Trong 2 tuần qua, bạn bị làm phiền bởi bất kỳ vấn đề nào sau đây với tần suất như thế nào?",
+        "options": [
+            {"label": "Hoàn toàn không", "score": 0},
+            {"label": "Vài ngày", "score": 1},
+            {"label": "Hơn một nửa số ngày", "score": 2},
+            {"label": "Gần như mỗi ngày", "score": 3},
+        ],
+        "questions": [
+            "Ít hứng thú hoặc không còn cảm thấy niềm vui trong các hoạt động hàng ngày.",
+            "Cảm thấy buồn bã, chán nản, ủ rũ hoặc tuyệt vọng.",
+            "Khó đi vào giấc ngủ, trằn trọc mất ngủ hoặc ngủ quá nhiều.",
+            "Cảm thấy mệt mỏi, kiệt sức hoặc thiếu năng lượng hoạt động.",
+            "Ăn không ngon miệng hoặc ăn uống quá mức không kiểm soát.",
+            "Cảm thấy tồi tệ về bản thân — tự cho mình là kẻ thất bại hoặc làm gia đình thất vọng.",
+            "Gặp khó khăn trong việc tập trung khi học tập, làm việc, đọc sách hoặc xem tivi.",
+            "Cử động hoặc nói năng chậm chạp; hoặc ngược lại bồn chồn, di chuyển không yên.",
+            "Có suy nghĩ rằng thà mình chết đi hoặc có ý định tự làm tổn thương bản thân.",
+        ],
+        "brackets": [
+            {
+                "range": [0, 4],
+                "level": "Không có / Tối thiểu (Bình thường)",
+                "color": "#10B981",
+                "advice": "Bạn không có biểu hiện trầm cảm đáng kể. Hãy tiếp tục duy trì kết nối xã hội tích cực và chăm sóc sức khỏe tinh thần mỗi ngày."
+            },
+            {
+                "range": [5, 9],
+                "level": "Mức độ Trầm cảm Nhẹ",
+                "color": "#F59E0B",
+                "advice": "Bạn đang trải qua giai đoạn trầm lắng nhẹ. Hãy vận động nhẹ nhàng ngoài trời, viết nhật ký giải tỏa cảm xúc và trò chuyện cùng An Nhiên."
+            },
+            {
+                "range": [10, 14],
+                "level": "Mức độ Trầm cảm Vừa",
+                "color": "#F97316",
+                "advice": "Tâm trạng chùng xuống đang tác động đến sinh hoạt và học tập. Hãy thiết lập thói quen ngủ điều độ, chia nhỏ công việc và tìm sự hỗ trợ từ người thân hoặc chuyên viên tâm lý."
+            },
+            {
+                "range": [15, 19],
+                "level": "Mức độ Trầm cảm Nặng Vừa",
+                "color": "#EA580C",
+                "advice": "Nỗi buồn và sự kiệt sức đang ở mức cao. Bạn rất cần sự đồng hành từ người thân, tham vấn chuyên gia tâm lý hoặc bác sĩ chuyên khoa tâm thần."
+            },
+            {
+                "range": [20, 27],
+                "level": "Mức độ Trầm cảm Nặng (Nghiêm trọng)",
+                "color": "#EF4444",
+                "advice": "Tình trạng đang ở mức báo động. Xin hãy liên hệ ngay với người thân đáng tin cậy hoặc gọi đường dây nóng hỗ trợ tâm lý 111 / 115 / Đường dây Ngày Mai 096 306 1414 để được hỗ trợ kịp thời."
             }
         ]
     }

@@ -1,24 +1,32 @@
 """
 Server Backend cho An Nhiên Edu-Psychology Platform (Encrypted Payload & Zero Tech Disclosure).
-Hỗ trợ Base64 payload encoding, Rate Limiting, Security Headers & Ẩn hoàn toàn thông tin công nghệ/API.
+Hỗ trợ Base64 payload obfuscation, Non-blocking Async SSE, Rate Limiting, Security Headers & CSP.
 """
 
+import base64
+import json
+import logging
 import os
 import time
-import json
-import base64
-import asyncio
 from collections import defaultdict
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List
+
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException, Response
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from core.bot_engine import CounselorEngine
-from core.knowledge_base import COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES, ASSESSMENT_QUIZZES
+from core.bot_engine import CounselorEngine, sanitize_messages_for_gemini
+from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES
+
+# Thiết lập logging chuẩn
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("an_nhien.server")
 
 load_dotenv()
 
@@ -29,16 +37,22 @@ app = FastAPI(
     openapi_url=None
 )
 
-# 1. CORS
+# 1. CORS Configuration (An toàn, cùng nguồn gốc)
+allowed_origins_env = os.getenv("CORS_ORIGINS", "")
+allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+if not allowed_origins:
+    # Mặc định an toàn cho môi trường cục bộ
+    allowed_origins = ["http://localhost:8000", "http://127.0.0.1:8000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# 2. Middleware xóa sạch thông tin Server & thêm Security Headers
+# 2. Middleware Security Headers & Content-Security-Policy
 @app.middleware("http")
 async def security_and_privacy_headers(request: Request, call_next):
     response: Response = await call_next(request)
@@ -46,36 +60,85 @@ async def security_and_privacy_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    # Xóa header tiết lộ công nghệ máy chủ
-    if "Server" in response.headers:
-        del response.headers["Server"]
+
+    # Header Content-Security-Policy (CSP)
+    csp_directives = [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
+        "media-src 'self' https://cdn.freesound.org https://actions.google.com https://cdn.pixabay.com data: blob:",
+        "img-src 'self' data: https:",
+        "connect-src 'self'",
+        "frame-ancestors 'self'",
+        "base-uri 'self'",
+        "form-action 'self'"
+    ]
+    response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
     return response
 
-# 3. Rate Limiting in-memory chống DoS / Spam
+
+# 3. Rate Limiting in-memory chống DoS / Spam (R1: Chỉ tin Header Proxy khi được cấu hình)
 RATE_LIMIT_WINDOW = 60
 MAX_REQUESTS_PER_WINDOW = 45
 request_history: Dict[str, List[float]] = defaultdict(list)
+TRUST_PROXY_HEADERS = os.getenv("TRUST_PROXY_HEADERS", "false").lower() in ("true", "1", "yes")
 
-def check_rate_limit(client_ip: str):
+
+def get_client_ip(request: Request) -> str:
+    """Lấy địa chỉ IP của client. Chỉ đọc header proxy nếu TRUST_PROXY_HEADERS=true để chống giả mạo."""
+    if TRUST_PROXY_HEADERS:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            client_ip = forwarded.split(",")[0].strip()
+            if client_ip:
+                return client_ip
+        real_ip = request.headers.get("CF-Connecting-IP") or request.headers.get("X-Real-IP")
+        if real_ip:
+            return real_ip.strip()
+    return request.client.host if request.client else "unknown"
+
+
+def check_rate_limit(client_ip: str) -> None:
     now = time.time()
-    request_history[client_ip] = [t for t in request_history[client_ip] if now - t < RATE_LIMIT_WINDOW]
-    if len(request_history[client_ip]) >= MAX_REQUESTS_PER_WINDOW:
+    valid_timestamps = [t for t in request_history[client_ip] if now - t < RATE_LIMIT_WINDOW]
+    if len(valid_timestamps) >= MAX_REQUESTS_PER_WINDOW:
+        request_history[client_ip] = valid_timestamps
+        logger.warning(f"Rate limit triggered for IP: {client_ip}")
         raise HTTPException(
             status_code=429,
             detail="Yêu cầu quá nhanh. Vui lòng thử lại sau giây lát."
         )
-    request_history[client_ip].append(now)
+    valid_timestamps.append(now)
+    request_history[client_ip] = valid_timestamps
 
-# Khởi tạo Engine (API Key quản lý bí mật 100% trong .env máy chủ)
-engine = CounselorEngine()
+    # Tự động dọn dẹp bộ nhớ nếu bảng IP lưu trữ lớn hơn 500 mục
+    if len(request_history) > 500:
+        stale_keys = [
+            ip for ip, times in request_history.items()
+            if not times or (now - times[-1] >= RATE_LIMIT_WINDOW)
+        ]
+        for ip in stale_keys:
+            request_history.pop(ip, None)
+
+
+# Khởi tạo Engine (R2: Bọc an toàn không để crash server khi khởi động)
+try:
+    engine = CounselorEngine()
+except Exception as exc:
+    logger.error(f"Lỗi khởi tạo CounselorEngine: {exc}", exc_info=True)
+    engine = CounselorEngine(api_key="")
+
 
 # Helpers mã hóa & giải mã Base64
 def b64_decode_json(encoded_str: str) -> Dict[str, Any]:
     try:
         raw_bytes = base64.b64decode(encoded_str.encode("utf-8"))
         return json.loads(raw_bytes.decode("utf-8"))
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Lỗi giải mã Base64 payload: {e}")
         raise HTTPException(status_code=400, detail="Dữ liệu truyền tải không hợp lệ.")
+
 
 def b64_encode_text(text: str) -> str:
     return base64.b64encode(text.encode("utf-8")).decode("utf-8")
@@ -87,9 +150,14 @@ class EncryptedPayload(BaseModel):
 
 @app.get("/api/health")
 async def health_check():
-    """Endpoint kiểm tra trạng thái chung (không tiết lộ công nghệ)."""
+    """Endpoint kiểm tra trạng thái hoạt động thực tế (R7)."""
+    # Nếu engine chưa sẵn sàng, thử nạp lại 1 lần phòng khi .env vừa được cập nhật
+    if not engine.is_ready():
+        engine.reload()
+    is_ready = engine.is_ready()
     return {
-        "status": "ready" if engine.is_ready() else "not_configured"
+        "status": "ready" if is_ready else "maintenance",
+        "ready": is_ready
     }
 
 
@@ -107,8 +175,8 @@ async def get_knowledge():
 
 @app.post("/api/chat")
 async def chat_stream(payload: EncryptedPayload, request: Request):
-    """Xử lý chat thời gian thực qua Base64 Encoded SSE Stream."""
-    client_ip = request.client.host if request.client else "unknown"
+    """Xử lý chat thời gian thực qua Base64 Encoded Async SSE Stream (Non-blocking)."""
+    client_ip = get_client_ip(request)
     check_rate_limit(client_ip)
 
     if not engine.is_ready():
@@ -120,38 +188,56 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
     # Giải mã Base64
     data = b64_decode_json(payload.p)
     raw_messages = data.get("messages", [])
-    mode = data.get("mode", "empathy")
-    mood_context = data.get("mood_context")
-    temperature = data.get("temperature", 0.8)
+    mode = str(data.get("mode", "empathy"))[:20]
+    raw_mood_context = data.get("mood_context")
+    raw_temp = data.get("temperature", 0.8)
 
-    # Validation cơ bản
+    # Validate & Clamp temperature
+    try:
+        temperature = max(0.0, min(2.0, float(raw_temp)))
+    except (ValueError, TypeError):
+        temperature = 0.8
+
+    # Validate mood context
+    mood_context = None
+    if isinstance(raw_mood_context, dict):
+        try:
+            s_level = max(1, min(10, int(raw_mood_context.get("stress_level", 4))))
+        except (ValueError, TypeError):
+            s_level = 4
+
+        mood_context = {
+            "mood_name": str(raw_mood_context.get("mood_name", "Bình yên"))[:50],
+            "stress_level": s_level,
+            "note": str(raw_mood_context.get("note", ""))[:500]
+        }
+
+    # Validation tin nhắn
     if not isinstance(raw_messages, list) or len(raw_messages) == 0:
         raise HTTPException(status_code=400, detail="Danh sách tin nhắn trống.")
 
-    # Giới hạn số lượng & độ dài tin nhắn
-    clean_messages = []
-    for m in raw_messages[-50:]:
-        role = "user" if m.get("role") == "user" else "model"
-        content = str(m.get("content", ""))[:6000]
-        if content:
-            clean_messages.append({"role": role, "content": content})
+    # Lấy 30 tin gần nhất & gộp các tin liên tiếp cùng role
+    recent_raw = raw_messages[-30:]
+    clean_messages = sanitize_messages_for_gemini(recent_raw)
+
+    if not clean_messages:
+        raise HTTPException(status_code=400, detail="Nội dung tin nhắn không hợp lệ.")
 
     async def event_generator():
         try:
-            stream = engine.stream_chat(
+            async for chunk in engine.async_stream_chat(
                 messages=clean_messages,
                 mode=mode,
                 mood_context=mood_context,
                 temperature=temperature
-            )
-            for chunk in stream:
+            ):
                 if chunk:
                     encoded_chunk = b64_encode_text(chunk)
                     yield f"data: {json.dumps({'d': encoded_chunk, 'f': 0})}\n\n"
-                    await asyncio.sleep(0)
 
             yield f"data: {json.dumps({'d': '', 'f': 1})}\n\n"
         except Exception as exc:
+            logger.error(f"Lỗi trong async event_generator: {exc}", exc_info=True)
             err_str = str(exc).lower()
             if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
                 err_msg = b64_encode_text("**An Nhiên xin lỗi bạn nhé.**\n\nHiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng lượng do số lượng cuộc trò chuyện trong phiên vượt quá giới hạn của hệ thống.\n\nTrong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua mục Thư Giãn & Tĩnh Tâm để thả lỏng một chút nhé. Mình sẽ sớm quay lại cùng bạn.")
@@ -174,7 +260,7 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
 @app.post("/api/summary")
 async def generate_summary(payload: EncryptedPayload, request: Request):
     """Tạo bản đúc kết lời nhắn nhủ (được mã hóa Base64)."""
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = get_client_ip(request)
     check_rate_limit(client_ip)
 
     if not engine.is_ready():
@@ -182,14 +268,11 @@ async def generate_summary(payload: EncryptedPayload, request: Request):
 
     data = b64_decode_json(payload.p)
     raw_messages = data.get("messages", [])
-    clean_messages = []
-    for m in raw_messages[-50:]:
-        role = "user" if m.get("role") == "user" else "model"
-        content = str(m.get("content", ""))[:6000]
-        if content:
-            clean_messages.append({"role": role, "content": content})
+    if not isinstance(raw_messages, list) or len(raw_messages) < 2:
+        raise HTTPException(status_code=400, detail="Cuộc trò chuyện quá ngắn.")
 
-    summary_text = engine.generate_session_summary(clean_messages)
+    clean_messages = sanitize_messages_for_gemini(raw_messages[-30:])
+    summary_text = await engine.async_generate_session_summary(clean_messages)
     return {"d": b64_encode_text(summary_text)}
 
 
@@ -199,10 +282,10 @@ os.makedirs(static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=FileResponse)
 async def serve_index():
+    """Phục vụ file index.html qua FileResponse tối ưu I/O."""
     index_file = os.path.join(static_dir, "index.html")
     if os.path.exists(index_file):
-        with open(index_file, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Đang khởi tạo...</h1>"
+        return FileResponse(index_file, media_type="text/html")
+    return HTMLResponse("<h1>Đang khởi tạo ứng dụng An Nhiên...</h1>")

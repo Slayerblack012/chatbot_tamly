@@ -7,12 +7,12 @@ Cach dung:
     python run.py
 """
 
-import sys
-import os
-import time
 import threading
+import time
 import webbrowser
+
 import uvicorn
+
 
 def open_browser():
     time.sleep(1.2)
@@ -23,6 +23,7 @@ def open_browser():
     except Exception as e:
         print(f"Khong the tu dong mo trinh duyet: {e}. Vui long mo thu cong tai: {url}")
 
+
 if __name__ == "__main__":
     print("=" * 65)
     print("   AN NHIEN TAM LY - NGUOI BAN DONG HANH CAM XUC")
@@ -32,5 +33,5 @@ if __name__ == "__main__":
     # Mo trinh duyet trong luong rieng
     threading.Thread(target=open_browser, daemon=True).start()
 
-    # Chay Uvicorn server
-    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=False, log_level="info")
+    # Chay Uvicorn server voi server_header=False
+    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=False, log_level="info", server_header=False)
