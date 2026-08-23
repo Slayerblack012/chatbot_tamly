@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================================================================
-  // 2. DARK MODE THEME CONTROLLER
+  // 2. DARK MODE THEME CONTROLLER (N1: Safe Try/Catch)
   // =========================================================================
   const THEME_STORAGE_KEY = "an_nhien_theme_mode";
   const btnThemeToggle = document.getElementById("btn-theme-toggle");
@@ -154,6 +154,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (themeColorMeta) {
       themeColorMeta.setAttribute("content", theme === "dark" ? "#0F172A" : "#F8FAFC");
     }
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch (e) {}
+  }
+
   let savedTheme = "light";
   try {
     savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
