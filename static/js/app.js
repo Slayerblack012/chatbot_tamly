@@ -2,7 +2,7 @@
  * AN NHIÊN TÂM LÝ - CLIENT SCRIPT
  * Bảo mật: DOMPurify Fail-closed, UTF-8 Base64 Obfuscation, Role Alternation Auto-Recovery,
  * Can thiệp Khủng hoảng (Crisis Alert & PHQ-9 Item 9 trigger), GAD-7 & PHQ-9, Real Health Check,
- * Dark Mode Toggle, Stop Stream AbortController, Smart Scroll, Drawer Backdrop & Feature Popups.
+ * Dark Mode Toggle, Stop Stream AbortController, Smart Scroll, Drawer Backdrop & Custom Modals (No native alert/confirm).
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 1. UNIVERSAL POPUP MODAL SYSTEM
+  // 1. UNIVERSAL CUSTOM POPUP & CONFIRM MODAL SYSTEM
   // =========================================================================
   const appModal = document.getElementById("app-modal");
   const modalIcon = document.getElementById("modal-icon");
@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalSubtitle = document.getElementById("modal-subtitle");
   const modalBody = document.getElementById("modal-body");
   const modalCloseBtn = document.getElementById("modal-close-btn");
+  const modalCancelBtn = document.getElementById("modal-cancel-btn");
   const modalPrimaryBtn = document.getElementById("modal-primary-btn");
 
   let currentModalAction = null;
@@ -73,9 +74,32 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modalTitle) modalTitle.textContent = title || "An Nhiên Tâm Lý";
     if (modalSubtitle) modalSubtitle.textContent = subtitle || "";
     if (modalBody) modalBody.innerHTML = bodyHtml || "";
+    if (modalCancelBtn) modalCancelBtn.style.display = "none";
     if (modalPrimaryBtn) {
       modalPrimaryBtn.textContent = primaryBtnText || "Đã Hiểu ✨";
+      modalPrimaryBtn.className = "btn-send";
       currentModalAction = onPrimaryClick || null;
+    }
+    if (appModal) {
+      appModal.style.display = "flex";
+      document.body.style.overflow = "hidden";
+    }
+  }
+
+  function openConfirmModal({ icon, title, subtitle, bodyHtml, confirmText, cancelText, isDanger, onConfirm }) {
+    if (modalIcon) modalIcon.textContent = icon || "❓";
+    if (modalTitle) modalTitle.textContent = title || "Xác Nhận";
+    if (modalSubtitle) modalSubtitle.textContent = subtitle || "";
+    if (modalBody) modalBody.innerHTML = bodyHtml || "";
+    if (modalCancelBtn) {
+      modalCancelBtn.style.display = "inline-flex";
+      modalCancelBtn.textContent = cancelText || "Hủy Bỏ";
+      modalCancelBtn.onclick = closeModal;
+    }
+    if (modalPrimaryBtn) {
+      modalPrimaryBtn.textContent = confirmText || "Đồng Ý";
+      modalPrimaryBtn.className = isDanger ? "btn-send btn-stop-stream" : "btn-send";
+      currentModalAction = onConfirm || null;
     }
     if (appModal) {
       appModal.style.display = "flex";
@@ -87,16 +111,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if (appModal) {
       appModal.style.display = "none";
       document.body.style.overflow = "";
+      currentModalAction = null;
     }
   }
 
   if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
+  if (modalCancelBtn) modalCancelBtn.addEventListener("click", closeModal);
   if (modalPrimaryBtn) {
     modalPrimaryBtn.addEventListener("click", () => {
-      if (typeof currentModalAction === "function") {
-        currentModalAction();
-      }
+      const action = currentModalAction;
       closeModal();
+      if (typeof action === "function") {
+        action();
+      }
     });
   }
 
@@ -113,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================================================================
-  // 2. B1 & C1: DARK MODE THEME CONTROLLER
+  // 2. DARK MODE THEME CONTROLLER
   // =========================================================================
   const THEME_STORAGE_KEY = "an_nhien_theme_mode";
   const btnThemeToggle = document.getElementById("btn-theme-toggle");
@@ -296,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
   navTabs.forEach(btn => btn.addEventListener("click", () => activateTab(btn.getAttribute("data-tab"))));
   mobileNavBtns.forEach(btn => btn.addEventListener("click", () => activateTab(btn.getAttribute("data-tab"))));
 
-  // B3: Mobile Drawer & Backdrop logic
+  // Mobile Drawer & Backdrop logic
   function openSidebar() {
     if (chatSidebar) chatSidebar.classList.add("open");
     if (drawerBackdrop) drawerBackdrop.classList.add("active");
@@ -312,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (drawerBackdrop) drawerBackdrop.addEventListener("click", closeSidebar);
 
   // =========================================================================
-  // 5. FEATURE GUIDE POPUP HANDLERS
+  // 5. FEATURE GUIDE POPUPS
   // =========================================================================
   const btnGuideChat = document.getElementById("btn-guide-chat");
   if (btnGuideChat) {
@@ -337,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 Bạn có thể chọn biểu tượng cảm xúc và kéo thanh <em>Mức độ áp lực (1 - 10)</em> bên thanh bên trái để An Nhiên điều chỉnh giọng điệu phù hợp nhất với bạn.
               </p>
             </div>
-            <div style="background:#F8FAFC; border:1px solid var(--border-color); padding:12px 14px; border-radius:var(--radius-md); font-size:0.85rem;">
+            <div style="background:var(--bg-page); border:1px solid var(--border-color); padding:12px 14px; border-radius:var(--radius-md); font-size:0.85rem;">
               🔒 <strong>Bảo mật tuyệt đối:</strong> Cuộc trò chuyện được lưu cục bộ trên máy của bạn và không chia sẻ cho bên thứ ba.
             </div>
           </div>
@@ -359,8 +386,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <p>
               <strong>Liệu pháp CBT (Cognitive Behavioral Therapy)</strong> khẳng định rằng: <em>Không phải hoàn cảnh làm ta tổn thương, mà chính là cách ta diễn giải hoàn cảnh đó.</em>
             </p>
-            <div style="background:#F0FDFA; padding:14px; border-radius:var(--radius-md); border:1px solid #CCFBF1;">
-              <h4 style="color:#0F766E; margin-bottom:6px;">Tam Giác Nhận Thức CBT:</h4>
+            <div style="background:var(--primary-light); padding:14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+              <h4 style="color:var(--primary); margin-bottom:6px;">Tam Giác Nhận Thức CBT:</h4>
               <p style="font-size:0.88rem; line-height:1.6;">
                 <strong>Suy Nghĩ</strong> (Bẫy nhận thức) ➔ <strong>Cảm Xúc</strong> (Lo âu, buồn bã) ➔ <strong>Hành Vi</strong> (Trì hoãn, thu mình). Khi thay đổi suy nghĩ, cảm xúc của bạn sẽ tự nhiên bình an trở lại.
               </p>
@@ -384,13 +411,13 @@ document.addEventListener("DOMContentLoaded", () => {
         subtitle: "Bộ công cụ trắc nghiệm chuẩn hóa y khoa quốc tế",
         bodyHtml: `
           <div style="display:flex; flex-direction:column; gap:14px;">
-            <div style="background:#F8FAFC; padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <div style="background:var(--bg-page); padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <strong>📊 Thang đo GAD-7 (Generalized Anxiety Disorder 7):</strong>
               <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
                 Đo lường mức độ lo âu, bồn chồn và căng thẳng trong 2 tuần qua qua 7 câu hỏi tiêu chuẩn.
               </p>
             </div>
-            <div style="background:#F8FAFC; padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <div style="background:var(--bg-page); padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <strong>🌧️ Thang đo PHQ-9 (Patient Health Questionnaire 9):</strong>
               <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
                 Sàng lọc mức độ trầm cảm và suy giảm năng lượng với 9 câu hỏi lâm sàng.
@@ -444,19 +471,19 @@ document.addEventListener("DOMContentLoaded", () => {
         bodyHtml: `
           <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem;">
             <p>Khi cảm xúc dâng trào hoặc tâm trí bị cuốn vào lo âu, hãy nhìn xung quanh và lần lượt thực hiện:</p>
-            <div style="background:#F0FDFA; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid var(--primary);">
+            <div style="background:var(--primary-light); padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid var(--primary);">
               <strong>👀 5 ĐIỀU BẠN NHÌN THẤY:</strong> Một chiếc lá, vệt nắng, cây bút, bức tường...
             </div>
-            <div style="background:#F8FAFC; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #38BDF8;">
+            <div style="background:var(--bg-page); padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #38BDF8;">
               <strong>🖐️ 4 ĐIỀU BẠN CẢM NHẬN ĐƯỢC:</strong> Độ mịn của áo, sự vững chắc của mặt sàn dưới chân...
             </div>
-            <div style="background:#F0FDFA; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #10B981;">
+            <div style="background:var(--primary-light); padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #10B981;">
               <strong>👂 3 ÂM THANH BẠN NGHE THẤY:</strong> Tiếng quạt, tiếng xe ngoài phố, tiếng thở của chính bạn...
             </div>
-            <div style="background:#F8FAFC; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #F59E0B;">
+            <div style="background:var(--bg-page); padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #F59E0B;">
               <strong>👃 2 MÙI HƯƠNG BẠN NGỬI THẤY:</strong> Mùi cà phê, mùi không khí trong phòng...
             </div>
-            <div style="background:#F0FDFA; padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #6366F1;">
+            <div style="background:var(--primary-light); padding:10px 14px; border-radius:var(--radius-md); border-left:3px solid #6366F1;">
               <strong>👅 1 VỊ BẠN NẾM ĐƯỢC:</strong> Vị nước mát trong miệng, hay một ngụm trà ấm...
             </div>
           </div>
@@ -467,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 6. CHAT FLOW & SMART STREAMING (B2: NÚT DỪNG, B4: SMART SCROLL)
+  // 6. CHAT FLOW & SMART STREAMING
   // =========================================================================
   function renderMessages() {
     chatMessagesEl.innerHTML = "";
@@ -530,7 +557,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function sendMessage(text) {
     if (!text || !text.trim()) return;
 
-    // Nếu đang stream mà bấm nút -> Hủy stream (B2)
     if (state.isStreaming) {
       if (currentAbortController) {
         currentAbortController.abort();
@@ -542,7 +568,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const trimmedText = text.trim();
     closeSidebar();
 
-    // Kiểm tra từ khóa khủng hoảng để hiển thị hotline ngay
     if (checkCrisisKeywords(trimmedText) && crisisAlertBanner) {
       crisisAlertBanner.style.display = "flex";
       crisisAlertBanner.scrollIntoView({ behavior: "smooth" });
@@ -681,28 +706,47 @@ document.addEventListener("DOMContentLoaded", () => {
     stressValDisplay.textContent = `${state.stressLevel} / 10`;
   });
 
-  // Clear Chat & Reset LocalStorage
+  // Clear Chat with Custom Modal Confirmation (No browser native confirm dialog)
   document.getElementById("btn-clear-chat").addEventListener("click", () => {
-    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện này và bắt đầu lại?")) {
-      state.messages = [
-        {
-          role: "model",
-          content: "Chào bạn, mình đã sẵn sàng cho một phiên trò chuyện mới. Hãy chia sẻ bất kỳ điều gì bạn muốn nhé."
-        }
-      ];
-      localStorage.removeItem(STORAGE_KEY);
-      renderMessages();
-      if (crisisAlertBanner) crisisAlertBanner.style.display = "none";
-      closeSidebar();
-    }
+    openConfirmModal({
+      icon: "🗑️",
+      title: "Bắt Đầu Lại Phiên Trò Chuyện?",
+      subtitle: "Làm mới không gian lắng nghe riêng tư",
+      bodyHtml: `
+        <p style="font-size:0.92rem; line-height:1.6; color:var(--text-dark);">
+          Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện này không? Toàn bộ nội dung trao đổi sẽ được xóa sạch khỏi bộ nhớ thiết bị để bạn bắt đầu một phiên mới hoàn toàn riêng tư.
+        </p>
+      `,
+      confirmText: "Xóa & Bắt Đầu Lại",
+      cancelText: "Giữ Lại",
+      isDanger: true,
+      onConfirm: () => {
+        state.messages = [
+          {
+            role: "model",
+            content: "Chào bạn, mình đã sẵn sàng cho một phiên trò chuyện mới. Hãy chia sẻ bất kỳ điều gì bạn muốn nhé."
+          }
+        ];
+        localStorage.removeItem(STORAGE_KEY);
+        renderMessages();
+        if (crisisAlertBanner) crisisAlertBanner.style.display = "none";
+        closeSidebar();
+      }
+    });
   });
 
-  // Export Chat to Text File
+  // Export Chat to Text File with Custom Info Modal
   const btnExportChat = document.getElementById("btn-export-chat");
   if (btnExportChat) {
     btnExportChat.addEventListener("click", () => {
       if (state.messages.length <= 1) {
-        alert("Chưa có nội dung trò chuyện để xuất.");
+        openModal({
+          icon: "ℹ️",
+          title: "Chưa Có Nội Dung Để Xuất",
+          subtitle: "Nhật ký hội thoại hiện đang trống",
+          bodyHtml: "<p>Hãy trò chuyện một vài câu cùng An Nhiên trước khi xuất biên bản nhật ký nhé.</p>",
+          primaryBtnText: "Đã Hiểu ✨"
+        });
         return;
       }
       let exportText = `====================================================\n`;
@@ -727,10 +771,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Summarize Session
+  // Summarize Session with Custom Modal Notifications
   document.getElementById("btn-summarize").addEventListener("click", async () => {
     if (state.messages.length < 3) {
-      alert("Hãy trò chuyện thêm một vài câu để An Nhiên có thể đúc kết cho bạn nhé.");
+      openModal({
+        icon: "📝",
+        title: "Cần Thêm Ngữ Cảnh",
+        subtitle: "Đúc kết lời nhắn nhủ",
+        bodyHtml: "<p>Hãy chia sẻ thêm một vài câu để An Nhiên có đủ ngữ cảnh đúc kết những lời nhắn nhủ ý nghĩa nhất cho bạn nhé.</p>",
+        primaryBtnText: "Tiếp Tục Trò Chuyện ✨"
+      });
       return;
     }
     const btn = document.getElementById("btn-summarize");
@@ -755,7 +805,13 @@ document.addEventListener("DOMContentLoaded", () => {
         closeSidebar();
       }
     } catch (e) {
-      alert("Không thể tạo đúc kết lúc này.");
+      openModal({
+        icon: "⚠️",
+        title: "Thông Báo",
+        subtitle: "Tạm thời gián đoạn",
+        bodyHtml: "<p>Chưa thể tạo đúc kết lúc này. Bạn vui lòng thử lại sau giây lát nhé.</p>",
+        primaryBtnText: "Đóng"
+      });
     } finally {
       btn.textContent = "📝 Đúc Kết Lời Nhắn Nhủ";
     }
@@ -792,7 +848,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `).join("");
 
-        // Gắn sự kiện click mở Popup chi tiết cho từng bẫy suy nghĩ
         grid.querySelectorAll(".distortion-card").forEach(card => {
           card.addEventListener("click", () => {
             const idx = parseInt(card.getAttribute("data-dist-idx"));
@@ -812,9 +867,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     <strong style="color:#92400E;">🔍 Biểu hiện thường gặp trong cuộc sống:</strong>
                     <p style="font-size:0.9rem; color:#78350F; margin-top:4px;">"${escapeHTML(dist.example)}"</p>
                   </div>
-                  <div style="background:#F0FDFA; border:1px solid #99F6E4; padding:14px; border-radius:var(--radius-md);">
-                    <strong style="color:#0F766E;">🌿 Cách tái cấu trúc nhận thức (Cognitive Reframing):</strong>
-                    <p style="font-size:0.9rem; color:#115E59; margin-top:4px;">${escapeHTML(dist.reframing)}</p>
+                  <div style="background:var(--primary-light); border:1px solid rgba(13,148,136,0.3); padding:14px; border-radius:var(--radius-md);">
+                    <strong style="color:var(--primary);">🌿 Cách tái cấu trúc nhận thức (Cognitive Reframing):</strong>
+                    <p style="font-size:0.9rem; color:#0F766E; margin-top:4px;">${escapeHTML(dist.reframing)}</p>
                   </div>
                   <div style="font-size:0.85rem; color:var(--text-muted);">
                     💡 <em>Bạn có đang gặp phải bẫy suy nghĩ này không? Hãy nhấn nút bên dưới để cùng An Nhiên tháo gỡ nhé!</em>
@@ -848,7 +903,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `).join("");
 
-        // Hover effect for article cards
         artContainer.querySelectorAll(".article-card").forEach(card => {
           card.addEventListener("mouseenter", () => card.style.boxShadow = "var(--shadow-md)");
           card.addEventListener("mouseleave", () => card.style.boxShadow = "var(--shadow-sm)");
@@ -887,7 +941,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadKnowledge();
 
   // =========================================================================
-  // 8. SELF-ASSESSMENT QUIZ (A2: NO DOUBLE ESCAPE, C4: PHQ-9 CÂU 9 >= 1)
+  // 8. SELF-ASSESSMENT QUIZ
   // =========================================================================
   const quizIntroView = document.getElementById("quiz-intro-view");
   const quizIntroTitle = document.getElementById("quiz-intro-title");
@@ -952,7 +1006,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const percent = Math.round(((curr) / total) * 100);
     quizProgressFill.style.width = `${percent}%`;
     quizProgressPercent.textContent = `${percent}%`;
-    // A2: Gán textContent trực tiếp, không qua escapeHTML để không bị double-escape & < >
     quizQuestionText.textContent = `${curr + 1}. ${qData.questions[curr]}`;
 
     quizOptionsList.innerHTML = qData.options.map(opt => `
@@ -980,7 +1033,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const qData = state.quizState.quizData;
     const maxScore = qData.questions.length * 3;
 
-    // C4: Kiểm tra câu số 9 của PHQ-9 (index 8) về suy nghĩ tự hại / tự tử
+    // PHQ-9 Câu 9 >= 1 Điểm trigger crisis
     const isPHQ9 = state.activeQuizType === "phq9" || (qData.id === "phq9");
     const item9Score = (isPHQ9 && state.quizState.answers.length >= 9) ? state.quizState.answers[8] : 0;
 
