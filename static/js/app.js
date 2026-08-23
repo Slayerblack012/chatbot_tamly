@@ -1,7 +1,8 @@
 /**
  * AN NHIÊN TÂM LÝ - CLIENT SCRIPT
  * Bảo mật: DOMPurify Fail-closed, UTF-8 Base64 Obfuscation, Role Alternation Auto-Recovery,
- * Can thiệp Khủng hoảng (Crisis Alert & PHQ-9 Item 9 trigger), GAD-7 & PHQ-9, Real Health Check, Persistence & Export.
+ * Can thiệp Khủng hoảng (Crisis Alert & PHQ-9 Item 9 trigger), GAD-7 & PHQ-9, Real Health Check,
+ * Dark Mode Toggle, Stop Stream AbortController, Smart Scroll & Drawer Backdrop.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -55,7 +56,38 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 1. CRISIS KEYWORD DETECTION
+  // 1. B1 & C1: DARK MODE THEME CONTROLLER
+  // =========================================================================
+  const THEME_STORAGE_KEY = "an_nhien_theme_mode";
+  const btnThemeToggle = document.getElementById("btn-theme-toggle");
+  const themeColorMeta = document.getElementById("theme-color-meta");
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    if (btnThemeToggle) {
+      btnThemeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
+    }
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute("content", theme === "dark" ? "#0F172A" : "#F8FAFC");
+    }
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch (e) {}
+  }
+
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
+  applyTheme(savedTheme);
+
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme") || "light";
+      const next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+    });
+  }
+
+  // =========================================================================
+  // 2. CRISIS KEYWORD DETECTION
   // =========================================================================
   const CRISIS_KEYWORDS = [
     "tự tử", "tu tu", "muốn chết", "muon chet", "kết thúc cuộc sống", "ket thuc cuoc song",
@@ -79,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 2. APP STATE & PERSISTENCE
+  // 3. APP STATE & PERSISTENCE
   // =========================================================================
   const STORAGE_KEY = "an_nhien_chat_session_v1";
 
@@ -131,6 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
     breathingMode: "478"
   };
 
+  let currentAbortController = null;
+
   // DOM Elements
   const navTabs = document.querySelectorAll(".nav-tab-btn");
   const mobileNavBtns = document.querySelectorAll(".mobile-nav-btn");
@@ -145,10 +179,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const chatSidebar = document.getElementById("chat-sidebar");
   const btnToggleSidebar = document.getElementById("btn-toggle-sidebar");
   const btnCloseSidebar = document.getElementById("btn-close-sidebar");
+  const drawerBackdrop = document.getElementById("drawer-backdrop");
+
+  const btnSend = document.getElementById("btn-send");
+  const btnSendLabel = document.getElementById("btn-send-label");
+  const btnSendIcon = document.getElementById("btn-send-icon");
 
   // R7: Health Check Indicator Real-time
   const statusIndicator = document.getElementById("status-indicator");
-  const statusDot = document.getElementById("status-dot");
   const statusText = document.getElementById("status-text");
 
   async function checkSystemHealth() {
@@ -201,20 +239,28 @@ document.addEventListener("DOMContentLoaded", () => {
   navTabs.forEach(btn => btn.addEventListener("click", () => activateTab(btn.getAttribute("data-tab"))));
   mobileNavBtns.forEach(btn => btn.addEventListener("click", () => activateTab(btn.getAttribute("data-tab"))));
 
-  if (btnToggleSidebar && chatSidebar) {
-    btnToggleSidebar.addEventListener("click", () => chatSidebar.classList.add("open"));
-  }
-  if (btnCloseSidebar && chatSidebar) {
-    btnCloseSidebar.addEventListener("click", () => chatSidebar.classList.remove("open"));
+  // B3: Mobile Drawer & Backdrop logic
+  function openSidebar() {
+    if (chatSidebar) chatSidebar.classList.add("open");
+    if (drawerBackdrop) drawerBackdrop.classList.add("active");
   }
 
+  function closeSidebar() {
+    if (chatSidebar) chatSidebar.classList.remove("open");
+    if (drawerBackdrop) drawerBackdrop.classList.remove("active");
+  }
+
+  if (btnToggleSidebar) btnToggleSidebar.addEventListener("click", openSidebar);
+  if (btnCloseSidebar) btnCloseSidebar.addEventListener("click", closeSidebar);
+  if (drawerBackdrop) drawerBackdrop.addEventListener("click", closeSidebar);
+
   // =========================================================================
-  // 3. CHAT FLOW & SSE STREAMING (R4: KHÔNG ĐƯA TIN LỖI VÀO AI HISTORY)
+  // 4. CHAT FLOW & SMART STREAMING (B2: NÚT DỪNG, B4: SMART SCROLL)
   // =========================================================================
   function renderMessages() {
     chatMessagesEl.innerHTML = "";
     state.messages.forEach(msg => appendMessageToDOM(msg.role, msg.content));
-    scrollToBottom();
+    forceScrollToBottom();
   }
 
   function appendMessageToDOM(role, content) {
@@ -236,16 +282,54 @@ document.addEventListener("DOMContentLoaded", () => {
     return bubble;
   }
 
-  function scrollToBottom() {
+  function forceScrollToBottom() {
     chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  }
+
+  // B4: Smart Scroll - chỉ auto-scroll nếu người dùng đang ở gần đáy (~140px)
+  function smartScrollToBottom() {
+    const threshold = 140;
+    const distanceToBottom = chatMessagesEl.scrollHeight - chatMessagesEl.scrollTop - chatMessagesEl.clientHeight;
+    if (distanceToBottom <= threshold) {
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    }
+  }
+
+  function setStreamingState(isStreaming) {
+    state.isStreaming = isStreaming;
+    if (isStreaming) {
+      if (btnSend) {
+        btnSend.classList.add("btn-stop-stream");
+        btnSend.setAttribute("aria-label", "Dừng phản hồi");
+      }
+      if (btnSendLabel) btnSendLabel.textContent = "Dừng";
+      if (btnSendIcon) btnSendIcon.textContent = "⏹️";
+    } else {
+      if (btnSend) {
+        btnSend.classList.remove("btn-stop-stream");
+        btnSend.setAttribute("aria-label", "Gửi tin nhắn");
+      }
+      if (btnSendLabel) btnSendLabel.textContent = "Gửi";
+      if (btnSendIcon) btnSendIcon.textContent = "🕊️";
+      currentAbortController = null;
+    }
   }
 
   // Chat Streaming with Base64 Obfuscated Transmission & Context Slicing
   async function sendMessage(text) {
-    if (!text || !text.trim() || state.isStreaming) return;
-    const trimmedText = text.trim();
+    if (!text || !text.trim()) return;
 
-    if (chatSidebar) chatSidebar.classList.remove("open");
+    // Nếu đang stream mà bấm nút -> Hủy stream (B2)
+    if (state.isStreaming) {
+      if (currentAbortController) {
+        currentAbortController.abort();
+      }
+      setStreamingState(false);
+      return;
+    }
+
+    const trimmedText = text.trim();
+    closeSidebar();
 
     // Kiểm tra từ khóa khủng hoảng để hiển thị hotline ngay
     if (checkCrisisKeywords(trimmedText) && crisisAlertBanner) {
@@ -257,11 +341,13 @@ document.addEventListener("DOMContentLoaded", () => {
     saveStoredMessages(state.messages);
     appendMessageToDOM("user", trimmedText);
     chatInput.value = "";
-    scrollToBottom();
+    forceScrollToBottom();
 
-    state.isStreaming = true;
+    setStreamingState(true);
+    currentAbortController = new AbortController();
+
     const assistantBubble = appendMessageToDOM("assistant", '<div class="typing-wave"><span></span><span></span><span></span></div>');
-    scrollToBottom();
+    forceScrollToBottom();
 
     let fullText = "";
 
@@ -281,7 +367,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ p: encodeB64(rawPayload) })
+        body: JSON.stringify({ p: encodeB64(rawPayload) }),
+        signal: currentAbortController.signal
       });
 
       if (!response.ok) {
@@ -310,7 +397,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   const chunkText = decodeB64(parsed.d);
                   fullText += chunkText;
                   assistantBubble.innerHTML = renderSafeMarkdown(fullText);
-                  scrollToBottom();
+                  smartScrollToBottom();
                 }
               } catch (e) {}
             }
@@ -322,27 +409,41 @@ document.addEventListener("DOMContentLoaded", () => {
         state.messages.push({ role: "model", content: fullText });
         saveStoredMessages(state.messages);
       } else {
-        // R4: Chỉ hiển thị thông báo trên UI, pop tin user chưa có hồi đáp để không làm hỏng AI context
         const fallbackMsg = "*(An Nhiên đang gặp gián đoạn kết nối tạm thời. Bạn hãy thử gửi lại sau giây lát nhé.)*";
         assistantBubble.innerHTML = renderSafeMarkdown(fallbackMsg);
         state.messages.pop();
         saveStoredMessages(state.messages);
       }
     } catch (err) {
-      console.error("Chat error:", err);
-      // R4: Chỉ hiển thị thông báo lỗi trên DOM, pop tin user để tránh 2 tin user liên tiếp
-      const errMsg = "*(Kết nối gián đoạn. Bạn thử gửi lại tin nhắn nhé.)*";
-      assistantBubble.innerHTML = errMsg;
-      state.messages.pop();
-      saveStoredMessages(state.messages);
+      if (err.name === "AbortError") {
+        if (fullText.trim()) {
+          state.messages.push({ role: "model", content: fullText });
+          saveStoredMessages(state.messages);
+        } else {
+          assistantBubble.innerHTML = `*(Đã dừng câu trả lời)*`;
+          state.messages.pop();
+          saveStoredMessages(state.messages);
+        }
+      } else {
+        console.error("Chat error:", err);
+        const errMsg = "*(Kết nối gián đoạn. Bạn thử gửi lại tin nhắn nhé.)*";
+        assistantBubble.innerHTML = errMsg;
+        state.messages.pop();
+        saveStoredMessages(state.messages);
+      }
     } finally {
-      state.isStreaming = false;
+      setStreamingState(false);
     }
   }
 
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    sendMessage(chatInput.value);
+    if (state.isStreaming) {
+      if (currentAbortController) currentAbortController.abort();
+      setStreamingState(false);
+    } else {
+      sendMessage(chatInput.value);
+    }
   });
 
   document.querySelectorAll(".chip-btn[data-prompt]").forEach(chip => {
@@ -382,7 +483,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.removeItem(STORAGE_KEY);
       renderMessages();
       if (crisisAlertBanner) crisisAlertBanner.style.display = "none";
-      if (chatSidebar) chatSidebar.classList.remove("open");
+      closeSidebar();
     }
   });
 
@@ -441,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         saveStoredMessages(state.messages);
         renderMessages();
-        if (chatSidebar) chatSidebar.classList.remove("open");
+        closeSidebar();
       }
     } catch (e) {
       alert("Không thể tạo đúc kết lúc này.");
@@ -453,7 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderMessages();
 
   // =========================================================================
-  // 4. KNOWLEDGE & PSYCHOEDUCATION
+  // 5. KNOWLEDGE & PSYCHOEDUCATION (B5: SKELETON REPLACEMENT)
   // =========================================================================
   async function loadKnowledge() {
     try {
@@ -486,14 +587,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const artContainer = document.getElementById("articles-container");
       if (artContainer && data.articles) {
         artContainer.innerHTML = data.articles.map(a => `
-          <div style="background:white; border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow-sm);">
+          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow-sm);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
               <span style="background:var(--primary-light); color:var(--primary); font-size:0.8rem; font-weight:700; padding:4px 12px; border-radius:var(--radius-full);">${escapeHTML(a.category)}</span>
               <span style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(a.readTime)}</span>
             </div>
             <h3 style="font-family:var(--font-heading); font-size:1.25rem; color:var(--indigo-dark); margin-bottom:12px;">${escapeHTML(a.title)}</h3>
             <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:14px;">${escapeHTML(a.summary)}</p>
-            <div style="background:#F8FAFC; padding:16px; border-radius:var(--radius-md); font-size:0.9rem; line-height:1.7;">
+            <div style="background:var(--bg-page); padding:16px; border-radius:var(--radius-md); font-size:0.9rem; line-height:1.7;">
               ${renderSafeMarkdown(a.content)}
             </div>
           </div>
@@ -509,7 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadKnowledge();
 
   // =========================================================================
-  // 5. SELF-ASSESSMENT QUIZ (R3: PHQ-9 CÂU 9 >= 1 KÍCH HOẠT CRISIS ALERT)
+  // 6. SELF-ASSESSMENT QUIZ (A2: NO DOUBLE ESCAPE, C4: PHQ-9 CÂU 9 >= 1)
   // =========================================================================
   const quizIntroView = document.getElementById("quiz-intro-view");
   const quizIntroTitle = document.getElementById("quiz-intro-title");
@@ -574,7 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const percent = Math.round(((curr) / total) * 100);
     quizProgressFill.style.width = `${percent}%`;
     quizProgressPercent.textContent = `${percent}%`;
-    // R5: Gán textContent trực tiếp, không double-escape
+    // A2: Gán textContent trực tiếp, không qua escapeHTML để không bị double-escape & < >
     quizQuestionText.textContent = `${curr + 1}. ${qData.questions[curr]}`;
 
     quizOptionsList.innerHTML = qData.options.map(opt => `
@@ -602,7 +703,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const qData = state.quizState.quizData;
     const maxScore = qData.questions.length * 3;
 
-    // R3: Kiểm tra câu số 9 của PHQ-9 (index 8) về suy nghĩ tự hại / tự tử
+    // C4: Kiểm tra câu số 9 của PHQ-9 (index 8) về suy nghĩ tự hại / tự tử
     const isPHQ9 = state.activeQuizType === "phq9" || (qData.id === "phq9");
     const item9Score = (isPHQ9 && state.quizState.answers.length >= 9) ? state.quizState.answers[8] : 0;
 
@@ -650,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 6. RELAXATION BREATHING
+  // 7. RELAXATION BREATHING
   // =========================================================================
   const circleBreathe = document.getElementById("circle-breathe");
   const breatheActionText = document.getElementById("breathe-action-text");
@@ -747,7 +848,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 7. AUTO-IDLE & PRIVACY SLEEP MODE (1 HOUR TIMEOUT)
+  // 8. AUTO-IDLE & PRIVACY SLEEP MODE (1 HOUR TIMEOUT)
   // =========================================================================
   const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
   let lastActiveTimestamp = Date.now();

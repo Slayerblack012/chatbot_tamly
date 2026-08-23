@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AN NHIÊN - THEME (CLEAN, RESPONSIVE & OBFUSCATED)
+   AN NHIÊN - THEME (CLEAN, RESPONSIVE, ACCESSIBILITY & DARK MODE READY)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
@@ -46,6 +46,84 @@
   --bottom-nav-height: 64px;
 }
 
+/* ==================== B1: DARK MODE THEME TOKENS ==================== */
+[data-theme="dark"] {
+  --bg-page: #0F172A;
+  --card-bg: #1E293B;
+  --border-color: #334155;
+  --border-focus: #2DD4BF;
+  --text-dark: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-light: #64748B;
+  --indigo-dark: #F1F5F9;
+  --primary-light: rgba(13, 148, 136, 0.2);
+}
+
+[data-theme="dark"] .app-navbar,
+[data-theme="dark"] .chat-sidebar,
+[data-theme="dark"] .chat-main-container,
+[data-theme="dark"] .chat-input-wrapper,
+[data-theme="dark"] .quick-chips,
+[data-theme="dark"] .studio-card,
+[data-theme="dark"] .quiz-container,
+[data-theme="dark"] .distortion-card,
+[data-theme="dark"] .mobile-bottom-nav,
+[data-theme="dark"] .mobile-sidebar-toggle,
+[data-theme="dark"] .sleep-card {
+  background-color: var(--card-bg);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .chat-messages {
+  background: #0B1120;
+}
+
+[data-theme="dark"] .chat-header {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .chat-input {
+  background: #0F172A;
+  color: #F8FAFC;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .msg-wrapper.assistant .msg-bubble {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F1F5F9;
+}
+
+[data-theme="dark"] .msg-avatar {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .nav-tabs,
+[data-theme="dark"] .quiz-type-selector {
+  background: #0F172A;
+}
+
+[data-theme="dark"] .nav-tab-btn.active,
+[data-theme="dark"] .quiz-type-btn.active {
+  background: #1E293B;
+  color: #2DD4BF;
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .chip-btn,
+[data-theme="dark"] .quiz-option-btn,
+[data-theme="dark"] .mood-btn,
+[data-theme="dark"] .stress-slider-wrapper,
+[data-theme="dark"] .sound-item,
+[data-theme="dark"] .dist-example {
+  background: #0F172A;
+  border-color: #334155;
+  color: #F1F5F9;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -62,6 +140,15 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* C3: Clear Keyboard Focus Rings */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2.5px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* Header */
@@ -76,6 +163,7 @@ body {
   box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
+  transition: background 0.25s ease;
 }
 
 .nav-container {
@@ -164,9 +252,30 @@ body {
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
+.btn-theme-toggle {
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--text-dark);
+}
+
+.btn-theme-toggle:hover {
+  transform: scale(1.08);
+  border-color: var(--primary);
+}
+
+/* Status Indicator States (R7 / A1) */
 .status-indicator {
   display: flex;
   align-items: center;
@@ -387,6 +496,26 @@ body {
   gap: 8px;
 }
 
+/* B3: Mobile Drawer Backdrop */
+.drawer-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.drawer-backdrop.active {
+  display: block;
+  opacity: 1;
+}
+
 /* Sidebar */
 .chat-sidebar {
   background: white;
@@ -584,6 +713,7 @@ input[type=range] {
   gap: 10px;
   max-width: 82%;
   animation: msgPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s ease;
 }
 
 @keyframes msgPop {
@@ -720,7 +850,7 @@ input[type=range] {
   font-weight: 700;
 }
 
-/* Input Form */
+/* Input Form & Stop Button (B2) */
 .chat-input-wrapper {
   padding: 14px 20px;
   background: white;
@@ -760,11 +890,21 @@ input[type=range] {
   transition: all 0.2s ease;
   font-family: var(--font-main);
   box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
+  white-space: nowrap;
 }
 
 .btn-send:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
+}
+
+.btn-send.btn-stop-stream {
+  background: #EF4444 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35) !important;
+}
+
+.btn-send.btn-stop-stream:hover {
+  background: #DC2626 !important;
 }
 
 /* ==================== TAB 2: PSYCHOEDUCATION ==================== */
@@ -843,6 +983,41 @@ input[type=range] {
   font-size: 0.82rem;
   color: #0F766E;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* ==================== B5: SKELETON LOADING STYLES ==================== */
+.skeleton-card {
+  pointer-events: none;
+  opacity: 0.85;
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: var(--radius-sm);
+}
+[data-theme="dark"] .skeleton-shimmer {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+  background-size: 200% 100%;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-badge {
+  width: 100px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  margin-bottom: 12px;
+}
+.skeleton-line {
+  height: 14px;
+  margin-bottom: 8px;
+}
+.skeleton-box {
+  height: 60px;
+  margin-top: 14px;
+  border-radius: var(--radius-md);
 }
 
 /* ==================== TAB 3: SELF-ASSESSMENT QUIZ ==================== */
@@ -1036,9 +1211,8 @@ input[type=range] {
   border: 1px solid var(--border-color);
 }
 
-/* ==================== MOBILE NAVIGATION ==================== */
+/* ==================== MOBILE NAVIGATION (A3, A4) ==================== */
 .mobile-bottom-nav {
-  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -1076,8 +1250,9 @@ input[type=range] {
   font-size: 1.25rem;
 }
 
+/* A4: Tăng cỡ chữ mobile lên 0.75rem */
 .nav-label {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -1163,6 +1338,19 @@ input[type=range] {
   .circle-breathe {
     width: 140px;
     height: 140px;
+  }
+}
+
+/* ==================== C2: PREFERS-REDUCED-MOTION ==================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .circle-breathe {
+    transition: none !important;
   }
 }
 
