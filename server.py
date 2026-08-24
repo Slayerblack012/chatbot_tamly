@@ -9,7 +9,8 @@ import logging
 import os
 import time
 from collections import defaultdict
-from typing import Any, Dict, List
+import datetime
+from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -276,6 +277,146 @@ async def generate_summary(payload: EncryptedPayload, request: Request):
     return {"d": b64_encode_text(summary_text)}
 
 
+# =========================================================================
+# FULL CRUD REST API SUITE (SESSIONS, MOOD LOGS, QUIZ RESULTS)
+# =========================================================================
+
+# Database Stores
+db_sessions: Dict[str, Dict[str, Any]] = {}
+db_moods: List[Dict[str, Any]] = []
+db_quiz_results: List[Dict[str, Any]] = []
+
+# Pydantic Schemas for Swagger UI
+class SessionCreateRequest(BaseModel):
+    title: str = Field(default="Cuộc trò chuyện mới", max_length=100)
+    messages: List[Dict[str, Any]] = Field(default_factory=list)
+
+class SessionUpdateRequest(BaseModel):
+    title: Optional[str] = Field(None, max_length=100)
+    messages: Optional[List[Dict[str, Any]]] = None
+
+class MoodCreateRequest(BaseModel):
+    mood: str = Field(..., max_length=50)
+    stress_level: int = Field(..., ge=1, le=10)
+    note: Optional[str] = Field(None, max_length=500)
+
+class QuizResultCreateRequest(BaseModel):
+    quiz_type: str = Field(..., max_length=20)
+    score: int = Field(..., ge=0, le=30)
+    severity: str = Field(..., max_length=100)
+    advice: Optional[str] = Field(None, max_length=1000)
+
+
+# --- 1. CHAT SESSIONS CRUD ---
+@app.get("/api/sessions", tags=["Chat Sessions CRUD"])
+async def get_all_sessions():
+    """[READ ALL] Lấy danh sách tất cả các cuộc trò chuyện đã lưu."""
+    sessions_list = list(db_sessions.values())
+    sessions_list.sort(key=lambda x: x.get("updatedAt", ""), reverse=True)
+    return {"status": "success", "count": len(sessions_list), "data": sessions_list}
+
+@app.post("/api/sessions", tags=["Chat Sessions CRUD"], status_code=201)
+async def create_session(req: SessionCreateRequest):
+    """[CREATE] Tạo một phiên trò chuyện mới."""
+    session_id = f"sess_{int(time.time() * 1000)}"
+    now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    session_data = {
+        "id": session_id,
+        "title": req.title,
+        "createdAt": now_str,
+        "updatedAt": now_str,
+        "messages": req.messages if req.messages else []
+    }
+    db_sessions[session_id] = session_data
+    return {"status": "success", "message": "Đã tạo phiên chat mới thành công", "data": session_data}
+
+@app.get("/api/sessions/{session_id}", tags=["Chat Sessions CRUD"])
+async def get_session_by_id(session_id: str):
+    """[READ ONE] Lấy thông tin chi tiết một phiên trò chuyện theo ID."""
+    if session_id not in db_sessions:
+        raise HTTPException(status_code=404, detail="Không tìm thấy phiên trò chuyện.")
+    return {"status": "success", "data": db_sessions[session_id]}
+
+@app.put("/api/sessions/{session_id}", tags=["Chat Sessions CRUD"])
+async def update_session(session_id: str, req: SessionUpdateRequest):
+    """[UPDATE] Cập nhật tiêu đề hoặc tin nhắn của phiên chat."""
+    if session_id not in db_sessions:
+        raise HTTPException(status_code=404, detail="Không tìm thấy phiên trò chuyện.")
+    sess = db_sessions[session_id]
+    if req.title is not None:
+        sess["title"] = req.title
+    if req.messages is not None:
+        sess["messages"] = req.messages
+    sess["updatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    return {"status": "success", "message": "Đã cập nhật phiên chat", "data": sess}
+
+@app.delete("/api/sessions/{session_id}", tags=["Chat Sessions CRUD"])
+async def delete_session(session_id: str):
+    """[DELETE] Xóa một phiên trò chuyện khỏi hệ thống."""
+    if session_id not in db_sessions:
+        raise HTTPException(status_code=404, detail="Không tìm thấy phiên trò chuyện.")
+    del db_sessions[session_id]
+    return {"status": "success", "message": f"Đã xóa thành công phiên chat {session_id}"}
+
+
+# --- 2. MOOD LOGS CRUD ---
+@app.get("/api/moods", tags=["Mood Logs CRUD"])
+async def get_all_mood_logs():
+    """[READ ALL] Lấy toàn bộ nhật ký cảm xúc & mức độ áp lực."""
+    return {"status": "success", "count": len(db_moods), "data": db_moods}
+
+@app.post("/api/moods", tags=["Mood Logs CRUD"], status_code=201)
+async def create_mood_log(req: MoodCreateRequest):
+    """[CREATE] Ghi nhận nhật ký tâm trạng mới."""
+    mood_id = f"mood_{int(time.time() * 1000)}"
+    entry = {
+        "id": mood_id,
+        "mood": req.mood,
+        "stressLevel": req.stress_level,
+        "note": req.note,
+        "createdAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+    db_moods.insert(0, entry)
+    return {"status": "success", "message": "Đã ghi nhận nhật ký cảm xúc", "data": entry}
+
+@app.delete("/api/moods/{mood_id}", tags=["Mood Logs CRUD"])
+async def delete_mood_log(mood_id: str):
+    """[DELETE] Xóa một bản ghi nhật ký cảm xúc."""
+    global db_moods
+    db_moods = [m for m in db_moods if m.get("id") != mood_id]
+    return {"status": "success", "message": f"Đã xóa bản ghi tâm trạng {mood_id}"}
+
+
+# --- 3. QUIZ RESULTS CRUD ---
+@app.get("/api/quizzes/results", tags=["Quiz Results CRUD"])
+async def get_all_quiz_results():
+    """[READ ALL] Lấy lịch sử kết quả trắc nghiệm tâm lý (GAD-7 / PHQ-9)."""
+    return {"status": "success", "count": len(db_quiz_results), "data": db_quiz_results}
+
+@app.post("/api/quizzes/results", tags=["Quiz Results CRUD"], status_code=201)
+async def create_quiz_result(req: QuizResultCreateRequest):
+    """[CREATE] Lưu bản ghi kết quả đánh giá trắc nghiệm mới."""
+    result_id = f"quiz_{int(time.time() * 1000)}"
+    record = {
+        "id": result_id,
+        "quizType": req.quiz_type,
+        "score": req.score,
+        "severity": req.severity,
+        "advice": req.advice,
+        "createdAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+    db_quiz_results.insert(0, record)
+    return {"status": "success", "message": "Đã lưu kết quả trắc nghiệm", "data": record}
+
+@app.delete("/api/quizzes/results/{result_id}", tags=["Quiz Results CRUD"])
+async def delete_quiz_result(result_id: str):
+    """[DELETE] Xóa một kết quả trắc nghiệm."""
+    global db_quiz_results
+    db_quiz_results = [q for q in db_quiz_results if q.get("id") != result_id]
+    return {"status": "success", "message": f"Đã xóa kết quả trắc nghiệm {result_id}"}
+
+
+
 # Phục vụ Static Files
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 os.makedirs(static_dir, exist_ok=True)
@@ -301,15 +442,15 @@ if __name__ == "__main__":
 
     target_port = int(os.getenv("PORT", 5000))
     if not is_port_available(target_port):
-        logger.warning(f"⚠️ Cổng {target_port} đang bị chiếm dụng, tự động chuyển sang cổng mới...")
+        logger.warning(f"Cong {target_port} dang bi chiem dung, tu dong chuyen sang cong moi...")
         for fallback in range(target_port + 1, target_port + 10):
             if is_port_available(fallback):
                 target_port = fallback
                 break
 
     print("\n============================================================")
-    print(f"🚀 AN NHIÊN SERVER ĐÃ SẴN SÀNG TẠI: http://localhost:{target_port}")
-    print(f"🌐 XEM TÀI LIỆU REST API (SWAGGER UI): http://localhost:{target_port}/docs")
+    print(f"AN NHIEN SERVER DA SAN SANG TAI: http://localhost:{target_port}")
+    print(f"XEM TAI LIEU REST API (SWAGGER UI): http://localhost:{target_port}/docs")
     print("============================================================\n")
 
     uvicorn.run("server:app", host="0.0.0.0", port=target_port, reload=False)
