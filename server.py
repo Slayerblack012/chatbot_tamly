@@ -32,9 +32,9 @@ load_dotenv()
 
 app = FastAPI(
     title="An Nhien Platform",
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # 1. CORS Configuration (An toàn, cùng nguồn gốc)
@@ -289,3 +289,9 @@ async def serve_index():
     if os.path.exists(index_file):
         return FileResponse(index_file, media_type="text/html")
     return HTMLResponse("<h1>Đang khởi tạo ứng dụng An Nhiên...</h1>")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 5000))
+    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)
