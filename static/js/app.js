@@ -1316,6 +1316,37 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderRealQuizRadar(quizType, answers) {
     const container = document.getElementById("quiz-radar-svg-wrapper");
     const chipsContainer = document.getElementById("quiz-radar-dimension-chips");
+    const statusBadge = document.getElementById("quiz-radar-status-badge");
+    
+    // Dynamic emotion status badge based on real data
+    if (statusBadge && answers) {
+      const total = answers.reduce((a, b) => a + b, 0);
+      const isPHQ9 = quizType === "phq9";
+      const item9 = (isPHQ9 && answers.length >= 9) ? answers[8] : 0;
+      const maxPts = quizType === "phq9" ? 27 : 21;
+
+      if (item9 >= 1 || total >= maxPts * 0.65) {
+        statusBadge.innerHTML = "⚠️ Cần Hỗ Trợ Gấp";
+        statusBadge.style.color = "#EF4444";
+        statusBadge.style.backgroundColor = "rgba(239, 68, 68, 0.12)";
+        statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+      } else if (total >= maxPts * 0.45) {
+        statusBadge.innerHTML = "⚠️ Cần Lưu Ý";
+        statusBadge.style.color = "#F59E0B";
+        statusBadge.style.backgroundColor = "rgba(245, 158, 11, 0.12)";
+        statusBadge.style.borderColor = "rgba(245, 158, 11, 0.3)";
+      } else if (total >= maxPts * 0.25) {
+        statusBadge.innerHTML = "😐 Áp Lực Nhẹ";
+        statusBadge.style.color = "#3B82F6";
+        statusBadge.style.backgroundColor = "rgba(59, 130, 246, 0.12)";
+        statusBadge.style.borderColor = "rgba(59, 130, 246, 0.3)";
+      } else {
+        statusBadge.innerHTML = "😊 Tâm Trạng Tốt";
+        statusBadge.style.color = "#10B981";
+        statusBadge.style.backgroundColor = "rgba(16, 185, 129, 0.12)";
+        statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+      }
+    }
     if (!container || !answers || answers.length === 0) return;
 
     let dimensions = [];
