@@ -8,10 +8,8 @@ from google.genai import types
 
 from core.prompts import BASE_COUNSELOR_PERSONA, MODE_PROMPTS, SUMMARY_PROMPT
 
-# Cấu hình logging
 logger = logging.getLogger("an_nhien.bot_engine")
 
-# Tìm nạp file .env ở thư mục gốc của dự án
 env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 if os.path.exists(env_path):
     load_dotenv(dotenv_path=env_path)
@@ -44,7 +42,6 @@ def sanitize_messages_for_gemini(raw_messages: List[Dict[str, str]]) -> List[Dic
             continue
 
         if clean and clean[-1]["role"] == role:
-            # Gộp hai tin cùng role lại với nhau
             clean[-1]["content"] += f"\n\n{content}"
         else:
             clean.append({"role": role, "content": content})
@@ -90,11 +87,9 @@ class CounselorEngine:
         """Tạo prompt hệ thống kết hợp chế độ trò chuyện và bối cảnh tâm trạng người dùng."""
         prompt = BASE_COUNSELOR_PERSONA
 
-        # Thêm chỉ dẫn theo chế độ
         mode_instruction = MODE_PROMPTS.get(mode, MODE_PROMPTS["empathy"])
         prompt += f"\n\n{mode_instruction}"
 
-        # Thêm bối cảnh cảm xúc nếu có
         if mood_context and isinstance(mood_context, dict):
             mood_name = str(mood_context.get("mood_name", "Chưa xác định"))[:50]
             try:
@@ -195,20 +190,17 @@ class CounselorEngine:
                         has_yielded = True
                         yield chunk.text
 
-                # Thành công: Cập nhật active_model đệm
                 self.active_model = target_model
                 return
             except Exception as exc:
                 last_err = exc
                 logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
-                # Nếu đã xuất token ra client rồi thì KHÔNG fallback sang model khác để tránh lặp text
                 if has_yielded:
                     logger.error("Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.")
                     yield "\n\n*(Kết nối gặp gián đoạn tạm thời.)*"
                     return
                 continue
 
-        # Nếu toàn bộ các model fallback đều thất bại trước khi gửi bất kỳ chunk nào
         err_str = str(last_err).lower() if last_err else ""
         if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
             yield """**An Nhiên xin lỗi bạn nhé.**
@@ -346,3 +338,4 @@ Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một n
                 continue
 
         return "Không thể tạo tóm tắt lúc này."
+

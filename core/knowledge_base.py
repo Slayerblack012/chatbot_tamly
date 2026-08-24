@@ -1,8 +1,3 @@
-"""
-Co so du lieu kien thuc giao duc tam ly (Psychoeducation), bay tu duy CBT va bo cau hoi danh gia.
-Toan bo du lieu duoc chuan hoa, khong su dung emoji trong noi dung tham van.
-"""
-
 COGNITIVE_DISTORTIONS = [
     {
         "id": "all_or_nothing",
@@ -78,7 +73,6 @@ PSYCHOEDU_ARTICLES = [
         "readTime": "3 phút đọc",
         "summary": "Hiểu rõ mối quan hệ mật thiết giữa Suy nghĩ -> Cảm xúc -> Hành vi để làm chủ tâm trạng.",
         "content": """
-### Tam Giác Nhận Thức Là Gì?
 Trong Liệu pháp Nhận thức - Hành vi (CBT), các nhà tâm lý học phát hiện ra rằng **không phải sự việc bên ngoài khiến bạn đau khổ, mà chính cách bạn diễn giải (suy nghĩ về) sự việc đó tạo nên cảm xúc của bạn.**
 
 1. **Suy nghĩ (Thoughts)**: Những câu thoại nội tâm bạn tự nói với chính mình khi gặp một tình huống.
@@ -95,7 +89,6 @@ Trong Liệu pháp Nhận thức - Hành vi (CBT), các nhà tâm lý học phá
         "readTime": "4 phút đọc",
         "summary": "Các bước thực hành tâm lý giúp vượt qua áp lực điểm số, thi cử và kỳ vọng gia đình.",
         "content": """
-### Áp Lực Học Tập & Cách Tháo Gỡ:
 1. **Phân biệt Áp lực lành mạnh (Eustress) & Áp lực kiệt sức (Distress)**:
    - Một chút căng thẳng vừa phải giúp bạn tập trung và tăng năng suất.
    - Nhưng khi tim đập nhanh kéo dài, mất ngủ và sợ hãi, cơ thể đang báo động kiệt sức.
@@ -116,7 +109,6 @@ Trong Liệu pháp Nhận thức - Hành vi (CBT), các nhà tâm lý học phá
         "readTime": "3 phút đọc",
         "summary": "Tại sao não bộ lại liên tục nghĩ ngợi vào ban đêm và cách ngắt mạch suy nghĩ lặp lại.",
         "content": """
-### Não Bộ Hoạt Động Thế Nào Khi Bạn Suy Nghĩ Miên Man?
 Hạch hạnh nhân (Amygdala) - trung tâm cảnh báo nguy hiểm trong não - bị kích hoạt quá mức, khiến não hiểu nhầm các suy nghĩ tưởng tượng là mối đe dọa thực tế.
 
 **3 Bước Ngắt Mạch Suy Nghĩ:**
@@ -231,3 +223,4 @@ ASSESSMENT_QUIZZES = {
         ]
     }
 }
+

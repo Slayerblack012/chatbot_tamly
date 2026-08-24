@@ -1,8 +1,3 @@
-"""
-Server Backend cho An Nhiên Edu-Psychology Platform (Encrypted Payload & Zero Tech Disclosure).
-Hỗ trợ Base64 payload obfuscation, Non-blocking Async SSE, Rate Limiting, Security Headers & CSP.
-"""
-
 import base64
 import datetime
 import json
@@ -22,7 +17,6 @@ from pydantic import BaseModel, Field
 from core.bot_engine import CounselorEngine, sanitize_messages_for_gemini
 from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES
 
-# Thiết lập logging chuẩn
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -38,11 +32,9 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# 1. CORS Configuration (An toàn, cùng nguồn gốc)
 allowed_origins_env = os.getenv("CORS_ORIGINS", "")
 allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 if not allowed_origins:
-    # Mặc định an toàn cho môi trường cục bộ
     allowed_origins = ["http://localhost:8000", "http://127.0.0.1:8000"]
 
 app.add_middleware(
@@ -53,7 +45,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Middleware Security Headers & Content-Security-Policy
 @app.middleware("http")
 async def security_and_privacy_headers(request: Request, call_next):
     response: Response = await call_next(request)
@@ -62,7 +53,6 @@ async def security_and_privacy_headers(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-    # Header Content-Security-Policy (CSP) - Đã siết chặt theo chuẩn Self-hosted
     csp_directives = [
         "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: cdn.jsdelivr.net",
@@ -79,7 +69,6 @@ async def security_and_privacy_headers(request: Request, call_next):
     return response
 
 
-# 3. Rate Limiting in-memory chống DoS / Spam (R1: Chỉ tin Header Proxy khi được cấu hình)
 RATE_LIMIT_WINDOW = 60
 MAX_REQUESTS_PER_WINDOW = 45
 request_history: Dict[str, List[float]] = defaultdict(list)
@@ -113,7 +102,6 @@ def check_rate_limit(client_ip: str) -> None:
     valid_timestamps.append(now)
     request_history[client_ip] = valid_timestamps
 
-    # Tự động dọn dẹp bộ nhớ nếu bảng IP lưu trữ lớn hơn 500 mục
     if len(request_history) > 500:
         stale_keys = [
             ip for ip, times in request_history.items()
@@ -123,7 +111,6 @@ def check_rate_limit(client_ip: str) -> None:
             request_history.pop(ip, None)
 
 
-# Khởi tạo Engine (R2: Bọc an toàn không để crash server khi khởi động)
 try:
     engine = CounselorEngine()
 except Exception as exc:
@@ -131,7 +118,6 @@ except Exception as exc:
     engine = CounselorEngine(api_key="")
 
 
-# Helpers mã hóa & giải mã Base64
 def b64_decode_json(encoded_str: str) -> Dict[str, Any]:
     try:
         raw_bytes = base64.b64decode(encoded_str.encode("utf-8"))
@@ -152,7 +138,6 @@ class EncryptedPayload(BaseModel):
 @app.get("/api/health")
 async def health_check():
     """Endpoint kiểm tra trạng thái hoạt động thực tế (R7)."""
-    # Nếu engine chưa sẵn sàng, thử nạp lại 1 lần phòng khi .env vừa được cập nhật
     if not engine.is_ready():
         engine.reload()
     is_ready = engine.is_ready()
@@ -186,20 +171,17 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
             yield f"data: {json.dumps({'d': msg, 'f': 1})}\n\n"
         return StreamingResponse(not_ready_gen(), media_type="text/event-stream")
 
-    # Giải mã Base64
     data = b64_decode_json(payload.p)
     raw_messages = data.get("messages", [])
     mode = str(data.get("mode", "empathy"))[:20]
     raw_mood_context = data.get("mood_context")
     raw_temp = data.get("temperature", 0.8)
 
-    # Validate & Clamp temperature
     try:
         temperature = max(0.0, min(2.0, float(raw_temp)))
     except (ValueError, TypeError):
         temperature = 0.8
 
-    # Validate mood context
     mood_context = None
     if isinstance(raw_mood_context, dict):
         try:
@@ -213,11 +195,9 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
             "note": str(raw_mood_context.get("note", ""))[:500]
         }
 
-    # Validation tin nhắn
     if not isinstance(raw_messages, list) or len(raw_messages) == 0:
         raise HTTPException(status_code=400, detail="Danh sách tin nhắn trống.")
 
-    # Lấy 30 tin gần nhất & gộp các tin liên tiếp cùng role
     recent_raw = raw_messages[-30:]
     clean_messages = sanitize_messages_for_gemini(recent_raw)
 
@@ -277,16 +257,11 @@ async def generate_summary(payload: EncryptedPayload, request: Request):
     return {"d": b64_encode_text(summary_text)}
 
 
-# =========================================================================
-# FULL CRUD REST API SUITE (SESSIONS, MOOD LOGS, QUIZ RESULTS)
-# =========================================================================
 
-# Database Stores
 db_sessions: Dict[str, Dict[str, Any]] = {}
 db_moods: List[Dict[str, Any]] = []
 db_quiz_results: List[Dict[str, Any]] = []
 
-# Pydantic Schemas for Swagger UI
 class SessionCreateRequest(BaseModel):
     title: str = Field(default="Cuộc trò chuyện mới", max_length=100)
     messages: List[Dict[str, Any]] = Field(default_factory=list)
@@ -307,7 +282,6 @@ class QuizResultCreateRequest(BaseModel):
     advice: Optional[str] = Field(None, max_length=1000)
 
 
-# --- 1. CHAT SESSIONS CRUD ---
 @app.get("/api/sessions", tags=["Chat Sessions CRUD"])
 async def get_all_sessions():
     """[READ ALL] Lấy danh sách tất cả các cuộc trò chuyện đã lưu."""
@@ -359,7 +333,6 @@ async def delete_session(session_id: str):
     return {"status": "success", "message": f"Đã xóa thành công phiên chat {session_id}"}
 
 
-# --- 2. MOOD LOGS CRUD ---
 @app.get("/api/moods", tags=["Mood Logs CRUD"])
 async def get_all_mood_logs():
     """[READ ALL] Lấy toàn bộ nhật ký cảm xúc & mức độ áp lực."""
@@ -387,7 +360,6 @@ async def delete_mood_log(mood_id: str):
     return {"status": "success", "message": f"Đã xóa bản ghi tâm trạng {mood_id}"}
 
 
-# --- 3. QUIZ RESULTS CRUD ---
 @app.get("/api/quizzes/results", tags=["Quiz Results CRUD"])
 async def get_all_quiz_results():
     """[READ ALL] Lấy lịch sử kết quả trắc nghiệm tâm lý (GAD-7 / PHQ-9)."""
@@ -417,7 +389,6 @@ async def delete_quiz_result(result_id: str):
 
 
 
-# Phục vụ Static Files
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 os.makedirs(static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
@@ -455,3 +426,4 @@ if __name__ == "__main__":
     print("============================================================\n")
 
     uvicorn.run("server:app", host="0.0.0.0", port=target_port, reload=False)
+

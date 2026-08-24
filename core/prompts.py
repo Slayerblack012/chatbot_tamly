@@ -1,8 +1,3 @@
-"""
-Hệ Thống Trí Tuệ & Chỉ Dẫn Hệ Thống Cho An Nhiên Tâm Lý (Human-like, Natural & Adaptive).
-Đặc trưng: Trò chuyện tự nhiên, thấu cảm, ứng biến linh hoạt, chân thành và có chiều sâu tri thức.
-"""
-
 from datetime import datetime
 
 
@@ -95,3 +90,4 @@ ICEBREAKERS = [
     {"title": "Tự ti và hay so sánh bản thân", "prompt": "Mình luôn thấy mình kém cỏi so với người khác và hay tự trách bản thân, hãy giúp mình thoát khỏi cảm giác này..."},
     {"title": "Cách tĩnh tâm và làm chủ cuộc sống", "prompt": "An Nhiên ơi, hãy chia sẻ cho mình cách để làm chủ tâm trí và xây dựng nội lực bình yên trước mọi áp lực..."},
 ]
+

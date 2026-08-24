@@ -1,16 +1,9 @@
-"""
-Giao dien dong lenh (CLI) cho An Nhien Tam Ly.
-De chay giao dien Web, vui long chay lenh:
-    python run.py
-"""
-
 import io
 import sys
 
 from core.bot_engine import CounselorEngine
 from core.prompts import get_time_greeting
 
-# Cau hinh UTF-8 cho Windows Terminal
 if sys.stdout.encoding != 'utf-8':
     try:
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -84,3 +77,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
