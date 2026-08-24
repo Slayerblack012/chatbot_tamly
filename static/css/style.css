@@ -2048,3 +2048,17 @@ input[type=range] {
   line-height: 1.7;
   box-shadow: var(--shadow-sm);
 }
+
+/* ==================== QUIZ RADAR MOBILE RESPONSIVE ==================== */
+@media (max-width: 680px) {
+  .quiz-result-grid-layout {
+    grid-template-columns: 1fr;
+  }
+  .quiz-radar-svg-wrapper svg {
+    max-width: 280px;
+    height: 200px;
+  }
+  .quiz-radar-dimension-chips {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -1285,7 +1285,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("quiz-level-text").style.color = (item9Score >= 1 && bracket.color === "#10B981") ? "#EA580C" : bracket.color;
 
     // Render Real Clinical Symptom Radar Chart
-    renderRealQuizRadar(state.activeQuizType, state.quizState.answers);
+    try {
+      renderRealQuizRadar(state.activeQuizType, state.quizState.answers);
+    } catch (e) {
+      console.error("[Radar] Error rendering radar chart:", e);
+    }
 
     let adviceHtml = `
       <div style="margin-bottom: 10px;">
@@ -1321,6 +1325,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderRealQuizRadar(quizType, answers) {
     const container = document.getElementById("quiz-radar-svg-wrapper");
     const chipsContainer = document.getElementById("quiz-radar-dimension-chips");
+    if (!container || !answers || answers.length === 0) {
+      console.warn("[Radar] Container or answers missing", { container: !!container, answers });
+      return;
+    }
     let dimensions = [];
 
     if (quizType === "gad7") {
