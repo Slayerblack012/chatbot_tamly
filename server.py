@@ -401,6 +401,36 @@ async def delete_quiz_result(result_id: str):
     return {"status": "success", "message": f"Đã xóa kết quả trắc nghiệm {result_id}"}
 
 
+tts_cache: Dict[str, bytes] = {}
+
+@app.get("/api/tts", tags=["Voice Engine"])
+async def get_vietnamese_tts(text: str):
+    """Phục vụ giọng đọc nữ tiếng Việt chất lượng cao chuẩn ngữ điệu."""
+    if not text or len(text.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Vui lòng cung cấp văn bản cần đọc")
+    
+    cleaned_text = text.strip()[:200]
+    if cleaned_text in tts_cache:
+        return Response(content=tts_cache[cleaned_text], media_type="audio/mpeg")
+    
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.get(
+                "https://translate.google.com/translate_tts",
+                params={"ie": "UTF-8", "tl": "vi", "client": "tw-ob", "q": cleaned_text},
+                headers={"User-Agent": "Mozilla/5.0"}
+            )
+            if resp.status_code == 200 and len(resp.content) > 500:
+                tts_cache[cleaned_text] = resp.content
+                return Response(content=resp.content, media_type="audio/mpeg")
+    except Exception as e:
+        logger.warning(f"Lỗi khi tải TTS: {e}")
+    
+    raise HTTPException(status_code=502, detail="Không thể tạo giọng đọc lúc này")
+
+
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(BASE_DIR, "static")

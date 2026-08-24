@@ -1698,85 +1698,54 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => playMindfulnessChime(648, 4.5, 0.65), 1100);
   }
 
-  // --- Vietnamese Female Voice Engine ---
-  let cachedFemaleVoice = null;
+  // --- Pure High-Definition Vietnamese Female Voice Engine (100% Guaranteed Female & Vietnamese) ---
+  const femaleVoiceAudios = {
+    intro: new Audio("/static/audio/tts/intro.mp3"),
+    inhale_4s: new Audio("/static/audio/tts/inhale_4s.mp3"),
+    hold_7s: new Audio("/static/audio/tts/hold_7s.mp3"),
+    hold_4s: new Audio("/static/audio/tts/hold_4s.mp3"),
+    exhale_8s: new Audio("/static/audio/tts/exhale_8s.mp3"),
+    exhale_4s: new Audio("/static/audio/tts/exhale_4s.mp3"),
+    rest_4s: new Audio("/static/audio/tts/rest_4s.mp3"),
+    completed: new Audio("/static/audio/tts/completed.mp3")
+  };
 
-  function loadAndSelectFemaleVoice() {
-    if (!("speechSynthesis" in window)) return null;
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return null;
+  let activeVoiceAudio = null;
 
-    const femaleKeywords = [
-      "hoaimy", "hoài my", "linh", "chi", "mai", "lan", "ngọc", "ngoc", 
-      "female", "nữ", "nu", "google tiếng việt", "google tieng viet",
-      "wavenet-a", "wavenet-c", "standard-a", "standard-c", "vic-network", "gft-network"
-    ];
-
-    const maleKeywords = [
-      "namminh", "nam minh", "microsoft an", " an ", "male", "nam", "viet", "minh", "david", "mark", "george"
-    ];
-
-    // Priority 1: Verified Vietnamese Female Voice (HoaiMy, Linh, Chi, Google Tieng Viet...)
-    for (const v of voices) {
-      const isVi = v.lang && (v.lang.toLowerCase().includes("vi") || v.lang.toLowerCase().includes("vie"));
-      const name = (v.name || "").toLowerCase();
-      if (isVi && femaleKeywords.some(kw => name.includes(kw))) {
-        cachedFemaleVoice = v;
-        return v;
-      }
+  function stopAllVoiceAudio() {
+    if (activeVoiceAudio) {
+      try {
+        activeVoiceAudio.pause();
+        activeVoiceAudio.currentTime = 0;
+      } catch (e) {}
+      activeVoiceAudio = null;
     }
-
-    // Priority 2: Any Vietnamese voice that is not explicitly named male
-    for (const v of voices) {
-      const isVi = v.lang && (v.lang.toLowerCase().includes("vi") || v.lang.toLowerCase().includes("vie"));
-      const name = (v.name || "").toLowerCase();
-      if (isVi && !maleKeywords.some(m => name.includes(m))) {
-        cachedFemaleVoice = v;
-        return v;
-      }
-    }
-
-    // Priority 3: Fallback any Vietnamese voice
-    const anyVi = voices.find(v => v.lang && (v.lang.toLowerCase().includes("vi") || v.lang.toLowerCase().includes("vie")));
-    if (anyVi) {
-      cachedFemaleVoice = anyVi;
-      return anyVi;
-    }
-
-    return null;
   }
 
-  // Pre-fetch voices on start and on voices changed
-  if ("speechSynthesis" in window) {
-    loadAndSelectFemaleVoice();
-    window.speechSynthesis.onvoiceschanged = () => {
-      loadAndSelectFemaleVoice();
-    };
-  }
-
-  function speakBreathingGuide(text) {
+  function playVietnameseFemaleVoice(audioKey, fallbackText = "") {
     if (state.breathingSoundMode !== "voice_bell") return;
-    if (!("speechSynthesis" in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "vi-VN";
+    stopAllVoiceAudio();
 
-      const femaleVoice = cachedFemaleVoice || loadAndSelectFemaleVoice();
-      if (femaleVoice) {
-        utter.voice = femaleVoice;
-        const name = (femaleVoice.name || "").toLowerCase();
-        const isKnownMale = name.includes("an") || name.includes("namminh") || name.includes("male");
-        utter.pitch = isKnownMale ? 1.4 : 1.16;
-      } else {
-        utter.pitch = 1.25;
+    const audioObj = femaleVoiceAudios[audioKey];
+    if (audioObj) {
+      activeVoiceAudio = audioObj;
+      audioObj.currentTime = 0;
+      audioObj.volume = 1.0;
+      const p = audioObj.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          if (fallbackText) {
+            const fallbackAudio = new Audio(`/api/tts?text=${encodeURIComponent(fallbackText)}`);
+            activeVoiceAudio = fallbackAudio;
+            fallbackAudio.play().catch(() => {});
+          }
+        });
       }
-
-      utter.rate = 0.84; // Gentle, calm meditation pace
-      utter.volume = 1.0;
-
-      window.speechSynthesis.speak(utter);
-    } catch (e) {}
+    } else if (fallbackText) {
+      const fallbackAudio = new Audio(`/api/tts?text=${encodeURIComponent(fallbackText)}`);
+      activeVoiceAudio = fallbackAudio;
+      fallbackAudio.play().catch(() => {});
+    }
   }
 
   // Duration Presets Selection
@@ -1801,7 +1770,9 @@ document.addEventListener("DOMContentLoaded", () => {
       soundPresetsContainer.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.breathingSoundMode = btn.getAttribute("data-sound");
-      if (state.breathingSoundMode !== "mute") {
+      if (state.breathingSoundMode === "voice_bell") {
+        playVietnameseFemaleVoice("inhale_4s", "Hít vào sâu bốn giây");
+      } else if (state.breathingSoundMode === "bell_only") {
         playMindfulnessChime(520, 1.2, 0.3);
       }
     });
@@ -1872,14 +1843,14 @@ document.addEventListener("DOMContentLoaded", () => {
     getMindfulnessAudioCtx();
     updateProgressDisplay();
 
-    // Initial chime and voice prompt
+    // Initial chime and Vietnamese female voice prompt
     playMindfulnessChime(396, 3.2, 0.45);
-    speakBreathingGuide("Bắt đầu thả lỏng và hít thở cùng An Nhiên nhé.");
+    playVietnameseFemaleVoice("intro", "Bắt đầu thả lỏng và hít thở cùng An Nhiên nhé.");
 
     setTimeout(() => {
       if (!state.breathingActive) return;
       initiateBreathingPhases();
-    }, 1300);
+    }, 1800);
   }
 
   function stopBreathing(completed = false) {
@@ -1888,9 +1859,7 @@ document.addEventListener("DOMContentLoaded", () => {
       clearInterval(state.breathingTimer);
       state.breathingTimer = null;
     }
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopAllVoiceAudio();
 
     btnToggleBreathe.textContent = "▶️ Bắt Đầu Bài Tập Thở";
     btnToggleBreathe.style.background = "";
@@ -1903,7 +1872,7 @@ document.addEventListener("DOMContentLoaded", () => {
       breatheTimerText.classList.remove("countdown-active");
       breatheTimerText.textContent = "BẮT ĐẦU";
       playMilestoneCompletedFanfare();
-      speakBreathingGuide("Phiên tập thở đã hoàn thành. Hãy mở mắt từ từ và giữ trọn sự an yên này nhé.");
+      playVietnameseFemaleVoice("completed", "Phiên tập thở đã hoàn thành. Hãy mở mắt từ từ và giữ trọn sự an yên này nhé.");
     } else {
       breatheActionText.style.display = "none";
       breatheTimerText.classList.remove("countdown-active");
@@ -1917,16 +1886,16 @@ document.addEventListener("DOMContentLoaded", () => {
     let phases = [];
     if (state.breathingMode === "478") {
       phases = [
-        { name: "inhale", title: "Hít vào sâu", duration: 4, voice: "Hít vào sâu bốn giây", chimeFreq: 432, css: "circle-breathe inhale" },
-        { name: "hold", title: "Giữ hơi thở", duration: 7, voice: "Giữ hơi thở bảy giây", chimeFreq: 528, css: "circle-breathe hold" },
-        { name: "exhale", title: "Thở ra êm", duration: 8, voice: "Thở ra từ từ tám giây", chimeFreq: 396, css: "circle-breathe exhale" }
+        { name: "inhale", title: "Hít vào sâu", duration: 4, audioKey: "inhale_4s", voice: "Hít vào sâu bốn giây", chimeFreq: 432, css: "circle-breathe inhale" },
+        { name: "hold", title: "Giữ hơi thở", duration: 7, audioKey: "hold_7s", voice: "Giữ hơi thở bảy giây", chimeFreq: 528, css: "circle-breathe hold" },
+        { name: "exhale", title: "Thở ra êm", duration: 8, audioKey: "exhale_8s", voice: "Thở ra từ từ tám giây", chimeFreq: 396, css: "circle-breathe exhale" }
       ];
     } else {
       phases = [
-        { name: "inhale", title: "Hít vào", duration: 4, voice: "Hít vào bốn giây", chimeFreq: 432, css: "circle-breathe inhale" },
-        { name: "hold1", title: "Giữ hơi", duration: 4, voice: "Giữ hơi bốn giây", chimeFreq: 528, css: "circle-breathe hold" },
-        { name: "exhale", title: "Thở ra", duration: 4, voice: "Thở ra bốn giây", chimeFreq: 396, css: "circle-breathe exhale" },
-        { name: "hold2", title: "Nghỉ ngơi", duration: 4, voice: "Thả lỏng bốn giây", chimeFreq: 360, css: "circle-breathe" }
+        { name: "inhale", title: "Hít vào", duration: 4, audioKey: "inhale_4s", voice: "Hít vào bốn giây", chimeFreq: 432, css: "circle-breathe inhale" },
+        { name: "hold1", title: "Giữ hơi", duration: 4, audioKey: "hold_4s", voice: "Giữ hơi bốn giây", chimeFreq: 528, css: "circle-breathe hold" },
+        { name: "exhale", title: "Thở ra", duration: 4, audioKey: "exhale_4s", voice: "Thở ra bốn giây", chimeFreq: 396, css: "circle-breathe exhale" },
+        { name: "hold2", title: "Nghỉ ngơi", duration: 4, audioKey: "rest_4s", voice: "Thả lỏng bốn giây", chimeFreq: 360, css: "circle-breathe" }
       ];
     }
 
@@ -1940,7 +1909,7 @@ document.addEventListener("DOMContentLoaded", () => {
       breatheTimerText.classList.add("countdown-active");
       breatheTimerText.textContent = `${currentPhaseSecondsLeft}s`;
       playMindfulnessChime(phase.chimeFreq, 3.2, 0.45);
-      speakBreathingGuide(phase.voice);
+      playVietnameseFemaleVoice(phase.audioKey, phase.voice);
     }
 
     applyPhase(phases[0]);
