@@ -1847,10 +1847,48 @@ input[type=range] {
 }
 
 
-/* ==================== PREMIUM NEON GLASSMORPHISM DESIGN OVERRIDES ==================== */
+/* ==================== HARMONIZED & SYNCHRONIZED LIGHT/DARK COLOR PALETTE ==================== */
+.btn-sidebar-action {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-sidebar-action:hover {
+  background: #E2E8F0;
+  border-color: #0D9488;
+  color: #0D9488;
+}
+
+.chip-btn {
+  border-radius: 20px;
+  padding: 8px 16px;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.chip-btn:hover {
+  background: #F0FDFA;
+  border-color: #0D9488;
+  color: #0D9488;
+  box-shadow: 0 0 10px rgba(13, 148, 136, 0.2);
+  transform: translateY(-1px);
+}
+
 .msg-wrapper.assistant .msg-avatar {
   background: linear-gradient(135deg, #0D9488, #1E293B);
-  box-shadow: 0 0 14px rgba(45, 212, 191, 0.45);
+  box-shadow: 0 0 14px rgba(45, 212, 191, 0.35);
   border: 1.5px solid #2DD4BF;
 }
 
@@ -1860,16 +1898,26 @@ input[type=range] {
   box-shadow: 0 0 12px rgba(45, 212, 191, 0.8);
 }
 
-.chip-btn {
-  border-radius: 20px;
-  padding: 8px 16px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid var(--border-color);
-  backdrop-filter: blur(8px);
-  transition: all 0.25s ease;
+[data-theme="dark"] .btn-sidebar-action {
+  background: #0F172A;
+  border: 1px solid #334155;
+  color: #F1F5F9;
 }
 
-.chip-btn:hover {
+[data-theme="dark"] .btn-sidebar-action:hover {
+  background: #1E293B;
+  border-color: #2DD4BF;
+  color: #2DD4BF;
+}
+
+[data-theme="dark"] .chip-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid #334155;
+  color: #F1F5F9;
+}
+
+[data-theme="dark"] .chip-btn:hover {
+  background: #1E293B;
   border-color: #2DD4BF;
   color: #2DD4BF;
   box-shadow: 0 0 12px rgba(45, 212, 191, 0.35);
