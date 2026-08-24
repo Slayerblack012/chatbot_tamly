@@ -4,12 +4,12 @@ Hỗ trợ Base64 payload obfuscation, Non-blocking Async SSE, Rate Limiting, Se
 """
 
 import base64
+import datetime
 import json
 import logging
 import os
 import time
 from collections import defaultdict
-import datetime
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
@@ -64,13 +64,13 @@ async def security_and_privacy_headers(request: Request, call_next):
 
     # Header Content-Security-Policy (CSP) - Đã siết chặt theo chuẩn Self-hosted
     csp_directives = [
-        "default-src 'self'",
-        "script-src 'self'",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com data:",
-        "media-src 'self' https://cdn.pixabay.com data: blob:",
-        "img-src 'self' data: https:",
-        "connect-src 'self'",
+        "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: cdn.jsdelivr.net",
+        "style-src 'self' 'unsafe-inline' https: fonts.googleapis.com cdn.jsdelivr.net",
+        "font-src 'self' https: fonts.gstatic.com data:",
+        "media-src 'self' https: cdn.pixabay.com data: blob:",
+        "img-src 'self' data: https: blob: cdn.jsdelivr.net",
+        "connect-src 'self' https: wss: ws:",
         "frame-ancestors 'self'",
         "base-uri 'self'",
         "form-action 'self'"
@@ -433,8 +433,9 @@ async def serve_index():
 
 
 if __name__ == "__main__":
-    import uvicorn
     import socket
+
+    import uvicorn
 
     def is_port_available(p: int) -> bool:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
