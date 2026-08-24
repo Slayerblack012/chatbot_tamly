@@ -16,12 +16,11 @@ if os.path.exists(env_path):
 else:
     load_dotenv()
 
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 FALLBACK_MODELS = [
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
     "gemini-2.5-flash",
-    "gemini-1.5-pro",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
 ]
 
 
@@ -212,7 +211,9 @@ Hiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng l
 Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua mục Thư Giãn & Tĩnh Tâm để thả lỏng một chút nhé. Mình sẽ sớm quay lại cùng bạn."""
         elif any(kw in err_str for kw in ["api_key", "unauthorized", "400", "invalid"]):
             yield f"\n\n*(Lỗi API Key: {last_err}. Bạn hãy kiểm tra lại GEMINI_API_KEY trên Render nhé.)*"
-        elif any(kw in err_str for kw in ["location", "region", "403", "not supported"]):
+        elif "404" in err_str or "not_found" in err_str or "not found" in err_str:
+            yield f"\n\n*(Lỗi mô hình Gemini: {last_err})*"
+        elif any(kw in err_str for kw in ["location", "region", "403"]):
             yield f"\n\n*(Lỗi vùng máy chủ Render: {last_err}. Vùng IP hiện tại của Render bị Google Gemini hạn chế.)*"
         else:
             yield f"\n\n*(An Nhiên gặp sự cố kết nối Gemini API: {last_err})*"
