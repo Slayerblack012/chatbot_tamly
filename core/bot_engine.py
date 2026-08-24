@@ -16,10 +16,10 @@ if os.path.exists(env_path):
 else:
     load_dotenv()
 
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 FALLBACK_MODELS = [
-    "gemini-3.6-flash",
     "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
     "gemini-flash-latest",
 ]
 
@@ -179,7 +179,7 @@ class CounselorEngine:
                     config=types.GenerateContentConfig(
                         system_instruction=system_instruction,
                         temperature=clamped_temp,
-                        max_output_tokens=1500,
+                        max_output_tokens=800,
                     ),
                     history=history_contents if history_contents else None,
                 )
@@ -251,7 +251,7 @@ Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một n
                     config=types.GenerateContentConfig(
                         system_instruction=system_instruction,
                         temperature=clamped_temp,
-                        max_output_tokens=1500,
+                        max_output_tokens=800,
                     ),
                     history=history_contents if history_contents else None,
                 )
