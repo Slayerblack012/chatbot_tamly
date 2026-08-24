@@ -293,5 +293,23 @@ async def serve_index():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 5000))
-    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)
+    import socket
+
+    def is_port_available(p: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(("127.0.0.1", p)) != 0
+
+    target_port = int(os.getenv("PORT", 5000))
+    if not is_port_available(target_port):
+        logger.warning(f"⚠️ Cổng {target_port} đang bị chiếm dụng, tự động chuyển sang cổng mới...")
+        for fallback in range(target_port + 1, target_port + 10):
+            if is_port_available(fallback):
+                target_port = fallback
+                break
+
+    print("\n============================================================")
+    print(f"🚀 AN NHIÊN SERVER ĐÃ SẴN SÀNG TẠI: http://localhost:{target_port}")
+    print(f"🌐 XEM TÀI LIỆU REST API (SWAGGER UI): http://localhost:{target_port}/docs")
+    print("============================================================\n")
+
+    uvicorn.run("server:app", host="0.0.0.0", port=target_port, reload=False)
