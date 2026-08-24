@@ -1399,12 +1399,79 @@ input[type=range] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 0;
+  padding: 16px 0;
+}
+
+/* ==================== MINDFULNESS BREATHING UPGRADES ==================== */
+.breathe-controls-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.breathe-controls-row .control-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breathe-controls-row .chips-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.breathe-progress-wrapper {
+  margin-top: 10px;
+  margin-bottom: 8px;
+  background: var(--primary-light);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.breathe-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--primary-hover);
+  margin-bottom: 6px;
+}
+
+.breathe-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(13, 148, 136, 0.15);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.breathe-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0D9488 0%, #38BDF8 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.5s linear;
+}
+
+.breathe-countdown {
+  font-size: 1.65rem !important;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-top: 4px;
+  font-family: var(--font-heading);
+  color: inherit;
+  transition: transform 0.2s ease;
 }
 
 .circle-breathe {
-  width: 170px;
-  height: 170px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   background: radial-gradient(circle, #CCFBF1 0%, #99F6E4 100%);
   border: 4px solid var(--primary);
@@ -1414,9 +1481,10 @@ input[type=range] {
   justify-content: center;
   font-weight: 700;
   color: #0F766E;
-  font-size: 1.1rem;
-  transition: transform 4s ease-in-out, background 1s ease;
-  box-shadow: 0 0 30px rgba(13, 148, 136, 0.2);
+  font-size: 1.15rem;
+  transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1), background 1s ease, border-color 1s ease, box-shadow 1s ease;
+  box-shadow: 0 0 35px rgba(13, 148, 136, 0.25);
+  user-select: none;
 }
 
 .circle-breathe.inhale {
@@ -1424,6 +1492,7 @@ input[type=range] {
   background: radial-gradient(circle, #A7F3D0 0%, #6EE7B7 100%);
   border-color: #059669;
   color: #065F46;
+  box-shadow: 0 0 45px rgba(16, 185, 129, 0.4);
 }
 
 .circle-breathe.hold {
@@ -1431,6 +1500,7 @@ input[type=range] {
   background: radial-gradient(circle, #FDE68A 0%, #FCD34D 100%);
   border-color: #D97706;
   color: #92400E;
+  box-shadow: 0 0 45px rgba(245, 158, 11, 0.4);
 }
 
 .circle-breathe.exhale {
@@ -1438,6 +1508,44 @@ input[type=range] {
   background: radial-gradient(circle, #E0F2FE 0%, #BAE6FD 100%);
   border-color: #0284C7;
   color: #075985;
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.35);
+}
+
+[data-theme="dark"] .breathe-progress-wrapper {
+  background: #0F172A;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .breathe-progress-header {
+  color: #2DD4BF;
+}
+
+[data-theme="dark"] .circle-breathe {
+  background: radial-gradient(circle, #134E4A 0%, #042F2E 100%);
+  border-color: #2DD4BF;
+  color: #5EEAD4;
+  box-shadow: 0 0 35px rgba(45, 212, 191, 0.3);
+}
+
+[data-theme="dark"] .circle-breathe.inhale {
+  background: radial-gradient(circle, #064E3B 0%, #022C22 100%);
+  border-color: #34D399;
+  color: #A7F3D0;
+  box-shadow: 0 0 45px rgba(52, 211, 153, 0.4);
+}
+
+[data-theme="dark"] .circle-breathe.hold {
+  background: radial-gradient(circle, #78350F 0%, #451A03 100%);
+  border-color: #FBBF24;
+  color: #FDE68A;
+  box-shadow: 0 0 45px rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="dark"] .circle-breathe.exhale {
+  background: radial-gradient(circle, #0C4A6E 0%, #082F49 100%);
+  border-color: #38BDF8;
+  color: #BAE6FD;
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.35);
 }
 
 .sound-list {

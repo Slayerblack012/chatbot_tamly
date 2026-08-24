@@ -15,12 +15,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/css/style.css?v=2.2.0">
+  <link rel="stylesheet" href="/static/css/style.css?v=2.3.0">
   
   <!-- Local Self-hosted Markdown & XSS Sanitizer (Hoạt động 100% Offline) -->
-  <script defer src="/static/js/vendor/marked.min.js?v=2.2.0"></script>
-  <script defer src="/static/js/vendor/purify.min.js?v=2.2.0"></script>
-  <script defer src="/static/js/app.js?v=2.2.0"></script>
+  <script defer src="/static/js/vendor/marked.min.js?v=2.3.0"></script>
+  <script defer src="/static/js/vendor/purify.min.js?v=2.3.0"></script>
+  <script defer src="/static/js/app.js?v=2.3.0"></script>
 </head>
 <body>
   <div id="network-loading-bar" class="network-loading-bar" style="display: none;"></div>
@@ -366,24 +366,62 @@
         <div class="studio-card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <h3 style="font-family:var(--font-heading); font-size:1.25rem;">🌬️ Thở Chậm & Tĩnh Tâm</h3>
-            <button class="btn-feature-guide" id="btn-guide-studio">💡 Lợi Ích Bài Thở</button>
+            <button class="btn-feature-guide" id="btn-guide-studio">💡 Hướng Dẫn Bài Thở</button>
           </div>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">
-            Thả lỏng đôi vai, nhịp thở sâu và chậm sẽ giúp cơ thể bạn hạ nhịp tim và tìm lại sự bình yên ngay lúc này.
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:14px;">
+            Thả lỏng đôi vai, nhắm mắt và lắng nghe âm thanh hướng dẫn để tìm lại sự an yên trong từng hơi thở.
           </p>
 
-          <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
-            <button class="chip-btn active" id="btn-mode-478">Thở 4-7-8 (Giảm Lo Âu)</button>
-            <button class="chip-btn" id="btn-mode-box">Thở Đều - Box Breathing (Tập Trung)</button>
+          <!-- 1. Kiểu Thở (Breathing Modes) -->
+          <div class="breathe-controls-row">
+            <span class="control-label">🌿 Kiểu thở:</span>
+            <div class="chips-group">
+              <button class="chip-btn active" id="btn-mode-478">Thở 4-7-8 (Giảm Lo Âu & Ngủ Ngon)</button>
+              <button class="chip-btn" id="btn-mode-box">Thở Đều 4-4-4-4 (Box Breathing - Tĩnh Tâm)</button>
+            </div>
           </div>
 
+          <!-- 2. Mốc Thời Gian (Session Duration Presets) -->
+          <div class="breathe-controls-row">
+            <span class="control-label">⏱️ Mốc thời gian phiên tập:</span>
+            <div class="chips-group" id="breathe-duration-presets">
+              <button class="chip-btn" data-duration="60">1 Phút</button>
+              <button class="chip-btn active" data-duration="180">3 Phút (Chuẩn)</button>
+              <button class="chip-btn" data-duration="300">5 Phút</button>
+              <button class="chip-btn" data-duration="600">10 Phút</button>
+              <button class="chip-btn" data-duration="0">♾️ Tự do</button>
+            </div>
+          </div>
+
+          <!-- 3. Chế Độ Âm Thanh (Audio & Voice Modes) -->
+          <div class="breathe-controls-row">
+            <span class="control-label">🔊 Âm thanh hướng dẫn:</span>
+            <div class="chips-group" id="breathe-sound-presets">
+              <button class="chip-btn active" data-sound="voice_bell">🎙️ Giọng nói + Chuông thiền</button>
+              <button class="chip-btn" data-sound="bell_only">🔔 Chỉ chuông thiền</button>
+              <button class="chip-btn" data-sound="mute">🔇 Tắt âm thanh</button>
+            </div>
+          </div>
+
+          <!-- Session Progress Bar & Counter -->
+          <div class="breathe-progress-wrapper" id="breathe-progress-wrapper" style="display: none;">
+            <div class="breathe-progress-header">
+              <span id="breathe-session-time">⏳ Còn lại: 03:00</span>
+              <span id="breathe-cycle-count">🌿 Chu kỳ: 0</span>
+            </div>
+            <div class="breathe-progress-bar">
+              <div class="breathe-progress-fill" id="breathe-progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Interactive Breathing Circle -->
           <div class="breathing-box">
             <div class="circle-breathe" id="circle-breathe">
               <span id="breathe-action-text">Sẵn sàng</span>
-              <span id="breathe-timer-text" style="font-size:0.9rem; opacity:0.8; margin-top:4px;">Nhấn Bắt Đầu</span>
+              <span id="breathe-timer-text" class="breathe-countdown">Nhấn Bắt Đầu</span>
             </div>
-            <button class="btn-send" id="btn-toggle-breathe" style="margin-top:28px;">
-              ▶️ Bắt Đầu
+            <button class="btn-send" id="btn-toggle-breathe" style="margin-top:24px; min-width: 190px; justify-content: center;">
+              ▶️ Bắt Đầu Bài Tập Thở
             </button>
           </div>
         </div>

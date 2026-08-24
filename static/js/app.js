@@ -798,6 +798,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <strong>Hít 4s - Giữ 4s - Thở 4s - Nghỉ 4s</strong>. Giúp tái tạo sự tập trung sắc bén và làm chủ tâm trí khi chịu áp lực cao.
               </p>
             </div>
+            <div>
+              <strong>🎙️ Âm Thanh & Mốc Thời Gian Cá Nhân Hóa:</strong>
+              <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+                Bạn có thể nhắm mắt thư giãn hoàn toàn nhờ <strong>giọng đọc tiếng Việt</strong> và <strong>tiếng chuông thiền Tây Tạng</strong> hướng dẫn từng nhịp chuyển. Đồng thời chọn linh hoạt các mốc thời gian từ 1 đến 10 phút phù hợp với lịch trình của bạn.
+              </p>
+            </div>
           </div>
         `,
         primaryBtnText: "Tập Thở Ngay 🍃"
@@ -1608,7 +1614,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 9. RELAXATION BREATHING
+  // 9. MINDFULNESS RELAXATION BREATHING (AUDIO & TIME MILESTONES ENGINE)
   // =========================================================================
   const circleBreathe = document.getElementById("circle-breathe");
   const breatheActionText = document.getElementById("breathe-action-text");
@@ -1616,19 +1622,141 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnToggleBreathe = document.getElementById("btn-toggle-breathe");
   const btnMode478 = document.getElementById("btn-mode-478");
   const btnModeBox = document.getElementById("btn-mode-box");
+  const durationPresetsContainer = document.getElementById("breathe-duration-presets");
+  const soundPresetsContainer = document.getElementById("breathe-sound-presets");
+  const progressWrapper = document.getElementById("breathe-progress-wrapper");
+  const sessionTimeEl = document.getElementById("breathe-session-time");
+  const cycleCountEl = document.getElementById("breathe-cycle-count");
+  const progressFillEl = document.getElementById("breathe-progress-fill");
+
+  // State configurations
+  state.breathingMode = "478"; // "478" | "box"
+  state.breathingTargetDuration = 180; // Default 3 mins (180s, 0 = infinite)
+  state.breathingSoundMode = "voice_bell"; // "voice_bell" | "bell_only" | "mute"
+  state.breathingActive = false;
+  state.breathingTimer = null;
+  state.breathingSecondsElapsed = 0;
+  state.breathingCycleCount = 0;
+
+  // --- Web Audio API Tibetan Singing Bowl Synthesizer (Zero External Dependencies) ---
+  let mindfulnessAudioCtx = null;
+
+  function getMindfulnessAudioCtx() {
+    if (!mindfulnessAudioCtx) {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) mindfulnessAudioCtx = new AudioCtxClass();
+    }
+    if (mindfulnessAudioCtx && mindfulnessAudioCtx.state === "suspended") {
+      mindfulnessAudioCtx.resume();
+    }
+    return mindfulnessAudioCtx;
+  }
+
+  function playMindfulnessChime(freq = 432, duration = 3.2, gainPeak = 0.5) {
+    if (state.breathingSoundMode === "mute") return;
+    try {
+      const ctx = getMindfulnessAudioCtx();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.0001, now);
+      masterGain.gain.exponentialRampToValueAtTime(gainPeak, now + 0.03);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      masterGain.connect(ctx.destination);
+
+      // Harmonic resonance for deep acoustic bowl tone
+      const harmonics = [
+        { f: freq, g: 0.55 },
+        { f: freq * 1.5, g: 0.28 },
+        { f: freq * 2.01, g: 0.15 },
+        { f: freq * 3.02, g: 0.07 }
+      ];
+
+      harmonics.forEach(h => {
+        const osc = ctx.createOscillator();
+        const hGain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(h.f, now);
+
+        hGain.gain.setValueAtTime(h.g, now);
+        hGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc.connect(hGain);
+        hGain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + duration);
+      });
+    } catch (e) {}
+  }
+
+  function playMilestoneCompletedFanfare() {
+    if (state.breathingSoundMode === "mute") return;
+    playMindfulnessChime(432, 3.8, 0.55);
+    setTimeout(() => playMindfulnessChime(540, 3.8, 0.5), 550);
+    setTimeout(() => playMindfulnessChime(648, 4.5, 0.65), 1100);
+  }
+
+  // --- Voice Guidance Engine (SpeechSynthesis) ---
+  function speakBreathingGuide(text) {
+    if (state.breathingSoundMode !== "voice_bell") return;
+    if (!("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "vi-VN";
+      utter.rate = 0.86;
+      utter.pitch = 0.95;
+
+      const voices = window.speechSynthesis.getVoices();
+      const viVoice = voices.find(v => (v.lang && v.lang.toLowerCase().includes("vi")));
+      if (viVoice) utter.voice = viVoice;
+
+      window.speechSynthesis.speak(utter);
+    } catch (e) {}
+  }
+
+  // Duration Presets Selection
+  if (durationPresetsContainer) {
+    durationPresetsContainer.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-duration]");
+      if (!btn) return;
+      durationPresetsContainer.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.breathingTargetDuration = parseInt(btn.getAttribute("data-duration"), 10);
+      if (!state.breathingActive) {
+        updateProgressDisplay();
+      }
+    });
+  }
+
+  // Sound Mode Presets Selection
+  if (soundPresetsContainer) {
+    soundPresetsContainer.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-sound]");
+      if (!btn) return;
+      soundPresetsContainer.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.breathingSoundMode = btn.getAttribute("data-sound");
+      if (state.breathingSoundMode !== "mute") {
+        playMindfulnessChime(520, 1.2, 0.3);
+      }
+    });
+  }
 
   btnMode478.addEventListener("click", () => {
     btnMode478.classList.add("active");
     btnModeBox.classList.remove("active");
     state.breathingMode = "478";
-    stopBreathing();
+    if (state.breathingActive) stopBreathing();
   });
 
   btnModeBox.addEventListener("click", () => {
     btnModeBox.classList.add("active");
     btnMode478.classList.remove("active");
     state.breathingMode = "box";
-    stopBreathing();
+    if (state.breathingActive) stopBreathing();
   });
 
   btnToggleBreathe.addEventListener("click", () => {
@@ -1636,72 +1764,138 @@ document.addEventListener("DOMContentLoaded", () => {
     else startBreathing();
   });
 
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  }
+
+  function updateProgressDisplay() {
+    if (!progressWrapper) return;
+    if (state.breathingTargetDuration > 0) {
+      progressWrapper.style.display = "block";
+      const remaining = Math.max(0, state.breathingTargetDuration - state.breathingSecondsElapsed);
+      sessionTimeEl.textContent = `⏳ Còn lại: ${formatTime(remaining)} / ${formatTime(state.breathingTargetDuration)}`;
+      cycleCountEl.textContent = `🌿 Chu kỳ: ${state.breathingCycleCount}`;
+      const pct = Math.min(100, Math.round((state.breathingSecondsElapsed / state.breathingTargetDuration) * 100));
+      progressFillEl.style.width = `${pct}%`;
+    } else {
+      progressWrapper.style.display = "block";
+      sessionTimeEl.textContent = `⏱️ Đã tập: ${formatTime(state.breathingSecondsElapsed)}`;
+      cycleCountEl.textContent = `🌿 Chu kỳ: ${state.breathingCycleCount}`;
+      progressFillEl.style.width = `100%`;
+    }
+  }
+
   function startBreathing() {
     state.breathingActive = true;
-    btnToggleBreathe.textContent = "Dừng Bài Tập Thở";
-    runBreathingCycle();
+    state.breathingSecondsElapsed = 0;
+    state.breathingCycleCount = 0;
+    btnToggleBreathe.textContent = "⏹️ Dừng Bài Tập Thở";
+    btnToggleBreathe.style.background = "var(--danger)";
+    btnToggleBreathe.style.color = "#FFFFFF";
+
+    getMindfulnessAudioCtx();
+    updateProgressDisplay();
+
+    // Initial chime and voice prompt
+    playMindfulnessChime(396, 3.2, 0.45);
+    speakBreathingGuide("Hãy thả lỏng cơ thể và chuẩn bị hít thở nhé.");
+
+    setTimeout(() => {
+      if (!state.breathingActive) return;
+      initiateBreathingPhases();
+    }, 1300);
   }
 
-  function stopBreathing() {
+  function stopBreathing(completed = false) {
     state.breathingActive = false;
-    clearTimeout(state.breathingInterval);
-    btnToggleBreathe.textContent = "▶️ Bắt Đầu";
+    if (state.breathingTimer) {
+      clearInterval(state.breathingTimer);
+      state.breathingTimer = null;
+    }
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    btnToggleBreathe.textContent = "▶️ Bắt Đầu Bài Tập Thở";
+    btnToggleBreathe.style.background = "";
+    btnToggleBreathe.style.color = "";
     circleBreathe.className = "circle-breathe";
-    breatheActionText.textContent = "Sẵn sàng";
-    breatheTimerText.textContent = "Nhấn Bắt Đầu";
+
+    if (completed) {
+      breatheActionText.textContent = "Hoàn thành! ✨";
+      breatheTimerText.textContent = "Rất tốt";
+      playMilestoneCompletedFanfare();
+      speakBreathingGuide("Phiên tập thở đã hoàn thành. Hãy mở mắt từ từ và giữ trọn sự an yên này nhé.");
+    } else {
+      breatheActionText.textContent = "Sẵn sàng";
+      breatheTimerText.textContent = "Nhấn Bắt Đầu";
+    }
   }
 
-  function runBreathingCycle() {
+  function initiateBreathingPhases() {
     if (!state.breathingActive) return;
 
+    let phases = [];
     if (state.breathingMode === "478") {
-      circleBreathe.className = "circle-breathe inhale";
-      breatheActionText.textContent = "Hít vào";
-      breatheTimerText.textContent = "4 giây";
-
-      state.breathingInterval = setTimeout(() => {
-        if (!state.breathingActive) return;
-        circleBreathe.className = "circle-breathe hold";
-        breatheActionText.textContent = "Giữ hơi thở";
-        breatheTimerText.textContent = "7 giây";
-
-        state.breathingInterval = setTimeout(() => {
-          if (!state.breathingActive) return;
-          circleBreathe.className = "circle-breathe exhale";
-          breatheActionText.textContent = "Thở ra êm";
-          breatheTimerText.textContent = "8 giây";
-
-          state.breathingInterval = setTimeout(() => runBreathingCycle(), 8000);
-        }, 7000);
-      }, 4000);
+      phases = [
+        { name: "inhale", title: "Hít vào sâu", duration: 4, voice: "Hít vào sâu 4 giây", chimeFreq: 432, css: "circle-breathe inhale" },
+        { name: "hold", title: "Giữ hơi thở", duration: 7, voice: "Giữ hơi thở 7 giây", chimeFreq: 528, css: "circle-breathe hold" },
+        { name: "exhale", title: "Thở ra êm", duration: 8, voice: "Thở ra từ từ 8 giây", chimeFreq: 396, css: "circle-breathe exhale" }
+      ];
     } else {
-      circleBreathe.className = "circle-breathe inhale";
-      breatheActionText.textContent = "Hít vào";
-      breatheTimerText.textContent = "4 giây";
-
-      state.breathingInterval = setTimeout(() => {
-        if (!state.breathingActive) return;
-        circleBreathe.className = "circle-breathe hold";
-        breatheActionText.textContent = "Giữ";
-        breatheTimerText.textContent = "4 giây";
-
-        state.breathingInterval = setTimeout(() => {
-          if (!state.breathingActive) return;
-          circleBreathe.className = "circle-breathe exhale";
-          breatheActionText.textContent = "Thở ra";
-          breatheTimerText.textContent = "4 giây";
-
-          state.breathingInterval = setTimeout(() => {
-            if (!state.breathingActive) return;
-            circleBreathe.className = "circle-breathe";
-            breatheActionText.textContent = "Nghỉ ngơi";
-            breatheTimerText.textContent = "4 giây";
-
-            state.breathingInterval = setTimeout(() => runBreathingCycle(), 4000);
-          }, 4000);
-        }, 4000);
-      }, 4000);
+      phases = [
+        { name: "inhale", title: "Hít vào", duration: 4, voice: "Hít vào 4 giây", chimeFreq: 432, css: "circle-breathe inhale" },
+        { name: "hold1", title: "Giữ hơi", duration: 4, voice: "Giữ hơi 4 giây", chimeFreq: 528, css: "circle-breathe hold" },
+        { name: "exhale", title: "Thở ra", duration: 4, voice: "Thở ra 4 giây", chimeFreq: 396, css: "circle-breathe exhale" },
+        { name: "hold2", title: "Nghỉ ngơi", duration: 4, voice: "Thả lỏng 4 giây", chimeFreq: 360, css: "circle-breathe" }
+      ];
     }
+
+    let phaseIndex = 0;
+    let currentPhaseSecondsLeft = phases[0].duration;
+
+    function applyPhase(phase) {
+      circleBreathe.className = phase.css;
+      breatheActionText.textContent = phase.title;
+      breatheTimerText.textContent = `${currentPhaseSecondsLeft}s`;
+      playMindfulnessChime(phase.chimeFreq, 3.2, 0.45);
+      speakBreathingGuide(phase.voice);
+    }
+
+    applyPhase(phases[0]);
+
+    state.breathingTimer = setInterval(() => {
+      if (!state.breathingActive) {
+        clearInterval(state.breathingTimer);
+        return;
+      }
+
+      state.breathingSecondsElapsed++;
+      currentPhaseSecondsLeft--;
+
+      updateProgressDisplay();
+
+      // Check if session milestone reached
+      if (state.breathingTargetDuration > 0 && state.breathingSecondsElapsed >= state.breathingTargetDuration) {
+        stopBreathing(true);
+        return;
+      }
+
+      if (currentPhaseSecondsLeft > 0) {
+        breatheTimerText.textContent = `${currentPhaseSecondsLeft}s`;
+      } else {
+        phaseIndex++;
+        if (phaseIndex >= phases.length) {
+          phaseIndex = 0;
+          state.breathingCycleCount++;
+          updateProgressDisplay();
+        }
+        currentPhaseSecondsLeft = phases[phaseIndex].duration;
+        applyPhase(phases[phaseIndex]);
+      }
+    }, 1000);
   }
 
   // =========================================================================
