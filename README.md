@@ -32,7 +32,7 @@ Dự án được xây dựng nhằm giải quyết 4 bài toán kỹ thuật v�
 4. **Tự Đánh Giá & Giáo Dục Tâm Lý Chủ Động (Psychoeducation & Screening)**:
    - Cung cấp công cụ tự phản tư với 2 thang đo chuẩn hóa quốc tế: **GAD-7** (Generalized Anxiety Disorder) và **PHQ-9** (Patient Health Questionnaire - Depression).
    - Tích hợp tính năng **Can thiệp khủng hoảng khẩn cấp (Crisis Intervention)**: Tự động hiển thị hotline hỗ trợ 111 / 115 / Đường dây Ngày Mai 096 306 1414 khi nhận diện nguy cơ tự hại.
-   - Lưu trữ phiên an toàn trên trình duyệt (`localStorage`) và hỗ trợ **Xuất Nhật Ký Hội Thoại** dạng văn bản.
+   - Lưu trữ phiên an toàn trên trình duyệt (`localStorage`) và hỗ trợ **Xem & Xuất Lịch Sử Chat** dạng văn bản.
 
 ---
 

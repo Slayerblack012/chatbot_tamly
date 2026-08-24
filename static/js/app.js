@@ -747,16 +747,16 @@ document.addEventListener("DOMContentLoaded", () => {
     btnExportChat.addEventListener("click", () => {
       if (state.messages.length <= 1) {
         openModal({
-          icon: "ℹ️",
-          title: "Chưa Có Nội Dung Để Xuất",
-          subtitle: "Nhật ký hội thoại hiện đang trống",
-          bodyHtml: "<p>Hãy trò chuyện một vài câu cùng An Nhiên trước khi xuất biên bản nhật ký nhé.</p>",
+          icon: "📜",
+          title: "Chưa Có Lịch Sử Chat",
+          subtitle: "Lịch sử trò chuyện hiện đang trống",
+          bodyHtml: "<p>Hãy trò chuyện một vài câu cùng An Nhiên để hệ thống tự động ghi nhớ và lưu trữ lịch sử chat cho bạn nhé.</p>",
           primaryBtnText: "Đã Hiểu ✨"
         });
         return;
       }
       let exportText = `====================================================\n`;
-      exportText += `   BIÊN BẢN TRÒ CHUYỆN - AN NHIÊN TÂM LÝ\n`;
+      exportText += `   LỊCH SỬ CHAT TRÒ CHUYỆN - AN NHIÊN TÂM LÝ\n`;
       exportText += `   Thời gian xuất: ${new Date().toLocaleString("vi-VN")}\n`;
       exportText += `====================================================\n\n`;
 
@@ -769,7 +769,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `An_Nhien_Nhat_Ky_${new Date().toISOString().slice(0, 10)}.txt`;
+      a.download = `An_Nhien_Lich_Su_Chat_${new Date().toISOString().slice(0, 10)}.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
