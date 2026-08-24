@@ -200,9 +200,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 4. APP STATE & PERSISTENCE
+  // 4. APP STATE & PERSISTENCE (MULTI-SESSION CHAT ENGINE - GEMINI / CHATGPT STYLE)
   // =========================================================================
-  const STORAGE_KEY = "an_nhien_chat_session_v1";
+  const SESSIONS_KEY = "an_nhien_all_sessions_v2";
+  const CURRENT_SESS_ID_KEY = "an_nhien_current_session_id_v2";
+  const OLD_STORAGE_KEY = "an_nhien_chat_session_v1";
 
   const DEFAULT_MESSAGES = [
     {
@@ -211,26 +213,127 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   ];
 
-  function loadStoredMessages() {
+  function getAllSessions() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
+      const raw = localStorage.getItem(SESSIONS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
-      console.warn("Không thể khôi phục lịch sử từ localStorage:", e);
+      console.warn("Không thể đọc danh sách lịch sử phiên chat:", e);
     }
-    return DEFAULT_MESSAGES;
+
+    try {
+      const oldSingle = localStorage.getItem(OLD_STORAGE_KEY);
+      if (oldSingle) {
+        const parsedOld = JSON.parse(oldSingle);
+        if (Array.isArray(parsedOld) && parsedOld.length > 1) {
+          const firstUser = parsedOld.find(m => m.role === "user");
+          const title = firstUser ? (firstUser.content.trim().slice(0, 32) + "...") : "Cuộc trò chuyện cũ";
+          const migratedId = "sess_migrated_" + Date.now();
+          const migratedSess = {
+            id: migratedId,
+            title: title,
+            updatedAt: new Date().toISOString(),
+            messages: parsedOld
+          };
+          localStorage.setItem(SESSIONS_KEY, JSON.stringify([migratedSess]));
+          localStorage.setItem(CURRENT_SESS_ID_KEY, migratedId);
+          return [migratedSess];
+        }
+      }
+    } catch(e) {}
+    return [];
+  }
+
+  function saveAllSessions(sessions) {
+    try {
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+    } catch (e) {
+      console.warn("Lưu danh sách cuộc hội thoại thất bại:", e);
+    }
+  }
+
+  function getCurrentSessionId() {
+    let id = localStorage.getItem(CURRENT_SESS_ID_KEY);
+    if (!id) {
+      id = "sess_" + Date.now();
+      localStorage.setItem(CURRENT_SESS_ID_KEY, id);
+    }
+    return id;
+  }
+
+  function loadStoredMessages() {
+    const sessions = getAllSessions();
+    const currId = getCurrentSessionId();
+    const found = sessions.find(s => s.id === currId);
+    if (found && Array.isArray(found.messages) && found.messages.length > 0) {
+      return [...found.messages];
+    }
+    return [...DEFAULT_MESSAGES];
   }
 
   function saveStoredMessages(messages) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch (e) {
-      console.warn("Không thể lưu lịch sử vào localStorage:", e);
+      localStorage.setItem(OLD_STORAGE_KEY, JSON.stringify(messages));
+    } catch (e) {}
+
+    const sessions = getAllSessions();
+    const currId = getCurrentSessionId();
+    
+    const firstUserMsg = messages.find(m => m.role === "user");
+    let title = "Cuộc trò chuyện mới";
+    if (firstUserMsg && firstUserMsg.content) {
+      title = firstUserMsg.content.trim().slice(0, 32);
+      if (firstUserMsg.content.length > 32) title += "...";
+    }
+
+    const updatedSess = {
+      id: currId,
+      title: title,
+      updatedAt: new Date().toISOString(),
+      messages: messages
+    };
+
+    const idx = sessions.findIndex(s => s.id === currId);
+    if (idx !== -1) {
+      sessions[idx] = updatedSess;
+    } else {
+      sessions.unshift(updatedSess);
+    }
+
+    saveAllSessions(sessions);
+  }
+
+  function createNewChatSession() {
+    const newId = "sess_" + Date.now();
+    localStorage.setItem(CURRENT_SESS_ID_KEY, newId);
+    state.messages = [...DEFAULT_MESSAGES];
+    saveStoredMessages(state.messages);
+    renderMessages();
+  }
+
+  function switchChatSession(sessionId) {
+    const sessions = getAllSessions();
+    const target = sessions.find(s => s.id === sessionId);
+    if (target) {
+      localStorage.setItem(CURRENT_SESS_ID_KEY, sessionId);
+      state.messages = [...target.messages];
+      renderMessages();
+    }
+  }
+
+  function deleteChatSession(sessionId) {
+    let sessions = getAllSessions();
+    sessions = sessions.filter(s => s.id !== sessionId);
+    saveAllSessions(sessions);
+    if (getCurrentSessionId() === sessionId) {
+      if (sessions.length > 0) {
+        switchChatSession(sessions[0].id);
+      } else {
+        createNewChatSession();
+      }
     }
   }
 
@@ -712,95 +815,122 @@ document.addEventListener("DOMContentLoaded", () => {
     stressValDisplay.textContent = `${state.stressLevel} / 10`;
   });
 
-  // Clear Chat with Custom Modal Confirmation (No browser native confirm dialog)
+  // Clear Chat / Start New Chat Session
   document.getElementById("btn-clear-chat").addEventListener("click", () => {
     openConfirmModal({
       icon: "🗑️",
       title: "Bắt Đầu Lại Phiên Trò Chuyện?",
-      subtitle: "Làm mới không gian lắng nghe riêng tư",
+      subtitle: "Tạo một cuộc trò chuyện mới hoàn toàn riêng tư",
       bodyHtml: `
         <p style="font-size:0.92rem; line-height:1.6; color:var(--text-dark);">
-          Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện này không? Toàn bộ nội dung trao đổi sẽ được xóa sạch khỏi bộ nhớ thiết bị để bạn bắt đầu một phiên mới hoàn toàn riêng tư.
+          Bạn có muốn tạo một phiên trò chuyện mới không? Cuộc hội thoại hiện tại sẽ được lưu tự động vào Lịch Sử Chat để bạn xem lại bất cứ lúc nào.
         </p>
       `,
-      confirmText: "Xóa & Bắt Đầu Lại",
+      confirmText: "➕ Cuộc Trò Chuyện Mới",
       cancelText: "Giữ Lại",
-      isDanger: true,
+      isDanger: false,
       onConfirm: () => {
-        state.messages = [
-          {
-            role: "model",
-            content: "Chào bạn, mình đã sẵn sàng cho một phiên trò chuyện mới. Hãy chia sẻ bất kỳ điều gì bạn muốn nhé."
-          }
-        ];
-        localStorage.removeItem(STORAGE_KEY);
-        renderMessages();
+        createNewChatSession();
         if (crisisAlertBanner) crisisAlertBanner.style.display = "none";
         closeSidebar();
       }
     });
   });
 
-  // Export Chat to Text File with Custom Info Modal
-  const btnExportChat = document.getElementById("btn-export-chat");
-  if (btnExportChat) {
-    btnExportChat.addEventListener("click", () => {
-      if (!state.messages || state.messages.length <= 1) {
-        openModal({
-          icon: "📜",
-          title: "Lịch Sử Chat",
-          subtitle: "Lịch sử trò chuyện hiện đang trống",
-          bodyHtml: "<p style='color: var(--text-muted); text-align: center; padding: 16px 0;'>Bạn chưa có lịch sử cuộc hội thoại nào. Hãy trò chuyện vài câu cùng An Nhiên để lưu giữ tâm sự nhé! ✨</p>",
-          primaryBtnText: "Đã Hiểu ✨"
-        });
-        return;
-      }
+  // Interactive Gemini / ChatGPT Chat History Modal Engine
+  function showInteractiveHistoryModal() {
+    const sessions = getAllSessions();
+    const currId = getCurrentSessionId();
 
-      const totalMsgs = state.messages.length - 1;
-      let historyItemsHtml = state.messages.map((msg, idx) => {
-        if (idx === 0) return '';
-        const isUser = msg.role === 'user';
-        const roleLabel = isUser ? '👤 Bạn' : '🌿 An Nhiên';
-        const badgeStyle = isUser 
-          ? 'background: rgba(13, 148, 136, 0.15); color: #0D9488; font-weight: 600;' 
-          : 'background: rgba(99, 102, 241, 0.15); color: #6366F1; font-weight: 600;';
-        
-        const contentEscaped = msg.content
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/\n/g, "<br>");
+    let listHtml = "";
+    if (sessions.length === 0) {
+      listHtml = `
+        <div style="text-align: center; padding: 28px 12px; color: var(--text-muted);">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">📜</div>
+          <p style="font-size: 0.95rem; font-weight: 600; color: var(--text-dark);">Chưa có lịch sử trò chuyện nào</p>
+          <p style="font-size: 0.85rem; margin-top: 4px;">Hãy nhắn vài câu cùng An Nhiên để hệ thống tự động lưu giữ các cuộc hội thoại cho bạn nhé! ✨</p>
+        </div>
+      `;
+    } else {
+      listHtml = sessions.map(sess => {
+        const isCurrent = sess.id === currId;
+        const totalMsgs = Array.isArray(sess.messages) ? sess.messages.length - 1 : 0;
+        const dateStr = sess.updatedAt ? new Date(sess.updatedAt).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" }) : "";
+        const badge = isCurrent 
+          ? `<span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: rgba(13, 148, 136, 0.2); color: #0D9488; font-weight: 600;">🟢 Đang mở</span>`
+          : `<span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: var(--border-color); color: var(--text-muted);">💬 Đã lưu</span>`;
 
         return `
-          <div style="margin-bottom: 12px; padding: 12px; border-radius: 12px; background: var(--bg-page); border: 1px solid var(--border-color);">
+          <div class="session-card-item" style="padding: 12px 14px; border-radius: 12px; background: var(--bg-page); border: 1px solid var(--border-color); margin-bottom: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 0.8rem; padding: 2px 8px; border-radius: 6px; ${badgeStyle}">${roleLabel}</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">Tin nhắn #${idx}</span>
+              <strong style="font-size: 0.95rem; color: var(--text-dark); max-width: 65%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${sess.title || "Cuộc trò chuyện"}</strong>
+              ${badge}
             </div>
-            <div style="font-size: 0.9rem; line-height: 1.5; color: var(--text-dark); max-height: 120px; overflow-y: auto; word-break: break-word;">
-              ${contentEscaped}
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+              <span>🕒 ${dateStr}</span>
+              <span>💬 ${totalMsgs} tin nhắn</span>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              ${!isCurrent ? `<button class="btn-switch-session" data-id="${sess.id}" style="padding: 5px 12px; font-size: 0.8rem; border-radius: 6px; background: #0D9488; color: #fff; border: none; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">👁️ Mở lại</button>` : ''}
+              <button class="btn-delete-session" data-id="${sess.id}" style="padding: 5px 10px; font-size: 0.8rem; border-radius: 6px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #EF4444; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">🗑️ Xóa</button>
             </div>
           </div>
         `;
-      }).join('');
+      }).join("");
+    }
 
-      const historyModalHtml = `
-        <div style="max-height: 380px; overflow-y: auto; padding-right: 4px; margin-bottom: 12px;">
-          <div style="margin-bottom: 12px; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
-            <span>💬 Tổng số tin nhắn: <strong>${totalMsgs}</strong></span>
-            <span>📱 Lưu trữ cục bộ an toàn</span>
-          </div>
-          ${historyItemsHtml}
-        </div>
-      `;
+    const modalBodyHtml = `
+      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Cuộc hội thoại đã lưu (${sessions.length})</span>
+        <button id="btn-modal-new-chat" style="padding: 6px 14px; font-size: 0.82rem; border-radius: 8px; background: #0D9488; color: #fff; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">➕ Cuộc Trò Chuyện Mới</button>
+      </div>
+      <div style="max-height: 360px; overflow-y: auto; padding-right: 4px;">
+        ${listHtml}
+      </div>
+    `;
 
-      openModal({
-        icon: "📜",
-        title: "Lịch Sử Trò Chuyện",
-        subtitle: `Xem lại nhật ký cuộc hội thoại cùng An Nhiên (${totalMsgs} tin nhắn)`,
-        bodyHtml: historyModalHtml,
-        primaryBtnText: "Đóng Lịch Sử ✨"
-      });
+    openModal({
+      icon: "📜",
+      title: "Lịch Sử Trò Chuyện",
+      subtitle: "Danh sách tất cả cuộc trò chuyện đã lưu trữ (ChatGPT / Gemini Style)",
+      bodyHtml: modalBodyHtml,
+      primaryBtnText: "Đóng ✨"
+    });
+
+    setTimeout(() => {
+      const btnNew = document.getElementById("btn-modal-new-chat");
+      if (btnNew) {
+        btnNew.addEventListener("click", () => {
+          createNewChatSession();
+          closeModal();
+        });
+      }
+
+      const modalBodyEl = document.getElementById("modal-body");
+      if (modalBodyEl) {
+        modalBodyEl.querySelectorAll(".btn-switch-session").forEach(b => {
+          b.addEventListener("click", (e) => {
+            const sid = e.currentTarget.getAttribute("data-id");
+            switchChatSession(sid);
+            closeModal();
+          });
+        });
+
+        modalBodyEl.querySelectorAll(".btn-delete-session").forEach(b => {
+          b.addEventListener("click", (e) => {
+            const sid = e.currentTarget.getAttribute("data-id");
+            deleteChatSession(sid);
+            showInteractiveHistoryModal();
+          });
+        });
+      }
+    }, 50);
+  }
+
+  const btnExportChat = document.getElementById("btn-export-chat");
+  if (btnExportChat) {
+    btnExportChat.addEventListener("click", () => {
+      showInteractiveHistoryModal();
     });
   }
 
