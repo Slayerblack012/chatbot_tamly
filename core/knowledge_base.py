@@ -163,7 +163,7 @@ ASSESSMENT_QUIZZES = {
                 "range": [15, 21],
                 "level": "Mức độ Lo âu Đáng Chú Ý (Cao)",
                 "color": "#EF4444",
-                "advice": "Bạn đang phải chịu đựng áp lực rất lớn. Ngoài việc thực hành các bài tập thư giãn với An Nhiên, bạn nên cân nhắc chia sẻ với người thân đáng tin cậy hoặc tham vấn chuyên gia tâm lý học đường/y tế."
+                "advice": "Bạn đang phải chịu đựng áp lực rất lớn khiến tâm trí luôn căng thẳng. Hãy tạm gác lại những âu lo chưa giải quyết được ngay, thực hành bài tập thở 4-7-8, uống một ngụm nước ấm và chia sẻ cùng An Nhiên hoặc người thân để tìm lại sự bình yên."
             }
         ]
     },
@@ -212,13 +212,13 @@ ASSESSMENT_QUIZZES = {
                 "range": [15, 19],
                 "level": "Mức độ Trầm cảm Nặng Vừa",
                 "color": "#EA580C",
-                "advice": "Nỗi buồn và sự kiệt sức đang ở mức cao. Bạn rất cần sự đồng hành từ người thân, tham vấn chuyên gia tâm lý hoặc bác sĩ chuyên khoa tâm thần."
+                "advice": "Nỗi buồn và cảm giác kiệt sức đang ảnh hưởng rõ rệt đến bạn. Hãy ưu tiên chăm sóc giấc ngủ, ăn uống đủ chất, ra ngoài hít thở không khí trong lành và tâm sự cùng người thân hoặc An Nhiên để giải tỏa bớt gánh nặng tâm trí."
             },
             {
                 "range": [20, 27],
                 "level": "Mức độ Trầm cảm Nặng (Nghiêm trọng)",
                 "color": "#EF4444",
-                "advice": "Tình trạng đang ở mức báo động. Xin hãy liên hệ ngay với người thân đáng tin cậy hoặc gọi đường dây nóng hỗ trợ tâm lý 111 / 115 / Đường dây Ngày Mai 096 306 1414 để được hỗ trợ kịp thời."
+                "advice": "Bạn đang trải qua khoảng thời gian vô cùng mệt mỏi và kiệt sức. Lúc này, điều quan trọng nhất là bạn hãy cho phép bản thân được nghỉ ngơi, đừng ôm đồm thêm áp lực. Hãy thở chậm lại, chia sẻ nỗi lòng với người bạn tin cậy hoặc cùng An Nhiên tháo gỡ từng nút thắt cảm xúc nhé."
             }
         ]
     }

@@ -1287,11 +1287,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Render Real Clinical Symptom Radar Chart
     renderRealQuizRadar(state.activeQuizType, state.quizState.answers);
 
-    let adviceHtml = `<strong>Lời khuyên & Định hướng:</strong><br>${escapeHTML(bracket.advice)}`;
-    if (item9Score >= 1) {
+    let adviceHtml = `
+      <div style="margin-bottom: 10px;">
+        <strong style="color:var(--primary); font-size:1.05rem;">🌿 Lời khuyên & Định hướng dành cho bạn:</strong>
+        <p style="margin-top:6px; line-height:1.7; color:var(--text-color);">${escapeHTML(bracket.advice)}</p>
+      </div>
+    `;
+    if (item9Score >= 1 || totalScore >= (maxScore * 0.65)) {
       adviceHtml += `
-        <div style="margin-top:14px; padding:12px 14px; background:#FEF2F2; border:1.5px solid #FCA5A5; border-radius:8px; color:#991B1B; font-size:0.9rem; line-height:1.6;">
-          ⚠️ <strong>Lưu ý an toàn quan trọng:</strong> Bạn đã ghi nhận có suy nghĩ tự làm tổn thương bản thân ở câu hỏi số 9. Bất kể tổng điểm là bao nhiêu, xin bạn hãy liên hệ ngay với người thân đáng tin cậy hoặc gọi tổng đài hỗ trợ khẩn cấp <strong>111</strong> (miễn phí 24/7), <strong>115</strong> hoặc Đường dây Ngày Mai <strong>096 306 1414</strong> để được lắng nghe và trợ giúp kịp thời.
+        <div style="margin-top:12px; padding:10px 14px; background:rgba(0,0,0,0.02); border-left:3px solid var(--primary); border-radius:4px; font-size:0.84rem; color:var(--text-muted); line-height:1.6;">
+          📌 <em><strong>Lưu ý thêm:</strong> Nếu bạn cảm thấy cần thêm người lắng nghe hoặc hỗ trợ trực tiếp, bạn luôn có thể tâm sự với người thân hoặc liên hệ Tổng đài Quốc gia <strong>111</strong> (miễn phí), <strong>115</strong> hoặc Đường dây Ngày Mai <strong>096 306 1414</strong> bất cứ lúc nào nhé.</em>
         </div>
       `;
     }
