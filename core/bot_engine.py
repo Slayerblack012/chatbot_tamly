@@ -20,7 +20,8 @@ DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 FALLBACK_MODELS = [
     "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
+    "gemini-flash-latest",
+    "gemini-2.0-flash-lite-preview-02-05",
 ]
 
 
