@@ -182,7 +182,7 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
 
     if not engine.is_ready():
         async def not_ready_gen():
-            msg = b64_encode_text("⚠️ Hệ thống đang bảo trì kết nối. Bạn vui lòng thử lại sau.")
+            msg = b64_encode_text("Hệ thống đang bảo trì kết nối. Bạn vui lòng thử lại sau.")
             yield f"data: {json.dumps({'d': msg, 'f': 1})}\n\n"
         return StreamingResponse(not_ready_gen(), media_type="text/event-stream")
 

@@ -162,7 +162,7 @@ class CounselorEngine:
         Async generator streaming câu trả lời từ Gemini qua client.aio (Non-blocking Event Loop).
         """
         if not self.is_ready():
-            yield "⚠️ *Chưa tìm thấy API Key trong cấu hình hệ thống.*"
+            yield "*Chưa tìm thấy API Key trong cấu hình hệ thống.*"
             return
 
         if not messages:
@@ -231,7 +231,7 @@ Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một n
         Sync generator streaming câu trả lời (Dành cho CLI main.py).
         """
         if not self.is_ready():
-            yield "⚠️ *Chưa tìm thấy API Key trong cấu hình hệ thống.*"
+            yield "*Chưa tìm thấy API Key trong cấu hình hệ thống.*"
             return
 
         if not messages:
