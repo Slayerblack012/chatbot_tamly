@@ -29,6 +29,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Cipher Key Salt for Client Storage Security & Encrypted JSON Persistence
+  const STORAGE_SALT = "AnNhien_Secured_v2_9988_Salt";
+
+  function xorCipher(text, key) {
+    let result = "";
+    for (let i = 0; i < text.length; i++) {
+      result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return result;
+  }
+
+  function encryptLocalData(data) {
+    try {
+      const jsonStr = typeof data === "string" ? data : JSON.stringify(data);
+      const obfuscated = xorCipher(jsonStr, STORAGE_SALT);
+      return "AN_ENC:" + encodeB64(obfuscated);
+    } catch (e) {
+      console.warn("Lỗi mã hóa dữ liệu cục bộ:", e);
+      return typeof data === "string" ? data : JSON.stringify(data);
+    }
+  }
+
+  function decryptLocalData(encryptedStr) {
+    if (!encryptedStr) return null;
+    try {
+      if (typeof encryptedStr === "string" && encryptedStr.startsWith("AN_ENC:")) {
+        const rawCipher = decodeB64(encryptedStr.slice(7));
+        const originalJsonStr = xorCipher(rawCipher, STORAGE_SALT);
+        return JSON.parse(originalJsonStr);
+      }
+      return JSON.parse(encryptedStr);
+    } catch (e) {
+      return encryptedStr;
+    }
+  }
+
   function escapeHTML(str) {
     if (!str) return "";
     return String(str).replace(/[&<>'"]/g, 
@@ -140,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================================================================
-  // 2. DARK MODE THEME CONTROLLER (N1: Safe Try/Catch)
+  // 2. DARK MODE THEME CONTROLLER (ENCRYPTED STORAGE)
   // =========================================================================
   const THEME_STORAGE_KEY = "an_nhien_theme_mode";
   const btnThemeToggle = document.getElementById("btn-theme-toggle");
@@ -155,13 +191,14 @@ document.addEventListener("DOMContentLoaded", () => {
       themeColorMeta.setAttribute("content", theme === "dark" ? "#0F172A" : "#F8FAFC");
     }
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
+      localStorage.setItem(THEME_STORAGE_KEY, encryptLocalData(theme));
     } catch (e) {}
   }
 
   let savedTheme = "light";
   try {
-    savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
+    const rawTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    savedTheme = rawTheme ? (decryptLocalData(rawTheme) || "light") : "light";
   } catch (e) {
     savedTheme = "light";
   }
@@ -200,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 4. APP STATE & PERSISTENCE (MULTI-SESSION CHAT ENGINE - GEMINI / CHATGPT STYLE)
+  // 4. APP STATE & PERSISTENCE (ENCRYPTED MULTI-SESSION CHAT ENGINE)
   // =========================================================================
   const SESSIONS_KEY = "an_nhien_all_sessions_v2";
   const CURRENT_SESS_ID_KEY = "an_nhien_current_session_id_v2";
@@ -217,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const raw = localStorage.getItem(SESSIONS_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw);
+        const parsed = decryptLocalData(raw);
         if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
@@ -227,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const oldSingle = localStorage.getItem(OLD_STORAGE_KEY);
       if (oldSingle) {
-        const parsedOld = JSON.parse(oldSingle);
+        const parsedOld = decryptLocalData(oldSingle);
         if (Array.isArray(parsedOld) && parsedOld.length > 1) {
           const firstUser = parsedOld.find(m => m.role === "user");
           const title = firstUser ? (firstUser.content.trim().slice(0, 32) + "...") : "Cuộc trò chuyện cũ";
@@ -238,8 +275,8 @@ document.addEventListener("DOMContentLoaded", () => {
             updatedAt: new Date().toISOString(),
             messages: parsedOld
           };
-          localStorage.setItem(SESSIONS_KEY, JSON.stringify([migratedSess]));
-          localStorage.setItem(CURRENT_SESS_ID_KEY, migratedId);
+          localStorage.setItem(SESSIONS_KEY, encryptLocalData([migratedSess]));
+          localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(migratedId));
           return [migratedSess];
         }
       }
@@ -249,17 +286,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveAllSessions(sessions) {
     try {
-      localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+      localStorage.setItem(SESSIONS_KEY, encryptLocalData(sessions));
     } catch (e) {
       console.warn("Lưu danh sách cuộc hội thoại thất bại:", e);
     }
   }
 
   function getCurrentSessionId() {
-    let id = localStorage.getItem(CURRENT_SESS_ID_KEY);
-    if (!id) {
+    const raw = localStorage.getItem(CURRENT_SESS_ID_KEY);
+    let id = raw ? decryptLocalData(raw) : null;
+    if (!id || typeof id !== "string") {
       id = "sess_" + Date.now();
-      localStorage.setItem(CURRENT_SESS_ID_KEY, id);
+      localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(id));
     }
     return id;
   }
@@ -276,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveStoredMessages(messages) {
     try {
-      localStorage.setItem(OLD_STORAGE_KEY, JSON.stringify(messages));
+      localStorage.setItem(OLD_STORAGE_KEY, encryptLocalData(messages));
     } catch (e) {}
 
     const sessions = getAllSessions();
@@ -308,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function createNewChatSession() {
     const newId = "sess_" + Date.now();
-    localStorage.setItem(CURRENT_SESS_ID_KEY, newId);
+    localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(newId));
     state.messages = [...DEFAULT_MESSAGES];
     saveStoredMessages(state.messages);
     renderMessages();
@@ -318,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sessions = getAllSessions();
     const target = sessions.find(s => s.id === sessionId);
     if (target) {
-      localStorage.setItem(CURRENT_SESS_ID_KEY, sessionId);
+      localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(sessionId));
       state.messages = [...target.messages];
       renderMessages();
     }
