@@ -57,8 +57,8 @@ async def security_and_privacy_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
     csp_directives = [
-        "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: cdn.jsdelivr.net",
+        "default-src 'self' https: data: blob: 'unsafe-inline'",
+        "script-src 'self' 'unsafe-inline' https: cdn.jsdelivr.net",
         "style-src 'self' 'unsafe-inline' https: fonts.googleapis.com cdn.jsdelivr.net",
         "font-src 'self' https: fonts.gstatic.com data:",
         "media-src 'self' https: cdn.pixabay.com data: blob:",
@@ -120,7 +120,7 @@ try:
     engine = CounselorEngine()
 except Exception as exc:
     logger.error(f"Lỗi khởi tạo CounselorEngine: {exc}", exc_info=True)
-    engine = CounselorEngine(api_key="")
+    raise RuntimeError("GEMINI_API_KEY không hợp lệ hoặc thiếu. Kiểm tra file .env") from exc
 
 
 def b64_decode_json(encoded_str: str) -> Dict[str, Any]:
@@ -178,6 +178,11 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
 
     data = b64_decode_json(payload.p)
     raw_messages = data.get("messages", [])
+    if len(raw_messages) > 30:
+        raise HTTPException(status_code=400, detail="Quá nhiều tin nhắn (tối đa 30)")
+    total_chars = sum(len(str(m.get("content", ""))) for m in raw_messages)
+    if total_chars > 50000:
+        raise HTTPException(status_code=400, detail="Nội dung hội thoại quá dài")
     mode = str(data.get("mode", "empathy"))[:20]
     raw_mood_context = data.get("mood_context")
     raw_temp = data.get("temperature", 0.8)
@@ -417,7 +422,7 @@ if __name__ == "__main__":
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             return s.connect_ex(("127.0.0.1", p)) != 0
 
-    target_port = int(os.getenv("PORT", 5000))
+    target_port = int(os.getenv("PORT", 8000))
     if not is_port_available(target_port):
         logger.warning(f"Cong {target_port} dang bi chiem dung, tu dong chuyen sang cong moi...")
         for fallback in range(target_port + 1, target_port + 10):
