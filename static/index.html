@@ -17,6 +17,7 @@
   <script defer src="/static/js/app.js"></script>
 </head>
 <body>
+  <div id="network-loading-bar" class="network-loading-bar" style="display: none;"></div>
 
   <!-- ==================== TOP NAVIGATION ==================== -->
   <header class="app-navbar">
@@ -166,6 +167,16 @@
 
           <!-- Message Flow Area -->
           <div class="chat-messages" id="chat-messages">
+            <!-- Typing & Network Loading Indicator -->
+            <div class="msg-wrapper assistant loading-wrapper" id="typing-indicator" style="display: none;">
+              <div class="msg-avatar">🕊️</div>
+              <div class="msg-bubble loading-bubble">
+                <span class="pulse-dot"></span>
+                <span class="pulse-dot"></span>
+                <span class="pulse-dot"></span>
+                <span class="loading-text" id="loading-text-label">An Nhiên đang lắng nghe và phản hồi...</span>
+              </div>
+            </div>
             <!-- Messages injected by JS -->
           </div>
 

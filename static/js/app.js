@@ -419,6 +419,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusIndicator = document.getElementById("status-indicator");
   const statusText = document.getElementById("status-text");
 
+  const networkLoadingBar = document.getElementById("network-loading-bar");
+  const typingIndicator = document.getElementById("typing-indicator");
+  const loadingTextLabel = document.getElementById("loading-text-label");
+
+  function showNetworkLoading(customText) {
+    if (networkLoadingBar) networkLoadingBar.style.display = "block";
+    if (typingIndicator) {
+      if (loadingTextLabel) {
+        loadingTextLabel.textContent = customText || "An Nhiên đang lắng nghe và phản hồi...";
+      }
+      typingIndicator.style.display = "flex";
+      forceScrollToBottom();
+    }
+  }
+
+  function hideNetworkLoading() {
+    if (networkLoadingBar) networkLoadingBar.style.display = "none";
+    if (typingIndicator) typingIndicator.style.display = "none";
+  }
+
   async function checkSystemHealth() {
     try {
       const res = await fetch("/api/health");
@@ -728,6 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setStreamingState(true);
     currentAbortController = new AbortController();
 
+    showNetworkLoading("An Nhiên đang lắng nghe và phản hồi...");
     const assistantBubble = appendMessageToDOM("assistant", '<div class="typing-wave"><span></span><span></span><span></span></div>');
     forceScrollToBottom();
 
@@ -775,6 +796,7 @@ document.addEventListener("DOMContentLoaded", () => {
               try {
                 const parsed = JSON.parse(jsonStr);
                 if (parsed.d) {
+                  hideNetworkLoading();
                   const chunkText = decodeB64(parsed.d);
                   fullText += chunkText;
                   assistantBubble.innerHTML = renderSafeMarkdown(fullText);
@@ -813,6 +835,7 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredMessages(state.messages);
       }
     } finally {
+      hideNetworkLoading();
       setStreamingState(false);
     }
   }
