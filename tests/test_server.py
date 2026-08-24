@@ -108,3 +108,18 @@ def test_get_client_ip_proxy_header(monkeypatch):
     monkeypatch.setattr("server.TRUST_PROXY_HEADERS", True)
     req = DummyRequest(forwarded="203.0.113.195, 70.41.3.18", host="192.168.1.50")
     assert get_client_ip(req) == "203.0.113.195"
+
+
+def test_tts_empty_query():
+    response = client.get("/api/tts?text=")
+    assert response.status_code == 400
+
+
+def test_tts_cached_response():
+    import server
+    server.tts_cache["test_phrase"] = b"fake_mp3_content_bytes"
+    response = client.get("/api/tts?text=test_phrase")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "audio/mpeg"
+    assert response.content == b"fake_mp3_content_bytes"
+

@@ -408,11 +408,11 @@ async def get_vietnamese_tts(text: str):
     """Phục vụ giọng đọc nữ tiếng Việt chất lượng cao chuẩn ngữ điệu."""
     if not text or len(text.strip()) == 0:
         raise HTTPException(status_code=400, detail="Vui lòng cung cấp văn bản cần đọc")
-    
+
     cleaned_text = text.strip()[:200]
     if cleaned_text in tts_cache:
         return Response(content=tts_cache[cleaned_text], media_type="audio/mpeg")
-    
+
     try:
         import httpx
         async with httpx.AsyncClient(timeout=8.0) as client:
@@ -426,7 +426,7 @@ async def get_vietnamese_tts(text: str):
                 return Response(content=resp.content, media_type="audio/mpeg")
     except Exception as e:
         logger.warning(f"Lỗi khi tải TTS: {e}")
-    
+
     raise HTTPException(status_code=502, detail="Không thể tạo giọng đọc lúc này")
 
 
