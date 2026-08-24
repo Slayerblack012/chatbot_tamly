@@ -1276,11 +1276,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const badge = document.getElementById("quiz-score-badge");
-    badge.textContent = `Tổng Điểm: ${totalScore} / ${maxScore}`;
-    badge.style.backgroundColor = (item9Score >= 1 && bracket.color === "#10B981") ? "#EA580C" : bracket.color;
+    badge.textContent = totalScore;
+    const maxValEl = document.getElementById("quiz-score-max-val");
+    if (maxValEl) maxValEl.textContent = maxScore;
+    badge.style.color = (item9Score >= 1 && bracket.color === "#10B981") ? "#EA580C" : bracket.color;
 
     document.getElementById("quiz-level-text").textContent = bracket.level;
     document.getElementById("quiz-level-text").style.color = (item9Score >= 1 && bracket.color === "#10B981") ? "#EA580C" : bracket.color;
+
+    // Render Real Clinical Symptom Radar Chart
+    renderRealQuizRadar(state.activeQuizType, state.quizState.answers);
 
     let adviceHtml = `<strong>Lời khuyên & Định hướng:</strong><br>${escapeHTML(bracket.advice)}`;
     if (item9Score >= 1) {
@@ -1303,6 +1308,115 @@ document.addEventListener("DOMContentLoaded", () => {
       quizResultView.style.display = "none";
       quizIntroView.style.display = "block";
     };
+  }
+
+  // =========================================================================
+  // REAL CLINICAL SYMPTOM RADAR CHART GENERATOR
+  // =========================================================================
+  function renderRealQuizRadar(quizType, answers) {
+    const container = document.getElementById("quiz-radar-svg-wrapper");
+    const chipsContainer = document.getElementById("quiz-radar-dimension-chips");
+    if (!container || !answers || answers.length === 0) return;
+
+    let dimensions = [];
+
+    if (quizType === "gad7") {
+      // 6 Clinical Anxiety Dimensions mapped directly from GAD-7 responses (0..3 pts each)
+      const a = answers;
+      dimensions = [
+        { label: "Căng Thẳng", emoji: "⚡", val: Math.round(((a[0] || 0) / 3) * 100) },
+        { label: "Lo Lan Tỏa", emoji: "🌪️", val: Math.round(((a[1] || 0) / 3) * 100) },
+        { label: "Khó Kiểm Soát", emoji: "🎛️", val: Math.round(((a[2] || 0) / 3) * 100) },
+        { label: "Khó Thư Giãn", emoji: "🛋️", val: Math.round(((a[3] || 0) / 3) * 100) },
+        { label: "Bứt Rứt", emoji: "⏳", val: Math.round(((a[4] || 0) / 3) * 100) },
+        { label: "Dễ Cáu & Sợ", emoji: "🛡️", val: Math.round((((a[5] || 0) + (a[6] || 0)) / 6) * 100) }
+      ];
+    } else {
+      // 6 Clinical Depression Dimensions mapped directly from PHQ-9 responses (0..3 pts each)
+      const a = answers;
+      dimensions = [
+        { label: "Giảm Hứng Thú", emoji: "🥀", val: Math.round(((a[0] || 0) / 3) * 100) },
+        { label: "U Uất/Buồn", emoji: "🌧️", val: Math.round(((a[1] || 0) / 3) * 100) },
+        { label: "Giấc Ngủ", emoji: "🌙", val: Math.round(((a[2] || 0) / 3) * 100) },
+        { label: "Thiếu Sức", emoji: "🔋", val: Math.round(((a[3] || 0) / 3) * 100) },
+        { label: "Ăn Uống", emoji: "🍽️", val: Math.round(((a[4] || 0) / 3) * 100) },
+        { label: "Tập Trung/Tự Ti", emoji: "🎯", val: Math.round((((a[5] || 0) + (a[6] || 0) + (a[7] || 0)) / 9) * 100) }
+      ];
+    }
+
+    const cx = 150;
+    const cy = 135;
+    const maxR = 80;
+    const numAxes = dimensions.length;
+
+    const levels = [0.2, 0.4, 0.6, 0.8, 1.0];
+    let gridSvg = "";
+    levels.forEach((lvl) => {
+      const pts = dimensions.map((_, i) => {
+        const angle = -Math.PI / 2 + (i * 2 * Math.PI / numAxes);
+        const r = maxR * lvl;
+        const x = (cx + r * Math.cos(angle)).toFixed(1);
+        const y = (cy + r * Math.sin(angle)).toFixed(1);
+        return `${x},${y}`;
+      }).join(" ");
+      gridSvg += `<polygon points="${pts}" fill="none" stroke="rgba(148, 163, 184, 0.28)" stroke-width="1" />`;
+      const topY = (cy - maxR * lvl + 3).toFixed(1);
+      gridSvg += `<text x="${cx + 4}" y="${topY}" font-size="8" fill="var(--text-muted)" opacity="0.6">${Math.round(lvl * 100)}</text>`;
+    });
+
+    let spokesSvg = "";
+    let labelsSvg = "";
+    dimensions.forEach((dim, i) => {
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI / numAxes);
+      const xEnd = (cx + maxR * Math.cos(angle)).toFixed(1);
+      const yEnd = (cy + maxR * Math.sin(angle)).toFixed(1);
+      spokesSvg += `<line x1="${cx}" y1="${cy}" x2="${xEnd}" y2="${yEnd}" stroke="rgba(148, 163, 184, 0.25)" stroke-width="1" stroke-dasharray="2 2" />`;
+
+      const xLabel = (cx + (maxR + 26) * Math.cos(angle)).toFixed(1);
+      const yLabel = (cy + (maxR + 26) * Math.sin(angle) + 4).toFixed(1);
+      labelsSvg += `<text x="${xLabel}" y="${yLabel}" text-anchor="middle" font-size="10" fill="var(--text-color)" font-weight="600">${dim.emoji} ${dim.label}</text>`;
+    });
+
+    const dataPoints = dimensions.map((dim, i) => {
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI / numAxes);
+      const normalizedVal = Math.min(1.0, Math.max(0.08, dim.val / 100));
+      const r = maxR * normalizedVal;
+      const x = (cx + r * Math.cos(angle)).toFixed(1);
+      const y = (cy + r * Math.sin(angle)).toFixed(1);
+      return { x, y, dim };
+    });
+
+    const polygonPts = dataPoints.map(p => `${p.x},${p.y}`).join(" ");
+
+    let dotsSvg = "";
+    dataPoints.forEach(p => {
+      dotsSvg += `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#A855F7" stroke="#FFFFFF" stroke-width="1.8" />`;
+    });
+
+    container.innerHTML = `
+      <svg viewBox="0 0 300 270" width="100%" height="235">
+        ${gridSvg}
+        ${spokesSvg}
+        <polygon points="${polygonPts}" fill="rgba(168, 85, 247, 0.25)" stroke="#A855F7" stroke-width="2.5" stroke-linejoin="round" />
+        ${dotsSvg}
+        ${labelsSvg}
+      </svg>
+    `;
+
+    if (chipsContainer) {
+      chipsContainer.innerHTML = dimensions.map(d => {
+        let badgeColor = "#10B981";
+        if (d.val >= 66) badgeColor = "#EF4444";
+        else if (d.val >= 33) badgeColor = "#F59E0B";
+
+        return `
+          <div class="quiz-dim-chip">
+            <span>${d.emoji} ${d.label}</span>
+            <strong style="color:${badgeColor}">${d.val}%</strong>
+          </div>
+        `;
+      }).join("");
+    }
   }
 
   // =========================================================================

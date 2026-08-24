@@ -1941,3 +1941,110 @@ input[type=range] {
   border: 1px solid #2DD4BF;
   box-shadow: 0 0 16px rgba(45, 212, 191, 0.25);
 }
+
+/* ==================== QUIZ RESULT 2-COLUMN RADAR LAYOUT ==================== */
+.quiz-result-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.quiz-result-summary-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-score-circle-wrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.quiz-score-badge {
+  font-size: 3.5rem;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  color: var(--primary);
+  line-height: 1;
+}
+
+.quiz-score-max-label {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.quiz-radar-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-radar-svg-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 220px;
+  margin: 4px 0;
+}
+
+.quiz-radar-svg-wrapper svg {
+  max-width: 320px;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 4px 12px rgba(168, 85, 247, 0.18));
+}
+
+.quiz-radar-dimension-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.quiz-dim-chip {
+  font-size: 0.76rem;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+[data-theme="dark"] .quiz-dim-chip {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.quiz-dim-chip strong {
+  font-weight: 700;
+}
+
+.quiz-advice-box {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  box-shadow: var(--shadow-sm);
+}

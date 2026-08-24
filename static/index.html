@@ -305,27 +305,53 @@
         </div>
 
         <!-- Quiz Result View -->
-        <div id="quiz-result-view" style="display:none;" class="quiz-result-card">
-          <div style="font-size:2.5rem; margin-bottom:12px;">📊</div>
-          <h2 style="font-family:var(--font-heading); margin-bottom:8px;">Kết Quả Nhìn Nhận Của Bạn</h2>
-          <div class="score-badge" id="quiz-score-badge">Điểm: 0 / 21</div>
-          <h3 id="quiz-level-text" style="color:var(--primary); margin-bottom:16px;">Mức độ: Bình thường</h3>
-          
-          <div id="quiz-advice-text" style=" border:1px solid var(--border-color); padding:18px; border-radius:var(--radius-md); text-align:left; font-size:0.95rem; line-height:1.6; margin-bottom:24px;">
-            Lời khuyên...
+        <div id="quiz-result-view" style="display: none;">
+          <div class="quiz-result-header" style="margin-bottom: 16px;">
+            <h3 style="font-family:var(--font-heading); font-size:1.3rem; margin-bottom:4px;">📊 Kết Quả Tự Đánh Giá Chi Tiết</h3>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Phân tích đa chiều dựa trên câu trả lời thực tế của bạn</p>
           </div>
 
-          <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-            <button class="btn-send" id="btn-discuss-result">
-              💬 Trò Chuyện Cùng An Nhiên Về Kết Quả Này
-            </button>
-            <button class="chip-btn" id="btn-retake-quiz" style="padding:12px 20px;">
-              🔄 Làm Lại Bài Test
-            </button>
+          <div class="quiz-result-grid-layout">
+            <!-- Left Card: Score Summary & Actions -->
+            <div class="quiz-result-summary-card">
+              <div class="quiz-score-circle-wrapper">
+                <div class="quiz-score-badge" id="quiz-score-badge">0</div>
+                <div class="quiz-score-max-label">/ <span id="quiz-score-max-val">21</span> điểm</div>
+              </div>
+              <div class="quiz-level-badge-container">
+                <span class="quiz-level-text" id="quiz-level-text" style="font-size:1.15rem; font-weight:700;">Bình thường</span>
+              </div>
+              
+              <div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-top:20px;">
+                <button class="btn-send" id="btn-discuss-result" style="width:100%; justify-content:center; padding:12px;">
+                  💬 Trò Chuyện & Tháo Gỡ Với An Nhiên
+                </button>
+                <button class="btn-feature-guide" id="btn-retake-quiz" style="width:100%; justify-content:center; padding:10px;">
+                  🔄 Làm Lại Bài Tự Đánh Giá
+                </button>
+              </div>
+            </div>
+
+            <!-- Right Card: Real Clinical Symptom Radar Chart -->
+            <div class="quiz-radar-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <h4 style="font-family:var(--font-heading); font-size:1.05rem; margin:0;">🕸️ Biểu Đồ Radar Triệu Chứng Thực Tế</h4>
+                <span style="font-size:0.75rem; color:var(--primary); font-weight:700; background:rgba(6,182,212,0.1); padding:2px 8px; border-radius:10px;">Dữ Liệu Thật</span>
+              </div>
+              
+              <div class="quiz-radar-svg-wrapper" id="quiz-radar-svg-wrapper">
+                <!-- Generated dynamically from real quiz answers by app.js -->
+              </div>
+
+              <div class="quiz-radar-dimension-chips" id="quiz-radar-dimension-chips">
+                <!-- Generated dynamically by app.js -->
+              </div>
+            </div>
           </div>
+
+          <!-- Bottom Section: Clinical Guidance & Safety Notes -->
+          <div class="quiz-advice-box" id="quiz-advice-text" style="margin-top:16px;"></div>
         </div>
-
-      </div>
     </section>
 
     <!-- ==================== TAB 4: RELAXATION STUDIO ==================== -->
