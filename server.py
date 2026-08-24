@@ -411,6 +411,8 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 @app.get("/", response_class=FileResponse)
+@app.get("/api", response_class=FileResponse)
+@app.get("/api/index.py", response_class=FileResponse)
 async def serve_index():
     """Phục vụ file index.html qua FileResponse tối ưu I/O."""
     index_file = os.path.join(static_dir, "index.html")
