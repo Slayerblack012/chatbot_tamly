@@ -2,11 +2,12 @@
    AN NHIÊN - THEME (CLEAN, RESPONSIVE, ACCESSIBILITY & DARK MODE READY)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
 
 :root {
-  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --primary: #0D9488;
   --primary-hover: #0F766E;
@@ -44,6 +45,37 @@
   
   --header-height: 68px;
   --bottom-nav-height: 64px;
+  --theme-transition-duration: 0.42s;
+  --theme-transition-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ==================== ETHEREAL THEME VIEW TRANSITIONS (ULTRA HIGH-FPS) ==================== */
+::view-transition-group(root) {
+  animation-duration: var(--theme-transition-duration);
+  animation-timing-function: var(--theme-transition-ease);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 999999;
+}
+
+/* Tối ưu hiệu năng: Tắt tạm thời transitions của các element khi chụp snapshot để tránh khựng FPS */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: none !important;
 }
 
 /* ==================== B1: DARK MODE THEME TOKENS ==================== */
@@ -128,13 +160,14 @@
   color: #F1F5F9;
 }
 
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
 body {
   font-family: var(--font-main);
   background-color: var(--bg-page);
@@ -145,6 +178,44 @@ body {
   display: flex;
   flex-direction: column;
   transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ==================== ĐỒNG BỘ PHÔNG CHỮ TOÀN DIỆN (UNIFIED TYPOGRAPHY) ==================== */
+/* 1. Toàn bộ Form, Button, Input, Textarea, Select đồng bộ dùng Plus Jakarta Sans */
+button,
+input,
+textarea,
+select,
+optgroup,
+option,
+label {
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 2. Toàn bộ Tiêu đề (Headings) đồng bộ Outfit chuẩn mực */
+h1, h2, h3, h4, h5, h6,
+.brand-title,
+.modal-title,
+.quiz-title,
+.crisis-title,
+.sleep-title,
+.studio-title,
+.distortion-title,
+.chat-title,
+.section-title {
+  font-family: var(--font-heading);
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+/* 3. Khối mã lệnh / code */
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
 }
 
 /* C3: Clear Keyboard Focus Rings */
@@ -261,22 +332,165 @@ a:focus-visible {
 
 .btn-theme-toggle {
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  width: 36px;
-  height: 36px;
+  border: 1.5px solid var(--border-color);
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.3s ease,
+              background-color 0.35s ease,
+              box-shadow 0.4s ease;
   color: var(--text-dark);
+  position: relative;
+  overflow: visible;
+  touch-action: manipulation;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-theme-toggle:hover {
-  transform: scale(1.08);
+  transform: scale(1.12) rotate(12deg);
   border-color: var(--primary);
+  box-shadow: 0 0 16px var(--primary-soft);
+}
+
+.btn-theme-toggle:active {
+  transform: scale(0.92);
+}
+
+.btn-theme-toggle .theme-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1;
+}
+
+.btn-theme-toggle.theme-animating .theme-toggle-icon {
+  animation: celestialSpin 0.42s cubic-bezier(0.2, 0, 0, 1);
+}
+
+[data-theme="dark"] .btn-theme-toggle {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="dark"] .btn-theme-toggle:hover {
+  border-color: #38BDF8;
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.5);
+}
+
+/* Celestial Spin Keyframes (Ultra-smooth GPU 3D transform) */
+@keyframes celestialSpin {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.6) rotate(0deg);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(0, 0, 0) scale(1.22) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+/* GPU-Accelerated Celestial Sparkles Burst */
+.theme-sparkles-container {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999999;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.celestial-sparkle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: sparkleBurst 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.celestial-sparkle.sparkle-dot {
+  border-radius: 50%;
+}
+
+.celestial-sparkle.sparkle-star {
+  clip-path: polygon(50% 0%, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0% 50%, 37% 37%);
+}
+
+.celestial-sparkle.sparkle-diamond {
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+@keyframes sparkleBurst {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.2);
+    opacity: 1;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--tx), var(--ty), 0) scale(var(--scale));
+    opacity: 0;
+  }
+}
+
+.theme-fallback-portal {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999998;
+  transform: translate3d(-50%, -50%, 0) scale(0);
+  opacity: 1;
+  transition: transform 0.42s cubic-bezier(0.2, 0, 0, 1), opacity 0.42s ease;
+  will-change: transform, opacity;
+}
+
+.theme-fallback-portal.dark-wave {
+  background: radial-gradient(circle, #0F172A 0%, #1E293B 70%, rgba(45, 212, 191, 0.75) 100%);
+  box-shadow: 0 0 80px rgba(56, 189, 248, 0.6);
+}
+
+.theme-fallback-portal.light-wave {
+  background: radial-gradient(circle, #F8FAFC 0%, #FEF3C7 70%, rgba(245, 158, 11, 0.75) 100%);
+  box-shadow: 0 0 80px rgba(251, 191, 36, 0.6);
+}
+
+.theme-fallback-portal.active {
+  transform: translate3d(-50%, -50%, 0) scale(1);
+  opacity: 0;
+}
+
+/* Accessibility: Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.15s !important;
+  }
+  .btn-theme-toggle.theme-animating .theme-toggle-icon {
+    animation: none !important;
+  }
+  .theme-fallback-portal {
+    transition: opacity 0.15s ease !important;
+  }
+  .theme-sparkles-container {
+    display: none !important;
+  }
 }
 
 /* Feature Guide Buttons */

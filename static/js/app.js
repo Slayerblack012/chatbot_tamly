@@ -177,16 +177,29 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================================================================
-  // 2. DARK MODE THEME CONTROLLER (ENCRYPTED STORAGE)
+  // 2. ETHEREAL CELESTIAL THEME CONTROLLER (ALL-DEVICE ANIMATION ENGINE)
   // =========================================================================
   const THEME_STORAGE_KEY = "an_nhien_theme_mode";
   const btnThemeToggle = document.getElementById("btn-theme-toggle");
   const themeColorMeta = document.getElementById("theme-color-meta");
 
-  function applyTheme(theme) {
+  function updateThemeUI(theme) {
     document.documentElement.setAttribute("data-theme", theme);
     if (btnThemeToggle) {
-      btnThemeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
+      const iconSpan = btnThemeToggle.querySelector(".theme-toggle-icon");
+      if (iconSpan) {
+        iconSpan.textContent = theme === "dark" ? "☀️" : "🌙";
+      } else {
+        btnThemeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
+      }
+      btnThemeToggle.setAttribute(
+        "title",
+        theme === "dark" ? "Chuyển sang Chế độ Sáng (White Mode)" : "Chuyển sang Chế độ Tối (Dark Mode)"
+      );
+      btnThemeToggle.setAttribute(
+        "aria-label",
+        theme === "dark" ? "Chuyển sang Chế độ Sáng" : "Chuyển sang Chế độ Tối"
+      );
     }
     if (themeColorMeta) {
       themeColorMeta.setAttribute("content", theme === "dark" ? "#0F172A" : "#F8FAFC");
@@ -196,6 +209,172 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) {}
   }
 
+  // --- High-FPS GPU-Accelerated Celestial Sparkle Burst ---
+  function spawnEtherealSparkles(originX, originY, targetTheme) {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
+    const container = document.createElement("div");
+    container.className = "theme-sparkles-container";
+    container.style.left = `${originX}px`;
+    container.style.top = `${originY}px`;
+
+    const isDark = targetTheme === "dark";
+    const particleCount = 14;
+    const palette = isDark
+      ? ["#38BDF8", "#2DD4BF", "#818CF8", "#C084FC", "#FFFFFF", "#67E8F9"]
+      : ["#F59E0B", "#FBBF24", "#FDE047", "#FB7185", "#34D399", "#FFFFFF"];
+
+    const shapes = ["sparkle-star", "sparkle-dot", "sparkle-diamond"];
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = document.createElement("div");
+      const shape = shapes[i % shapes.length];
+      p.className = `celestial-sparkle ${shape}`;
+
+      const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.4;
+      const distance = 40 + Math.random() * 70;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+      const size = 6 + Math.random() * 7;
+      const color = palette[i % palette.length];
+
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.backgroundColor = color;
+      p.style.boxShadow = `0 0 6px ${color}`;
+      p.style.setProperty("--tx", `${tx.toFixed(1)}px`);
+      p.style.setProperty("--ty", `${ty.toFixed(1)}px`);
+      p.style.setProperty("--scale", (0.5 + Math.random() * 0.6).toFixed(2));
+      p.style.animationDelay = `${(i * 10)}ms`;
+
+      container.appendChild(p);
+    }
+
+    document.body.appendChild(container);
+
+    setTimeout(() => {
+      container.remove();
+    }, 520);
+  }
+
+  // --- Fallback Ethereal Portal Wave (Older Safari/Firefox/WebViews) ---
+  function runFallbackPortalWave(x, y, targetTheme, maxDist) {
+    const wave = document.createElement("div");
+    wave.className = `theme-fallback-portal ${targetTheme === "dark" ? "dark-wave" : "light-wave"}`;
+    const diameter = maxDist * 2.3;
+    wave.style.width = `${diameter}px`;
+    wave.style.height = `${diameter}px`;
+    wave.style.left = `${x}px`;
+    wave.style.top = `${y}px`;
+
+    document.body.appendChild(wave);
+
+    requestAnimationFrame(() => {
+      wave.classList.add("active");
+      updateThemeUI(targetTheme);
+    });
+
+    setTimeout(() => {
+      wave.remove();
+    }, 450);
+  }
+
+  // --- Main Animated Theme Switch Orchestrator (60-120 FPS Guaranteed) ---
+  async function toggleThemeEthereal(event) {
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+
+    // 1. Calculate Origin Coordinates (Mouse, Touch, or Button Center)
+    let originX = window.innerWidth / 2;
+    let originY = window.innerHeight / 2;
+
+    if (event) {
+      if (typeof event.clientX === "number" && typeof event.clientY === "number" && (event.clientX !== 0 || event.clientY !== 0)) {
+        originX = event.clientX;
+        originY = event.clientY;
+      } else if (event.touches && event.touches[0]) {
+        originX = event.touches[0].clientX;
+        originY = event.touches[0].clientY;
+      } else if (btnThemeToggle) {
+        const rect = btnThemeToggle.getBoundingClientRect();
+        originX = rect.left + rect.width / 2;
+        originY = rect.top + rect.height / 2;
+      }
+    } else if (btnThemeToggle) {
+      const rect = btnThemeToggle.getBoundingClientRect();
+      originX = rect.left + rect.width / 2;
+      originY = rect.top + rect.height / 2;
+    }
+
+    // 2. Button Animation & Haptic Feedback
+    if (btnThemeToggle) {
+      btnThemeToggle.classList.remove("theme-animating");
+      void btnThemeToggle.offsetWidth;
+      btnThemeToggle.classList.add("theme-animating");
+      setTimeout(() => {
+        btnThemeToggle.classList.remove("theme-animating");
+      }, 450);
+    }
+
+    if (navigator.vibrate) {
+      try {
+        navigator.vibrate(15);
+      } catch (e) {}
+    }
+
+    // 3. Spawn GPU-Accelerated Sparkles
+    spawnEtherealSparkles(originX, originY, nextTheme);
+
+    // 4. Calculate Maximum Expansion Distance
+    const maxDist = Math.hypot(
+      Math.max(originX, window.innerWidth - originX),
+      Math.max(originY, window.innerHeight - originY)
+    );
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // 5. Tier 1: Modern View Transitions API with Hardware-Accelerated Circular Clip-Path
+    if (document.startViewTransition && !prefersReduced) {
+      try {
+        document.documentElement.classList.add("theme-transitioning");
+
+        const transition = document.startViewTransition(() => {
+          updateThemeUI(nextTheme);
+        });
+
+        await transition.ready;
+
+        const clipAnimation = document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${originX}px ${originY}px)`,
+              `circle(${maxDist * 1.12}px at ${originX}px ${originY}px)`,
+            ],
+          },
+          {
+            duration: 420,
+            easing: "cubic-bezier(0.2, 0, 0, 1)",
+            pseudoElement: "::view-transition-new(root)",
+          }
+        );
+
+        await clipAnimation.finished;
+      } catch (err) {
+        updateThemeUI(nextTheme);
+      } finally {
+        document.documentElement.classList.remove("theme-transitioning");
+      }
+    } else if (!prefersReduced) {
+      // Tier 2: Universal Fallback Wave for Firefox / Older WebViews / Mobile
+      runFallbackPortalWave(originX, originY, nextTheme, maxDist);
+    } else {
+      // Tier 3: Instant gentle switch for reduced motion
+      updateThemeUI(nextTheme);
+    }
+  }
+
+  // --- Initial Theme Load ---
   let savedTheme = "light";
   try {
     const rawTheme = localStorage.getItem(THEME_STORAGE_KEY);
@@ -203,13 +382,11 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (e) {
     savedTheme = "light";
   }
-  applyTheme(savedTheme);
+  updateThemeUI(savedTheme);
 
   if (btnThemeToggle) {
-    btnThemeToggle.addEventListener("click", () => {
-      const current = document.documentElement.getAttribute("data-theme") || "light";
-      const next = current === "dark" ? "light" : "dark";
-      applyTheme(next);
+    btnThemeToggle.addEventListener("click", (e) => {
+      toggleThemeEthereal(e);
     });
   }
 

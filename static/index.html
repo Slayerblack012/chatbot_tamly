@@ -9,6 +9,12 @@
   
   <!-- Favicon biểu tượng lá thương hiệu An Nhiên -->
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  
+  <!-- Preconnect & Unified Fonts (Outfit & Plus Jakarta Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/static/css/style.css">
   
   <!-- Local Self-hosted Markdown & XSS Sanitizer (Hoạt động 100% Offline) -->
@@ -43,9 +49,9 @@
           <span class="status-dot" id="status-dot"></span>
           <span class="status-text" id="status-text">Đang Kết Nối...</span>
         </div>
-        <!-- B1: Dark Mode Toggle -->
+        <!-- B1: Dark Mode Toggle with Celestial Icon -->
         <button class="btn-theme-toggle" id="btn-theme-toggle" title="Chuyển đổi Chế độ Tối / Sáng" aria-label="Chuyển đổi giao diện">
-          🌙
+          <span class="theme-toggle-icon" id="theme-toggle-icon">🌙</span>
         </button>
       </div>
     </div>
