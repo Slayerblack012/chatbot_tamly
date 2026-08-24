@@ -1498,13 +1498,14 @@ input[type=range] {
 }
 
 #breathe-timer-text {
-  font-size: 1.75rem;
+  font-size: 1.35rem;
   font-weight: 800;
   font-family: var(--font-heading);
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
   color: inherit;
   line-height: 1.1;
   text-align: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 

@@ -1699,41 +1699,58 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Vietnamese Female Voice Engine ---
-  function getBestVietnameseFemaleVoice() {
+  let cachedFemaleVoice = null;
+
+  function loadAndSelectFemaleVoice() {
     if (!("speechSynthesis" in window)) return null;
     const voices = window.speechSynthesis.getVoices();
     if (!voices || voices.length === 0) return null;
 
     const femaleKeywords = [
-      "hoaimy", "hoài my", "linh", "chi", "mai", "ngọc", "lan", "female", "nữ", "nu"
+      "hoaimy", "hoài my", "linh", "chi", "mai", "lan", "ngọc", "ngoc", 
+      "female", "nữ", "nu", "google tiếng việt", "google tieng viet",
+      "wavenet-a", "wavenet-c", "standard-a", "standard-c", "vic-network", "gft-network"
     ];
 
-    // Priority 1: Vietnamese female voice
-    const femaleVi = voices.find(v => {
+    const maleKeywords = [
+      "namminh", "nam minh", "microsoft an", " an ", "male", "nam", "viet", "minh", "david", "mark", "george"
+    ];
+
+    // Priority 1: Verified Vietnamese Female Voice (HoaiMy, Linh, Chi, Google Tieng Viet...)
+    for (const v of voices) {
       const isVi = v.lang && (v.lang.toLowerCase().includes("vi") || v.lang.toLowerCase().includes("vie"));
-      const nameLower = (v.name || "").toLowerCase();
-      return isVi && femaleKeywords.some(kw => nameLower.includes(kw));
-    });
-    if (femaleVi) return femaleVi;
+      const name = (v.name || "").toLowerCase();
+      if (isVi && femaleKeywords.some(kw => name.includes(kw))) {
+        cachedFemaleVoice = v;
+        return v;
+      }
+    }
 
-    // Priority 2: Natural / Online Vietnamese voice (default female in Edge & Chrome)
-    const naturalVi = voices.find(v => {
-      const isVi = v.lang && v.lang.toLowerCase().includes("vi");
-      const nameLower = (v.name || "").toLowerCase();
-      return isVi && (nameLower.includes("natural") || nameLower.includes("online") || nameLower.includes("google"));
-    });
-    if (naturalVi) return naturalVi;
+    // Priority 2: Any Vietnamese voice that is not explicitly named male
+    for (const v of voices) {
+      const isVi = v.lang && (v.lang.toLowerCase().includes("vi") || v.lang.toLowerCase().includes("vie"));
+      const name = (v.name || "").toLowerCase();
+      if (isVi && !maleKeywords.some(m => name.includes(m))) {
+        cachedFemaleVoice = v;
+        return v;
+      }
+    }
 
-    // Priority 3: Any Vietnamese voice
-    const anyVi = voices.find(v => v.lang && v.lang.toLowerCase().includes("vi"));
-    if (anyVi) return anyVi;
+    // Priority 3: Fallback any Vietnamese voice
+    const anyVi = voices.find(v => v.lang && (v.lang.toLowerCase().includes("vi") || v.lang.toLowerCase().includes("vie")));
+    if (anyVi) {
+      cachedFemaleVoice = anyVi;
+      return anyVi;
+    }
 
     return null;
   }
 
+  // Pre-fetch voices on start and on voices changed
   if ("speechSynthesis" in window) {
+    loadAndSelectFemaleVoice();
     window.speechSynthesis.onvoiceschanged = () => {
-      getBestVietnameseFemaleVoice();
+      loadAndSelectFemaleVoice();
     };
   }
 
@@ -1745,15 +1762,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "vi-VN";
 
-      const femaleVoice = getBestVietnameseFemaleVoice();
+      const femaleVoice = cachedFemaleVoice || loadAndSelectFemaleVoice();
       if (femaleVoice) {
         utter.voice = femaleVoice;
+        const name = (femaleVoice.name || "").toLowerCase();
+        const isKnownMale = name.includes("an") || name.includes("namminh") || name.includes("male");
+        utter.pitch = isKnownMale ? 1.4 : 1.16;
+      } else {
+        utter.pitch = 1.25;
       }
 
-      // Slightly elevated pitch (1.18) & gentle cadence (0.85) produces a sweet, soothing feminine tone
-      utter.pitch = 1.18;
-      utter.rate = 0.85;
-      utter.volume = 0.95;
+      utter.rate = 0.84; // Gentle, calm meditation pace
+      utter.volume = 1.0;
 
       window.speechSynthesis.speak(utter);
     } catch (e) {}
@@ -1846,7 +1866,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     breatheActionText.style.display = "block";
     breatheActionText.textContent = "Chuẩn bị";
-    breatheTimerText.textContent = "START";
+    breatheTimerText.textContent = "BẮT ĐẦU";
     breatheTimerText.classList.remove("countdown-active");
 
     getMindfulnessAudioCtx();
@@ -1881,13 +1901,13 @@ document.addEventListener("DOMContentLoaded", () => {
       breatheActionText.style.display = "block";
       breatheActionText.textContent = "Hoàn thành! ✨";
       breatheTimerText.classList.remove("countdown-active");
-      breatheTimerText.textContent = "START";
+      breatheTimerText.textContent = "BẮT ĐẦU";
       playMilestoneCompletedFanfare();
       speakBreathingGuide("Phiên tập thở đã hoàn thành. Hãy mở mắt từ từ và giữ trọn sự an yên này nhé.");
     } else {
       breatheActionText.style.display = "none";
       breatheTimerText.classList.remove("countdown-active");
-      breatheTimerText.textContent = "START";
+      breatheTimerText.textContent = "BẮT ĐẦU";
     }
   }
 
