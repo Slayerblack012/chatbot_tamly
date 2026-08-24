@@ -19,8 +19,9 @@ else:
 DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 FALLBACK_MODELS = [
     "gemini-1.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
     "gemini-1.5-pro",
-    "gemini-2.0-flash-exp",
 ]
 
 
@@ -202,14 +203,19 @@ class CounselorEngine:
                 continue
 
         err_str = str(last_err).lower() if last_err else ""
+        logger.error(f"Tất cả model Gemini đều thất bại: {last_err}")
         if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
             yield """**An Nhiên xin lỗi bạn nhé.**
 
 Hiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng lượng do số lượng cuộc trò chuyện trong phiên vượt quá giới hạn của hệ thống.
 
 Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua mục Thư Giãn & Tĩnh Tâm để thả lỏng một chút nhé. Mình sẽ sớm quay lại cùng bạn."""
+        elif any(kw in err_str for kw in ["api_key", "unauthorized", "400", "invalid"]):
+            yield f"\n\n*(Lỗi API Key: {last_err}. Bạn hãy kiểm tra lại GEMINI_API_KEY trên Render nhé.)*"
+        elif any(kw in err_str for kw in ["location", "region", "403", "not supported"]):
+            yield f"\n\n*(Lỗi vùng máy chủ Render: {last_err}. Vùng IP hiện tại của Render bị Google Gemini hạn chế.)*"
         else:
-            yield "\n\n*(An Nhiên đang gặp gián đoạn kết nối tạm thời. Bạn hãy thử gửi lại sau giây lát nhé.)*"
+            yield f"\n\n*(An Nhiên gặp sự cố kết nối Gemini API: {last_err})*"
 
     def stream_chat(
         self,
