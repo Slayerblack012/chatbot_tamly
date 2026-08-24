@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -31,6 +32,8 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json"
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 allowed_origins_env = os.getenv("CORS_ORIGINS", "")
 allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
@@ -66,6 +69,8 @@ async def security_and_privacy_headers(request: Request, call_next):
         "form-action 'self'"
     ]
     response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=86400"
     return response
 
 
