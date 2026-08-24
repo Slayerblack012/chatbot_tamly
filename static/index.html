@@ -15,12 +15,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/css/style.css?v=2.3.0">
+  <link rel="stylesheet" href="/static/css/style.css?v=2.4.0">
   
   <!-- Local Self-hosted Markdown & XSS Sanitizer (Hoạt động 100% Offline) -->
-  <script defer src="/static/js/vendor/marked.min.js?v=2.3.0"></script>
-  <script defer src="/static/js/vendor/purify.min.js?v=2.3.0"></script>
-  <script defer src="/static/js/app.js?v=2.3.0"></script>
+  <script defer src="/static/js/vendor/marked.min.js?v=2.4.0"></script>
+  <script defer src="/static/js/vendor/purify.min.js?v=2.4.0"></script>
+  <script defer src="/static/js/app.js?v=2.4.0"></script>
 </head>
 <body>
   <div id="network-loading-bar" class="network-loading-bar" style="display: none;"></div>
@@ -416,9 +416,9 @@
 
           <!-- Interactive Breathing Circle -->
           <div class="breathing-box">
-            <div class="circle-breathe" id="circle-breathe">
-              <span id="breathe-action-text">Sẵn sàng</span>
-              <span id="breathe-timer-text" class="breathe-countdown">Nhấn Bắt Đầu</span>
+            <div class="circle-breathe" id="circle-breathe" title="Chạm để bắt đầu bài tập thở">
+              <span id="breathe-action-text" style="display: none;">Sẵn sàng</span>
+              <span id="breathe-timer-text">START</span>
             </div>
             <button class="btn-send" id="btn-toggle-breathe" style="margin-top:24px; min-width: 190px; justify-content: center;">
               ▶️ Bắt Đầu Bài Tập Thở
