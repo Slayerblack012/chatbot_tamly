@@ -1,4 +1,4 @@
-# 🌿 AN NHIÊN TÂM LÝ — HỆ THỐNG TRỢ LÝ THAM VẤN & CHĂM SÓC SỨC KHỎE TINH THẦN
+# AN NHIÊN TÂM LÝ — HỆ THỐNG TRỢ LÝ THAM VẤN & CHĂM SÓC SỨC KHỎE TINH THẦN
 
 [![Python Version](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -14,7 +14,7 @@
 
 ---
 
-## 📑 MỤC LỤC
+## MỤC LỤC
 1. [Bối Cảnh & Mục Tiêu Kỹ Thuật](#1-bối-cảnh--mục-tiêu-kỹ-thuật)
 2. [Tính Năng Cốt Lõi (Core Features)](#2-tính-năng-cốt-lõi-core-features)
 3. [Kiến Trúc Hệ Thống (System Architecture)](#3-kiến-trúc-hệ-thống-system-architecture)
@@ -25,7 +25,6 @@
 8. [Kiểm Thử Tự Động & Đảm Bảo Chất Lượng (QA & Testing)](#8-kiểm-thử-tự-động--đảm-bảo-chất-lượng-qa--testing)
 9. [Triển Khai Môi Trường Sản Xuất (Production Deployment)](#9-triển-khai-môi-trường-sản-xuất-production-deployment)
 10. [Bảo Mật & Quyền Riêng Tư (Security & Privacy)](#10-bảo-mật--quyền-riêng-tư-security--privacy)
-11. [Ranh Giới Y Tế & Đường Dây Nóng Khẩn Cấp](#11-ranh-giới-y-tế--đường-dây-nóng-khẩn-cấp)
 
 ---
 
@@ -46,17 +45,17 @@
 
 ## 2. TÍNH NĂNG CỐT LÕI (CORE FEATURES)
 
-### 🤖 2.1. Động Cơ Tham Vấn AI Đa Phong Cách (Multi-Persona Engine)
+### 2.1. Động Cơ Tham Vấn AI Đa Phong Cách (Multi-Persona Engine)
 - **Thấu Cảm (Empathy Mode - Mặc định)**: Lắng nghe không phán xét, phản chiếu cảm xúc (*Emotion Reflection*).
 - **Tái Cấu Trúc Nhận Thức (CBT Mode)**: Nhận diện 8 bẫy tư duy sai lệch, đặt câu hỏi Socrates để chuyển hóa góc nhìn.
 - **Chánh Niệm & Tĩnh Tâm (Mindfulness Mode)**: Hướng tâm trí về thực tại (*Grounding*), làm dịu phản ứng thần kinh chiến-hay-biến (*Fight-or-Flight*).
 - **Ngữ cảnh thông minh**: Tự động nhận diện thời gian trong ngày (Sáng, Trưa, Chiều, Đêm khuya) để mở lời phù hợp.
 
-### 🆘 2.2. Lá Chắn Can Thiệp Khủng Hoảng Khẩn Cấp (Crisis Safety Net)
+### 2.2. Can Thiệp Khủng Hoảng (Crisis Safety Net)
 - Tích hợp bộ lọc từ khóa nguy cấp theo thời gian thực (*Tự tử, kết thúc cuộc sống, tự hại, bế tắc cùng cực*).
 - Kích hoạt **Banner cứu hộ khẩn cấp 24/7** hiển thị trực tiếp đường dây nóng miễn phí: **Tổng đài 111**, **Cấp cứu 115**, **Đường dây Ngày Mai (096 306 1414)**.
 
-### 📊 2.3. Bộ Tự Đánh Giá & Biểu Đồ Radar Tâm Lý (Psychometric Suite)
+### 2.3. Bộ Tự Đánh Giá & Biểu Đồ Radar Tâm Lý (Psychometric Suite)
 - **3 Thang đo chuẩn hóa quốc tế**:
   - **GAD-7**: Thang đo Rối loạn Lo âu Lan tỏa.
   - **PHQ-9**: Thang đo Mức độ Trầm cảm.
@@ -64,20 +63,20 @@
 - **Biểu đồ Radar SVG Đa Chiều**: Tự động tổng hợp điểm số trên 5 trục cảm xúc (*Lo âu, Trầm cảm, Căng thẳng, Thể chất, Tự ti*) với biểu đồ lưới SVG thuần cực nhẹ.
 - **CRUD Quản lý Lịch sử**: Lưu trữ phiên đánh giá cục bộ và đồng bộ API.
 
-### 🌬️ 2.4. Góc Tĩnh Tâm & Động Cơ Âm Thanh Giọng Nữ Chuẩn
+### 2.4. Góc Tĩnh Tâm & Động Cơ Âm Thanh Giọng Nữ Chuẩn
 - **2 Phương pháp thở khoa học**:
-  - **Thở 4-7-8 (Tiến sĩ Andrew Weil)**: Hít 4s ➔ Giữ 7s ➔ Thở 8s (Hạ cortisol, hỗ trợ ngủ sâu).
-  - **Thở Đều 4-4-4-4 (Box Breathing - Navy SEALs)**: Hít 4s ➔ Giữ 4s ➔ Thở 4s ➔ Nghỉ 4s (Tập trung tinh thần).
+  - **Thở 4-7-8 (Tiến sĩ Andrew Weil)**: Hít 4s -> Giữ 7s -> Thở 8s (Hạ cortisol, hỗ trợ ngủ sâu).
+  - **Thở Đều 4-4-4-4 (Box Breathing - Navy SEALs)**: Hít 4s -> Giữ 4s -> Thở 4s -> Nghỉ 4s (Tập trung tinh thần).
 - **Động cơ Giọng Nữ Tiếng Việt Chuẩn 100%**:
   - Tích hợp bộ tệp âm thanh giọng nữ studio tiếng Việt độc lập thiết bị (`/static/audio/tts/`), không bị lỗi giọng nam tiếng Anh trên máy tính Windows.
   - Hỗ trợ endpoint `/api/tts` dự phòng tự động nạp giọng nói trực tuyến.
 - **Tiếng Chuông Thiền Tây Tạng (Tibetan Singing Bowl Synthesizer)**:
   - Tổng hợp sóng âm hài âm tự nhiên (*432Hz & 528Hz*) bằng **Web Audio API** chạy 100% offline.
-- **Mốc thời gian tùy chọn**: `1 Phút`, `3 Phút (Chuẩn)`, `5 Phút`, `10 Phút`, `♾️ Tự do` kèm thanh tiến trình và bộ đếm chu kỳ.
+- **Mốc thời gian tùy chọn**: `1 Phút`, `3 Phút (Chuẩn)`, `5 Phút`, `10 Phút`, `Tự do` kèm thanh tiến trình và bộ đếm chu kỳ.
 - **Không gian âm thanh thư giãn**: Tích hợp tiếng Mưa rơi, Sóng biển, Tiếng chim rừng.
 - **Kỹ thuật Neo Cảm Xúc 5-4-3-2-1**: Cắt đứt cơn hoảng loạn bằng 5 giác quan.
 
-### 🎨 2.5. Thiết Kế Huyền Ảo & Chuyển Động GPU 120 FPS (Celestial Theme)
+### 2.5. Giao Diện & Chuyển Động GPU 120 FPS (Celestial Theme)
 - **Chuyển đổi Dark/Light Mode 3D**: Vòng tròn tỏa sáng góc nhấp chuột kết hợp **View Transitions API** và bụi sao phát sáng chuyển động 100% trên GPU compositor thread.
 - **Hệ thống Font chữ chuẩn mực**:
   - Tiêu đề & Nhãn: **Outfit** (Đậm nét, hiện đại).
@@ -293,7 +292,7 @@ pytest -v
 ### Cách 1: Tự động qua Render Cloud (Khuyên dùng)
 Dự án đã tích hợp sẵn tệp cấu hình hạ tầng [`render.yaml`](file:///d:/AI_md_siking/tamly-chatbot/render.yaml):
 1. Đẩy mã nguồn lên GitHub.
-2. Tại [Render Dashboard](https://dashboard.render.com/) ➔ Chọn **New Blueprint Instance** ➔ Chọn repository `chatbot_tamly`.
+2. Tại [Render Dashboard](https://dashboard.render.com/) -> Chọn **New Blueprint Instance** -> Chọn repository `chatbot_tamly`.
 3. Điền giá trị `GEMINI_API_KEY` tại mục biến môi trường.
 4. Render sẽ tự động build và cấp phát HTTPS miễn phí.
 
@@ -324,23 +323,3 @@ docker run -d \
 - **Fail-Closed DOMPurify**: Khử trùng 100% nội dung HTML/Markdown trước khi chèn vào DOM.
 - **Giới Hạn Tần Suất Yêu Cầu (Rate Limiting)**: Chống Spam và DoS với thuật toán Sliding Window (Tối đa 45 requests/phút/IP), hỗ trợ nhận diện IP thật qua Proxy/Cloudflare.
 - **Khóa Phiên Tự Động (Auto-Lock)**: Tự động che mờ và khóa nội dung sau 60 phút không tương tác để bảo vệ quyền riêng tư nếu người dùng rời khỏi thiết bị.
-
----
-
-## 11. RANH GIỚI Y TẾ & ĐƯỜNG DÂY NÓNG KHẨN CẤP
-
-> [!IMPORTANT]
-> **Tuyên Bố Ranh Giới Chuyên Môn**:
-> Ứng dụng **An Nhiên Tâm Lý** là công cụ hỗ trợ giải tỏa cảm xúc, rèn luyện chánh niệm và cung cấp tri thức tâm lý học đường. Ứng dụng **KHÔNG PHẢI LÀ DỊCH VỤ Y TẾ LÂM SÀNG** và **KHÔNG THAY THẾ CHO CHẨN ĐOÁN, ĐIỀU TRỊ TÂM THẦN TỪ BÁC SĨ CHUYÊN KHOA**.
-
-### 🆘 Danh Bạ Khẩn Cấp 24/7 Tại Việt Nam:
-- **Tổng đài Quốc gia Bảo vệ Trẻ em & Thanh thiếu niên**: 📞 **`111`** *(Miễn phí 24/7)*
-- **Cấp cứu Y tế Khẩn cấp Toàn quốc**: 📞 **`115`**
-- **Đường dây nóng Ngày Mai (Hỗ trợ người trầm cảm & khủng hoảng tâm lý)**: 📞 **`096 306 1414`**
-
----
-
-<p align="center">
-  <i>Được phát triển với tất cả tâm huyết nhằm mang lại sự an yên và xoa dịu tâm hồn cho cộng đồng người Việt.</i><br>
-  <b>An Nhiên Tâm Lý © 2026 — Giữ trọn sự an yên trong từng hơi thở.</b>
-</p>
