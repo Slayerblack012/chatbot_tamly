@@ -54,14 +54,16 @@ class CounselorEngine:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.client: Optional[genai.Client] = None
         self.active_model: str = DEFAULT_MODEL
-        if self.api_key:
-            self._init_client()
+        self._init_client()
 
     def _init_client(self) -> None:
         """Khởi tạo Google GenAI Client (an toàn, không crash server nếu lỗi key ban đầu)."""
+        raw_key = self.api_key or os.getenv("GEMINI_API_KEY") or ""
+        clean_key = raw_key.strip().strip('"').strip('\'')
         try:
-            if self.api_key and self.api_key.strip():
-                self.client = genai.Client(api_key=self.api_key.strip())
+            if clean_key:
+                self.api_key = clean_key
+                self.client = genai.Client(api_key=clean_key)
                 logger.info("Khởi tạo Google GenAI Client thành công.")
             else:
                 self.client = None

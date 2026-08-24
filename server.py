@@ -171,8 +171,11 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
     check_rate_limit(client_ip)
 
     if not engine.is_ready():
+        engine.reload()
+
+    if not engine.is_ready():
         async def not_ready_gen():
-            msg = b64_encode_text("Hệ thống đang bảo trì kết nối. Bạn vui lòng thử lại sau.")
+            msg = b64_encode_text("Hệ thống chưa kết nối được với Gemini API (chưa có GEMINI_API_KEY hợp lệ). Bạn vui lòng kiểm tra lại Environment Variable trên Render nhé.")
             yield f"data: {json.dumps({'d': msg, 'f': 1})}\n\n"
         return StreamingResponse(not_ready_gen(), media_type="text/event-stream")
 
