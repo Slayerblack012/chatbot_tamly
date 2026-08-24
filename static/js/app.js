@@ -745,35 +745,62 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnExportChat = document.getElementById("btn-export-chat");
   if (btnExportChat) {
     btnExportChat.addEventListener("click", () => {
-      if (state.messages.length <= 1) {
+      if (!state.messages || state.messages.length <= 1) {
         openModal({
           icon: "📜",
-          title: "Chưa Có Lịch Sử Chat",
+          title: "Lịch Sử Chat",
           subtitle: "Lịch sử trò chuyện hiện đang trống",
-          bodyHtml: "<p>Hãy trò chuyện một vài câu cùng An Nhiên để hệ thống tự động ghi nhớ và lưu trữ lịch sử chat cho bạn nhé.</p>",
+          bodyHtml: "<p style='color: var(--text-muted); text-align: center; padding: 16px 0;'>Bạn chưa có lịch sử cuộc hội thoại nào. Hãy trò chuyện vài câu cùng An Nhiên để lưu giữ tâm sự nhé! ✨</p>",
           primaryBtnText: "Đã Hiểu ✨"
         });
         return;
       }
-      let exportText = `====================================================\n`;
-      exportText += `   LỊCH SỬ CHAT TRÒ CHUYỆN - AN NHIÊN TÂM LÝ\n`;
-      exportText += `   Thời gian xuất: ${new Date().toLocaleString("vi-VN")}\n`;
-      exportText += `====================================================\n\n`;
 
-      state.messages.forEach((msg) => {
-        const sender = msg.role === "user" ? "BẠN" : "AN NHIÊN";
-        exportText += `[${sender}]:\n${msg.content}\n\n----------------------------------------------------\n\n`;
+      const totalMsgs = state.messages.length - 1;
+      let historyItemsHtml = state.messages.map((msg, idx) => {
+        if (idx === 0) return '';
+        const isUser = msg.role === 'user';
+        const roleLabel = isUser ? '👤 Bạn' : '🌿 An Nhiên';
+        const badgeStyle = isUser 
+          ? 'background: rgba(13, 148, 136, 0.15); color: #0D9488; font-weight: 600;' 
+          : 'background: rgba(99, 102, 241, 0.15); color: #6366F1; font-weight: 600;';
+        
+        const contentEscaped = msg.content
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\n/g, "<br>");
+
+        return `
+          <div style="margin-bottom: 12px; padding: 12px; border-radius: 12px; background: var(--bg-page); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.8rem; padding: 2px 8px; border-radius: 6px; ${badgeStyle}">${roleLabel}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Tin nhắn #${idx}</span>
+            </div>
+            <div style="font-size: 0.9rem; line-height: 1.5; color: var(--text-dark); max-height: 120px; overflow-y: auto; word-break: break-word;">
+              ${contentEscaped}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const historyModalHtml = `
+        <div style="max-height: 380px; overflow-y: auto; padding-right: 4px; margin-bottom: 12px;">
+          <div style="margin-bottom: 12px; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <span>💬 Tổng số tin nhắn: <strong>${totalMsgs}</strong></span>
+            <span>📱 Lưu trữ cục bộ an toàn</span>
+          </div>
+          ${historyItemsHtml}
+        </div>
+      `;
+
+      openModal({
+        icon: "📜",
+        title: "Lịch Sử Trò Chuyện",
+        subtitle: `Xem lại nhật ký cuộc hội thoại cùng An Nhiên (${totalMsgs} tin nhắn)`,
+        bodyHtml: historyModalHtml,
+        primaryBtnText: "Đóng Lịch Sử ✨"
       });
-
-      const blob = new Blob([exportText], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `An_Nhien_Lich_Su_Chat_${new Date().toISOString().slice(0, 10)}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     });
   }
 

@@ -1579,3 +1579,202 @@ input[type=range] {
   color: #0F766E;
   margin-bottom: 20px;
 }
+
+
+/* ==================== COMPREHENSIVE DARK MODE OVERRIDES ==================== */
+[data-theme="dark"] {
+  --bg-page: #0F172A;
+  --card-bg: #1E293B;
+  --border-color: #334155;
+  --border-focus: #2DD4BF;
+  --text-dark: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-light: #64748B;
+  --indigo-dark: #F1F5F9;
+  --primary-light: rgba(13, 148, 136, 0.25);
+  --primary-soft: rgba(13, 148, 136, 0.18);
+  --danger-light: rgba(239, 68, 68, 0.2);
+  --danger-border: #991B1B;
+}
+
+[data-theme="dark"] body {
+  background-color: var(--bg-page);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .app-navbar,
+[data-theme="dark"] .chat-sidebar,
+[data-theme="dark"] .chat-main-container,
+[data-theme="dark"] .chat-input-wrapper,
+[data-theme="dark"] .quick-chips,
+[data-theme="dark"] .studio-card,
+[data-theme="dark"] .quiz-container,
+[data-theme="dark"] .distortion-card,
+[data-theme="dark"] .mobile-bottom-nav,
+[data-theme="dark"] .mobile-sidebar-toggle,
+[data-theme="dark"] .sleep-card,
+[data-theme="dark"] .modal-card,
+[data-theme="dark"] #quiz-advice-text,
+[data-theme="dark"] #btn-grounding-card {
+  background-color: var(--card-bg);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+  background: #1E293B;
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-body {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .modal-title {
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .modal-subtitle {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .chat-messages {
+  background: #0B1120;
+}
+
+[data-theme="dark"] .chat-header {
+  background: #1E293B;
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .chat-input {
+  background: #0F172A;
+  color: #F8FAFC;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .msg-wrapper.assistant .msg-bubble {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F1F5F9;
+}
+
+[data-theme="dark"] .msg-wrapper.user .msg-bubble {
+  background: #0D9488;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .msg-avatar {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .nav-tabs,
+[data-theme="dark"] .quiz-type-selector {
+  background: #0F172A;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .nav-tab-btn,
+[data-theme="dark"] .quiz-type-btn {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .nav-tab-btn.active,
+[data-theme="dark"] .quiz-type-btn.active {
+  background: #1E293B;
+  color: #2DD4BF;
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .chip-btn,
+[data-theme="dark"] .quiz-option-btn,
+[data-theme="dark"] .mood-btn,
+[data-theme="dark"] .stress-slider-wrapper,
+[data-theme="dark"] .sound-item,
+[data-theme="dark"] .dist-example,
+[data-theme="dark"] .dist-reframe,
+[data-theme="dark"] .btn-feature-guide,
+[data-theme="dark"] .btn-sidebar-action {
+  background: #0F172A;
+  border-color: #334155;
+  color: #F1F5F9;
+}
+
+[data-theme="dark"] .chip-btn:hover,
+[data-theme="dark"] .quiz-option-btn:hover,
+[data-theme="dark"] .sound-item:hover,
+[data-theme="dark"] .btn-sidebar-action:hover {
+  background: #1E293B;
+  border-color: #2DD4BF;
+  color: #2DD4BF;
+}
+
+[data-theme="dark"] .quiz-option-btn.selected,
+[data-theme="dark"] .mood-btn.active,
+[data-theme="dark"] .sound-item.active {
+  background: rgba(13, 148, 136, 0.25);
+  border-color: #2DD4BF;
+  color: #2DD4BF;
+}
+
+[data-theme="dark"] .crisis-banner {
+  background: #450A0A;
+  border-color: #991B1B;
+  color: #FCA5A5;
+}
+
+[data-theme="dark"] .crisis-icon {
+  background: #7F1D1D;
+  color: #FECACA;
+}
+
+[data-theme="dark"] .crisis-title {
+  color: #FEF2F2;
+}
+
+[data-theme="dark"] .crisis-text {
+  color: #FECACA;
+}
+
+[data-theme="dark"] .hotline-chip {
+  background: #7F1D1D;
+  border-color: #991B1B;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .hotline-chip.secondary {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .btn-dismiss-crisis {
+  background: #7F1D1D;
+  color: #FECACA;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: #0F172A;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #0F172A;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
