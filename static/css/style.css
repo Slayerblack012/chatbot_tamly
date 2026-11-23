@@ -383,7 +383,8 @@ a:focus-visible {
 
 /* Tabs */
 .nav-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   background: #EDF2F7;
   padding: 4px;
   border-radius: var(--radius-full);
@@ -391,6 +392,7 @@ a:focus-visible {
   flex: 1 1 auto;
   justify-content: center;
   min-width: 0;
+  max-width: 760px;
 }
 
 .nav-tab-btn {
@@ -404,6 +406,7 @@ a:focus-visible {
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   transition: all 0.25s ease;
   font-family: var(--font-main);
@@ -625,6 +628,9 @@ a:focus-visible {
   border-radius: var(--radius-full);
   border: 1px solid rgba(13, 148, 136, 0.2);
   transition: all 0.3s ease;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 44px;
 }
 
 .status-indicator.online {
@@ -1977,7 +1983,9 @@ html.a11y-high-contrast {
   }
 
   .nav-tabs {
+    display: flex;
     gap: 2px;
+    max-width: none;
   }
 
   .nav-tab-btn {
