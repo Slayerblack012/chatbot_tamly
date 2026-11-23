@@ -1,10 +1,14 @@
 name: CI/CD Pipeline - Quality, Security & Docker Build
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -53,6 +57,30 @@ jobs:
       run: |
         pytest -v
 
+    - name: Start Server Smoke Test
+      env:
+        GEMINI_API_KEY: "dummy_ci_test_key"
+        GEMINI_MODEL: "gemini-3.6-flash"
+      run: |
+        uvicorn server:app --host 127.0.0.1 --port 8000 &
+        server_pid=$!
+        trap 'kill "$server_pid"' EXIT
+        python - <<'PY'
+        import time
+        import urllib.request
+
+        for _ in range(30):
+            try:
+                with urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=2) as response:
+                    assert response.status == 200
+                    print("Server smoke test passed")
+                    break
+            except Exception:
+                time.sleep(1)
+        else:
+            raise SystemExit("Server did not become healthy")
+        PY
+
   # ==========================================
   # 2. DOCKER BUILD VALIDATION
   # ==========================================
@@ -75,3 +103,22 @@ jobs:
         file: ./Dockerfile
         push: false
         tags: tamly-chatbot:ci-test
+
+  deploy:
+    name: Deploy to Render
+    needs: [test, docker-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Trigger Render Deployment
+      env:
+        RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      run: |
+        if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+          echo "RENDER_DEPLOY_HOOK_URL is not configured; deployment skipped."
+          exit 0
+        fi
+        curl --fail --show-error --silent --max-time 60 \
+          --request POST \
+          "$RENDER_DEPLOY_HOOK_URL"
