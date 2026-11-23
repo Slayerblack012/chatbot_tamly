@@ -252,7 +252,7 @@ pip install -r requirements.txt
 Tạo file `.env` tại thư mục gốc của dự án:
 ```env
 GEMINI_API_KEY=your_google_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.8-flash
 PORT=8000
 ```
 > *(Nhận API Key miễn phí tại [Google AI Studio](https://aistudio.google.com/)).*
