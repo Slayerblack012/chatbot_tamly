@@ -54,7 +54,7 @@ if __name__ == "__main__":
     print(f"👉 GIAO DIỆN WEB UI:    http://localhost:{port}")
     print(f"👉 XEM TÀI LIỆU API:    http://localhost:{port}/docs")
     print("=" * 65)
-    print(f"🌿 Nhấn giữ Ctrl + Click vào link trên hoặc mở trình duyệt web!")
+    print("🌿 Nhấn giữ Ctrl + Click vào link trên hoặc mở trình duyệt web!")
     print("=" * 65 + "\n")
 
     threading.Thread(target=open_browser, args=(port,), daemon=True).start()
