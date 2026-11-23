@@ -1,6 +1,6 @@
 """Unit tests for Knowledge Base, CBT distortions, and Assessments."""
 
-from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES
+from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES, PSYCHOLOGICAL_FACILITIES
 
 
 def test_cognitive_distortions_structure():
@@ -63,3 +63,24 @@ def test_phq9_quiz_structure():
         assert r[0] <= r[1]
         assert "level" in bracket
         assert "advice" in bracket
+
+
+def test_psychological_facilities_structure():
+    assert len(PSYCHOLOGICAL_FACILITIES) >= 5
+    bien_hoa_count = 0
+    for f in PSYCHOLOGICAL_FACILITIES:
+        assert "id" in f
+        assert "name" in f
+        assert "category" in f
+        assert "location" in f
+        assert "city" in f
+        assert "address" in f
+        assert "phone" in f
+        assert "specialties" in f
+        assert isinstance(f["specialties"], list)
+        assert len(f["specialties"]) > 0
+        assert "highlights" in f
+        assert "advice" in f
+        if f["location"] == "bien_hoa":
+            bien_hoa_count += 1
+    assert bien_hoa_count >= 5

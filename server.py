@@ -1,11 +1,21 @@
 import base64
 import datetime
+import glob
 import json
 import logging
 import os
+import sys
 import time
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
+
+# Tự động nạp gói thư viện từ .venv nếu người dùng chạy bằng python hệ thống
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_VENV_DIR = os.path.join(_BASE_DIR, ".venv")
+if os.path.isdir(_VENV_DIR):
+    for _sp in glob.glob(os.path.join(_VENV_DIR, "lib", "python*", "site-packages")):
+        if _sp not in sys.path:
+            sys.path.insert(0, _sp)
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -15,8 +25,15 @@ from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from core.bot_engine import CounselorEngine, sanitize_messages_for_gemini
-from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES
+from core.bot_engine import (
+    AUTH_FAILURE_MESSAGE,
+    QUOTA_FALLBACK_MESSAGE,
+    TEMPORARY_FALLBACK_MESSAGE,
+    CounselorEngine,
+    is_quota_error,
+    sanitize_messages_for_gemini,
+)
+from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES, PSYCHOLOGICAL_FACILITIES
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,7 +55,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 allowed_origins_env = os.getenv("CORS_ORIGINS", "")
 allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 if not allowed_origins:
-    allowed_origins = ["http://localhost:8000", "http://127.0.0.1:8000"]
+    allowed_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,6 +72,8 @@ async def security_and_privacy_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if request.url.path in ("/static/sw.js", "/static/manifest.webmanifest"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 
     csp_directives = [
         "default-src 'self' https: data: blob: 'unsafe-inline'",
@@ -154,14 +173,33 @@ async def health_check():
 
 @app.get("/api/knowledge")
 async def get_knowledge():
-    """Trả về dữ liệu giáo dục tâm lý và trắc nghiệm (đã đóng gói)."""
+    """Trả về dữ liệu giáo dục tâm lý, trắc nghiệm và danh bạ cơ sở khám (đã đóng gói)."""
     payload_data = {
         "distortions": COGNITIVE_DISTORTIONS,
         "articles": PSYCHOEDU_ARTICLES,
-        "quizzes": ASSESSMENT_QUIZZES
+        "quizzes": ASSESSMENT_QUIZZES,
+        "facilities": PSYCHOLOGICAL_FACILITIES
     }
     encoded = b64_encode_text(json.dumps(payload_data, ensure_ascii=False))
     return {"d": encoded}
+
+
+@app.get("/api/facilities", tags=["Psychological Facilities Directory"])
+async def get_facilities(location: Optional[str] = None):
+    """[READ] Lấy danh bạ cơ sở khám & tham vấn tâm lý uy tín theo địa phương (mặc định: Biên Hòa, Đồng Nai)."""
+    facilities = PSYCHOLOGICAL_FACILITIES
+    if location:
+        loc = location.strip().lower()
+        facilities = [
+            f for f in facilities
+            if f.get("location") == loc or loc in f.get("city", "").lower() or loc in f.get("province", "").lower()
+        ]
+    return {
+        "status": "success",
+        "location": location or "all",
+        "count": len(facilities),
+        "data": facilities
+    }
 
 
 @app.post("/api/chat")
@@ -170,22 +208,31 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
     client_ip = get_client_ip(request)
     check_rate_limit(client_ip)
 
-    if not engine.is_ready():
-        engine.reload()
-
-    if not engine.is_ready():
-        async def not_ready_gen():
-            msg = b64_encode_text("Hệ thống chưa kết nối được với Gemini API (chưa có GEMINI_API_KEY hợp lệ). Bạn vui lòng kiểm tra lại Environment Variable trên Render nhé.")
-            yield f"data: {json.dumps({'d': msg, 'f': 1})}\n\n"
-        return StreamingResponse(not_ready_gen(), media_type="text/event-stream")
-
     data = b64_decode_json(payload.p)
     raw_messages = data.get("messages", [])
+    if not isinstance(raw_messages, list) or len(raw_messages) == 0:
+        raise HTTPException(status_code=400, detail="Danh sách tin nhắn trống.")
+
     if len(raw_messages) > 30:
         raise HTTPException(status_code=400, detail="Quá nhiều tin nhắn (tối đa 30)")
     total_chars = sum(len(str(m.get("content", ""))) for m in raw_messages)
     if total_chars > 50000:
         raise HTTPException(status_code=400, detail="Nội dung hội thoại quá dài")
+
+    recent_raw = raw_messages[-30:]
+    clean_messages = sanitize_messages_for_gemini(recent_raw)
+    if not clean_messages:
+        raise HTTPException(status_code=400, detail="Nội dung tin nhắn không hợp lệ.")
+
+    if not engine.is_ready():
+        engine.reload()
+
+    if not engine.is_ready():
+        async def not_ready_gen():
+            msg = b64_encode_text(AUTH_FAILURE_MESSAGE)
+            yield f"data: {json.dumps({'d': msg, 'f': 1})}\n\n"
+        return StreamingResponse(not_ready_gen(), media_type="text/event-stream")
+
     mode = str(data.get("mode", "empathy"))[:20]
     raw_mood_context = data.get("mood_context")
     raw_temp = data.get("temperature", 0.8)
@@ -208,15 +255,6 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
             "note": str(raw_mood_context.get("note", ""))[:500]
         }
 
-    if not isinstance(raw_messages, list) or len(raw_messages) == 0:
-        raise HTTPException(status_code=400, detail="Danh sách tin nhắn trống.")
-
-    recent_raw = raw_messages[-30:]
-    clean_messages = sanitize_messages_for_gemini(recent_raw)
-
-    if not clean_messages:
-        raise HTTPException(status_code=400, detail="Nội dung tin nhắn không hợp lệ.")
-
     async def event_generator():
         try:
             async for chunk in engine.async_stream_chat(
@@ -233,10 +271,10 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
         except Exception as exc:
             logger.error(f"Lỗi trong async event_generator: {exc}", exc_info=True)
             err_str = str(exc).lower()
-            if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
-                err_msg = b64_encode_text("**An Nhiên xin lỗi bạn nhé.**\n\nHiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng lượng do số lượng cuộc trò chuyện trong phiên vượt quá giới hạn của hệ thống.\n\nTrong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua mục Thư Giãn & Tĩnh Tâm để thả lỏng một chút nhé. Mình sẽ sớm quay lại cùng bạn.")
+            if is_quota_error(err_str):
+                err_msg = b64_encode_text(QUOTA_FALLBACK_MESSAGE)
             else:
-                err_msg = b64_encode_text("\n\n*(An Nhiên đang gặp gián đoạn kết nối tạm thời. Bạn hãy thử gửi lại sau giây lát nhé.)*")
+                err_msg = b64_encode_text(TEMPORARY_FALLBACK_MESSAGE)
             yield f"data: {json.dumps({'d': err_msg, 'f': 1})}\n\n"
 
     return StreamingResponse(

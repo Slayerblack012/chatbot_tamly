@@ -6,6 +6,14 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/static/sw.js").catch((error) => {
+        console.warn("Không thể đăng ký PWA service worker:", error);
+      });
+    });
+  }
+
   // =========================================================================
   // 0. BASE64 UTF-8 OBFUSCATION & HTML ESCAPING HELPERS
   // =========================================================================
@@ -173,6 +181,17 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && appModal && appModal.style.display === "flex") {
       closeModal();
+    }
+
+    if (e.altKey && ["1", "2", "3", "4", "5"].includes(e.key)) {
+      const tabIds = ["tab-chat", "tab-edu", "tab-quiz", "tab-studio", "tab-facilities"];
+      activateTab(tabIds[Number(e.key) - 1]);
+      e.preventDefault();
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && chatInput) {
+      chatForm.requestSubmit();
+      e.preventDefault();
     }
   });
 
@@ -561,6 +580,8 @@ document.addEventListener("DOMContentLoaded", () => {
     isStreaming: false,
     activeQuizType: "gad7",
     allQuizzes: null,
+    facilities: [],
+    facilityFilter: "all",
     quizState: {
       currentQuestion: 0,
       answers: [],
@@ -592,6 +613,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSend = document.getElementById("btn-send");
   const btnSendLabel = document.getElementById("btn-send-label");
   const btnSendIcon = document.getElementById("btn-send-icon");
+  const chatMicBtn = document.getElementById("chat-mic-btn");
+  const textSizeSelect = document.getElementById("text-size-select");
+  const highContrastBtn = document.getElementById("btn-high-contrast");
 
   // R7: Health Check Indicator Real-time
   const statusIndicator = document.getElementById("status-indicator");
@@ -600,6 +624,107 @@ document.addEventListener("DOMContentLoaded", () => {
   const networkLoadingBar = document.getElementById("network-loading-bar");
   const typingIndicator = document.getElementById("typing-indicator");
   const loadingTextLabel = document.getElementById("loading-text-label");
+
+  function speakText(text) {
+    if (!text || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "vi-VN";
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function setupAccessibilityPreferences() {
+    const textSizeKey = "an_nhien_text_size";
+    const contrastKey = "an_nhien_high_contrast";
+
+    let savedTextSize = "normal";
+    let savedContrast = false;
+    try {
+      savedTextSize = localStorage.getItem(textSizeKey) || "normal";
+      savedContrast = localStorage.getItem(contrastKey) === "true";
+    } catch (e) {}
+
+    const applyTextSize = (size) => {
+      document.documentElement.classList.remove("a11y-text-large", "a11y-text-x-large");
+      if (size === "large") document.documentElement.classList.add("a11y-text-large");
+      if (size === "x-large") document.documentElement.classList.add("a11y-text-x-large");
+      if (textSizeSelect) textSizeSelect.value = size;
+    };
+
+    const applyContrast = (enabled) => {
+      document.documentElement.classList.toggle("a11y-high-contrast", enabled);
+      if (highContrastBtn) {
+        highContrastBtn.setAttribute("aria-pressed", enabled ? "true" : "false");
+        highContrastBtn.textContent = enabled ? "🔲 Tắt tăng tương phản" : "🔲 Tăng tương phản";
+      }
+    };
+
+    applyTextSize(savedTextSize);
+    applyContrast(savedContrast);
+
+    if (textSizeSelect) {
+      textSizeSelect.addEventListener("change", () => {
+        const size = textSizeSelect.value;
+        applyTextSize(size);
+        try {
+          localStorage.setItem(textSizeKey, size);
+        } catch (e) {}
+      });
+    }
+
+    if (highContrastBtn) {
+      highContrastBtn.addEventListener("click", () => {
+        const enabled = !document.documentElement.classList.contains("a11y-high-contrast");
+        applyContrast(enabled);
+        try {
+          localStorage.setItem(contrastKey, enabled ? "true" : "false");
+        } catch (e) {}
+      });
+    }
+  }
+
+  setupAccessibilityPreferences();
+
+  function setupVoiceInput() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition || !chatMicBtn) return;
+
+    chatMicBtn.hidden = false;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "vi-VN";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    recognition.addEventListener("start", () => {
+      chatMicBtn.classList.add("listening");
+      chatMicBtn.setAttribute("aria-label", "Đang nghe giọng nói");
+    });
+
+    recognition.addEventListener("result", (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      if (chatInput) chatInput.value = transcript.trim();
+    });
+
+    const stopListening = () => {
+      chatMicBtn.classList.remove("listening");
+      chatMicBtn.setAttribute("aria-label", "Nhập bằng giọng nói");
+    };
+    recognition.addEventListener("end", stopListening);
+    recognition.addEventListener("error", stopListening);
+
+    chatMicBtn.addEventListener("click", () => {
+      try {
+        recognition.start();
+      } catch (e) {}
+    });
+  }
+
+  setupVoiceInput();
 
   function showNetworkLoading(customText) {
     if (networkLoadingBar) networkLoadingBar.style.display = "block";
@@ -650,12 +775,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // Navigation Tabs
   function activateTab(targetTabId) {
     navTabs.forEach(b => {
-      if (b.getAttribute("data-tab") === targetTabId) b.classList.add("active");
-      else b.classList.remove("active");
+      const isActive = b.getAttribute("data-tab") === targetTabId;
+      b.classList.toggle("active", isActive);
+      if (isActive) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
     });
     mobileNavBtns.forEach(b => {
-      if (b.getAttribute("data-tab") === targetTabId) b.classList.add("active");
-      else b.classList.remove("active");
+      const isActive = b.getAttribute("data-tab") === targetTabId;
+      b.classList.toggle("active", isActive);
+      if (isActive) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
     });
     tabPanes.forEach(p => {
       if (p.id === targetTabId) p.classList.add("active");
@@ -671,11 +800,15 @@ document.addEventListener("DOMContentLoaded", () => {
   function openSidebar() {
     if (chatSidebar) chatSidebar.classList.add("open");
     if (drawerBackdrop) drawerBackdrop.classList.add("active");
+    if (btnToggleSidebar) btnToggleSidebar.setAttribute("aria-expanded", "true");
+    if (chatSidebar) chatSidebar.setAttribute("aria-hidden", "false");
   }
 
   function closeSidebar() {
     if (chatSidebar) chatSidebar.classList.remove("open");
     if (drawerBackdrop) drawerBackdrop.classList.remove("active");
+    if (btnToggleSidebar) btnToggleSidebar.setAttribute("aria-expanded", "false");
+    if (chatSidebar) chatSidebar.setAttribute("aria-hidden", "true");
   }
 
   if (btnToggleSidebar) btnToggleSidebar.addEventListener("click", openSidebar);
@@ -811,6 +944,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const btnGuideFacilities = document.getElementById("btn-guide-facilities");
+  if (btnGuideFacilities) {
+    btnGuideFacilities.addEventListener("click", () => {
+      openModal({
+        icon: "🏥",
+        title: "Hướng Dẫn Chọn Cơ Sở Khám Tâm Lý",
+        subtitle: "Những điều cần biết trước khi đặt lịch khám",
+        bodyHtml: `
+          <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
+            <div style="background:var(--primary-light); padding:12px 16px; border-radius:var(--radius-md); border-left:4px solid var(--primary);">
+              <strong>🔍 Bước 1 — Xác định nhu cầu:</strong>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">
+                Nếu bạn chỉ cần <strong>tư vấn tâm lý</strong> (lo âu, căng thẳng, mối quan hệ), hãy chọn <strong>phòng khám tư nhân hoặc chuyên khoa tâm lý</strong>. Nếu có triệu chứng nghiêm trọng (mất ngủ kéo dài, hoang tưởng, trầm cảm nặng), hãy đến <strong>bệnh viện có chuyên khoa tâm thần</strong>.
+              </p>
+            </div>
+            <div style="background:var(--bg-page); padding:12px 16px; border-radius:var(--radius-md); border-left:4px solid #38BDF8;">
+              <strong>📋 Bước 2 — Chuẩn bị trước khi đến:</strong>
+              <ul style="font-size:0.85rem; color:var(--text-muted); margin-top:6px; padding-left:16px; line-height:1.7;">
+                <li>Ghi chú triệu chứng bạn gặp phải (thời điểm, tần suất, mức độ)</li>
+                <li>Mang theo giấy tờ tùy thân và thẻ BHYT (nếu có)</li>
+                <li>Chuẩn bị câu hỏi muốn hỏi bác sĩ trước</li>
+                <li>Nếu lo lắng, hãy nhờ người thân đi cùng</li>
+              </ul>
+            </div>
+            <div style="background:var(--primary-light); padding:12px 16px; border-radius:var(--radius-md); border-left:4px solid #10B981;">
+              <strong>💬 Bước 3 — Trong buổi khám:</strong>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">
+                Hãy chia sẻ <strong>trung thực và cởi mở</strong> với bác sĩ. Mọi thông tin đều được <strong>bảo mật tuyệt đối</strong> theo y đức. Đừng ngại nói về cảm xúc, suy nghĩ hay khó khăn của bạn — đó chính là thông tin quý giá nhất để bác sĩ hỗ trợ bạn.
+              </p>
+            </div>
+            <div style="background:var(--bg-page); padding:12px 16px; border-radius:var(--radius-md); border-left:4px solid #F59E0B;">
+              <strong>⚠️ Lưu ý quan trọng:</strong>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">
+                Nếu bạn hoặc người thân đang có <strong>ý định tự làm hại bản thân</strong>, hãy gọi ngay <strong>đường dây khẩn cấp 1800 599 920</strong> (miễn phí, 24/7) hoặc đến cấp cứu bệnh viện gần nhất.
+              </p>
+            </div>
+          </div>
+        `,
+        primaryBtnText: "Đã Hiểu, Đặt Lịch Ngay 🏥"
+      });
+    });
+  }
+
   const btnGroundingCard = document.getElementById("btn-grounding-card");
   if (btnGroundingCard) {
     btnGroundingCard.addEventListener("click", () => {
@@ -864,6 +1040,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
     bubble.innerHTML = renderSafeMarkdown(content);
+
+    if (!isUser) {
+      const plainText = String(content).replace(/[#*_`>\[\]()]/g, "").replace(/\s+/g, " ").trim();
+      if (plainText) {
+        const actions = document.createElement("div");
+        actions.className = "msg-a11y-actions";
+        const readBtn = document.createElement("button");
+        readBtn.type = "button";
+        readBtn.className = "read-message-btn";
+        readBtn.textContent = "🔊 Đọc";
+        readBtn.setAttribute("aria-label", "Đọc câu trả lời bằng giọng nói");
+        readBtn.addEventListener("click", () => speakText(plainText));
+        actions.appendChild(readBtn);
+        bubble.appendChild(actions);
+      }
+    }
 
     wrapper.appendChild(avatar);
     wrapper.appendChild(bubble);
@@ -937,6 +1129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     forceScrollToBottom();
 
     let fullText = "";
+    let receivedServerData = false;
 
     try {
       const payloadMessages = state.messages.slice(-20);
@@ -980,6 +1173,7 @@ document.addEventListener("DOMContentLoaded", () => {
               try {
                 const parsed = JSON.parse(jsonStr);
                 if (parsed.d) {
+                  receivedServerData = true;
                   hideNetworkLoading();
                   const chunkText = decodeB64(parsed.d);
                   fullText += chunkText;
@@ -996,10 +1190,17 @@ document.addEventListener("DOMContentLoaded", () => {
         state.messages.push({ role: "model", content: fullText });
         saveStoredMessages(state.messages);
       } else {
-        const fallbackMsg = "*(An Nhiên đang gặp gián đoạn kết nối tạm thời. Bạn hãy thử gửi lại sau giây lát nhé.)*";
-        assistantBubble.innerHTML = renderSafeMarkdown(fallbackMsg);
-        state.messages.pop();
-        saveStoredMessages(state.messages);
+        if (receivedServerData) {
+          const fallbackMsg = "Mình vẫn ở đây. Hãy gửi lại câu hỏi hoặc nhấn gửi lần nữa để mình tiếp tục hoàn chỉnh phần trả lời nhé.";
+          assistantBubble.innerHTML = renderSafeMarkdown(fullText + "\n\n" + fallbackMsg);
+          state.messages.push({ role: "model", content: fullText });
+          saveStoredMessages(state.messages);
+        } else {
+          const fallbackMsg = "Mình vẫn ở đây. Hãy gửi lại câu hỏi hoặc nhấn gửi lần nữa để mình tiếp tục hoàn chỉnh phần trả lời nhé.";
+          assistantBubble.innerHTML = renderSafeMarkdown(fallbackMsg);
+          state.messages.pop();
+          saveStoredMessages(state.messages);
+        }
       }
     } catch (err) {
       if (err.name === "AbortError") {
@@ -1013,7 +1214,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else {
         console.error("Chat error:", err);
-        const errMsg = "*(Kết nối gián đoạn. Bạn thử gửi lại tin nhắn nhé.)*";
+        const errMsg = "Mình vẫn ở đây. Hãy gửi lại câu hỏi hoặc nhấn gửi lần nữa để mình tiếp tục hoàn chỉnh phần trả lời nhé.";
         assistantBubble.innerHTML = errMsg;
         state.messages.pop();
         saveStoredMessages(state.messages);
@@ -1041,16 +1242,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll(".mode-item").forEach(item => {
     item.addEventListener("click", () => {
-      document.querySelectorAll(".mode-item").forEach(i => i.classList.remove("active"));
+      document.querySelectorAll(".mode-item").forEach(i => {
+        i.classList.remove("active");
+        i.setAttribute("aria-pressed", "false");
+      });
       item.classList.add("active");
+      item.setAttribute("aria-pressed", "true");
       state.mode = item.getAttribute("data-mode");
     });
   });
 
   document.querySelectorAll(".mood-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".mood-btn").forEach(b => {
+        b.classList.remove("active");
+        b.setAttribute("aria-pressed", "false");
+      });
       btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
       state.currentMood = btn.getAttribute("data-mood");
     });
   });
@@ -1241,23 +1450,41 @@ document.addEventListener("DOMContentLoaded", () => {
       const grid = document.getElementById("distortion-grid");
       if (grid && data.distortions) {
         grid.innerHTML = data.distortions.map((d, idx) => `
-          <div class="distortion-card" data-dist-idx="${idx}">
+          <article class="distortion-card" data-dist-idx="${idx}">
             <div>
               <div class="dist-badge">
                 <span class="dist-icon-label">${escapeHTML(d.icon)}</span> 
                 <span class="dist-title">${escapeHTML(d.name)}</span>
               </div>
               <p class="dist-desc">${escapeHTML(d.description)}</p>
-              <div class="dist-example"><strong>Ví dụ:</strong> ${escapeHTML(d.example)}</div>
+              <div class="dist-card-details">
+                <div class="dist-example"><strong>Ví dụ:</strong> ${escapeHTML(d.example)}</div>
+                <div class="dist-reframe">
+                  <strong>Góc nhìn hóa giải:</strong> ${escapeHTML(d.reframing)}
+                </div>
+              </div>
             </div>
-            <div class="dist-reframe">
-              <strong>Góc nhìn hóa giải:</strong> ${escapeHTML(d.reframing)}
-            </div>
-          </div>
+            <button type="button" class="card-expand-btn" aria-expanded="false" aria-label="Mở chi tiết ${escapeHTML(d.name)}">
+              <span class="expand-label">Xem chi tiết</span><span aria-hidden="true">⌄</span>
+            </button>
+          </article>
         `).join("");
 
         grid.querySelectorAll(".distortion-card").forEach(card => {
+          const expandBtn = card.querySelector(".card-expand-btn");
+          expandBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const isOpen = card.classList.toggle("expanded");
+            expandBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            expandBtn.querySelector(".expand-label").textContent = isOpen ? "Thu gọn" : "Xem chi tiết";
+          });
           card.addEventListener("click", () => {
+            if (window.matchMedia("(max-width: 680px)").matches) {
+              const isOpen = card.classList.toggle("expanded");
+              expandBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+              expandBtn.querySelector(".expand-label").textContent = isOpen ? "Thu gọn" : "Xem chi tiết";
+              return;
+            }
             const idx = parseInt(card.getAttribute("data-dist-idx"));
             const dist = data.distortions[idx];
             if (!dist) return;
@@ -1342,11 +1569,119 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Setup initial Quiz Data
       selectQuizType(state.activeQuizType);
+
+      // Render Reputable Psychological Facilities (Biên Hòa - Đồng Nai)
+      state.facilities = data.facilities || [];
+      renderFacilities(state.facilities, state.facilityFilter);
+      setupFacilityFilters();
     } catch (e) {
       console.warn("Không thể nạp tri thức tâm lý:", e);
     }
   }
   loadKnowledge();
+
+  // --- Reputable Facilities Rendering & Filter Engine ---
+  function renderFacilities(facilitiesList, filter = "all") {
+    const grid = document.getElementById("facility-grid");
+    if (!grid) return;
+    if (!facilitiesList || facilitiesList.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: var(--text-muted);">Đang cập nhật danh bạ cơ sở khám tâm lý...</div>`;
+      return;
+    }
+
+    let filtered = facilitiesList;
+    if (filter === "tuyen_dau") {
+      filtered = facilitiesList.filter(f => f.badge && (f.badge.includes("Tuyến") || f.category.includes("Trung ương") || f.category.includes("Tuyến Tỉnh")));
+    } else if (filter === "ngoai_gio") {
+      filtered = facilitiesList.filter(f => (f.timing && f.timing.includes("ngoài giờ")) || (f.badge && f.badge.includes("Ngoài Giờ")) || (f.timing && f.timing.includes("17:00")) || (f.timing && f.timing.includes("24/7")));
+    } else if (filter === "tre_em") {
+      filtered = facilitiesList.filter(f => (f.category && f.category.includes("Nhi")) || (f.badge && f.badge.includes("Trẻ Em")) || (f.specialties && f.specialties.some(s => s.toLowerCase().includes("trẻ em") || s.toLowerCase().includes("học đường") || s.toLowerCase().includes("vị thành niên"))));
+    }
+
+    grid.innerHTML = filtered.map(f => `
+      <article class="facility-card" data-facility-id="${escapeHTML(f.id)}">
+        <div class="facility-card-top">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <span class="facility-badge-tag">${escapeHTML(f.badge || "Uy Tín")}</span>
+            <span class="facility-category-label">${escapeHTML(f.category)}</span>
+          </div>
+          <h4 class="facility-card-title">${escapeHTML(f.name)}</h4>
+          <div class="facility-card-details">
+            <div class="facility-info-list">
+              <div class="facility-info-item">
+                <span class="item-icon">📍</span>
+                <span><strong>Địa chỉ:</strong> ${escapeHTML(f.address)}</span>
+              </div>
+              <div class="facility-info-item">
+                <span class="item-icon">⏰</span>
+                <span><strong>Thời gian:</strong> ${escapeHTML(f.timing)}</span>
+              </div>
+              <div class="facility-info-item">
+                <span class="item-icon">📞</span>
+                <span><strong>Hotline/SĐT:</strong> <a href="tel:${escapeHTML(f.phone.replace(/[^0-9]/g, ''))}" style="color:var(--primary); font-weight:700;">${escapeHTML(f.phone)}</a></span>
+              </div>
+            </div>
+
+            <div class="facility-specialties-box">
+              <div class="facility-specialties-title">Lĩnh vực & Thế mạnh chuyên sâu:</div>
+              <div class="facility-tags-wrap">
+                ${(f.specialties || []).map(s => `<span class="facility-tag">${escapeHTML(s)}</span>`).join("")}
+              </div>
+            </div>
+
+            ${f.advice ? `
+              <div class="facility-advice-quote">
+                <strong>💡 Lời khuyên khi đi khám:</strong> ${escapeHTML(f.advice)}
+              </div>
+            ` : ""}
+          </div>
+          <button type="button" class="card-expand-btn facility-expand-btn" aria-expanded="false" aria-label="Mở chi tiết ${escapeHTML(f.name)}">
+            <span class="expand-label">Xem chi tiết</span><span aria-hidden="true">⌄</span>
+          </button>
+        </div>
+
+        <div class="facility-actions-bar">
+          <a href="tel:${escapeHTML(f.phone.replace(/[^0-9]/g, ''))}" class="btn-facility-call">
+            📞 Gọi Tư Vấn
+          </a>
+          <button class="btn-facility-ask" data-name="${escapeHTML(f.name)}">
+            💬 Hỏi An Nhiên
+          </button>
+        </div>
+      </article>
+    `).join("");
+
+    grid.querySelectorAll(".facility-expand-btn").forEach(btn => {
+      btn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const card = btn.closest(".facility-card");
+        const isOpen = card.classList.toggle("expanded");
+        btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        btn.querySelector(".expand-label").textContent = isOpen ? "Thu gọn" : "Xem chi tiết";
+      });
+    });
+
+    grid.querySelectorAll(".btn-facility-ask").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const name = btn.getAttribute("data-name");
+        activateTab("tab-chat");
+        sendMessage(`Mình đang tìm hiểu về "${name}" tại Biên Hòa để đi khám tâm lý. An Nhiên có thể tư vấn giúp mình cần chuẩn bị những gì trước khi đi và những lưu ý quan trọng không?`);
+      });
+    });
+  }
+
+  function setupFacilityFilters() {
+    const filterContainer = document.getElementById("facility-filter-chips");
+    if (!filterContainer) return;
+    filterContainer.querySelectorAll(".chip-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterContainer.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.facilityFilter = btn.getAttribute("data-filter") || "all";
+        renderFacilities(state.facilities, state.facilityFilter);
+      });
+    });
+  }
 
   // =========================================================================
   // 8. SELF-ASSESSMENT QUIZ
@@ -1500,6 +1835,13 @@ document.addEventListener("DOMContentLoaded", () => {
       quizResultView.style.display = "none";
       quizIntroView.style.display = "block";
     };
+
+    const btnViewFacilities = document.getElementById("btn-view-facilities");
+    if (btnViewFacilities) {
+      btnViewFacilities.onclick = () => {
+        activateTab("tab-facilities");
+      };
+    }
   }
 
   // =========================================================================

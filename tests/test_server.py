@@ -54,6 +54,8 @@ def test_knowledge_endpoint():
     assert "distortions" in knowledge
     assert "articles" in knowledge
     assert "quizzes" in knowledge
+    assert "facilities" in knowledge
+    assert len(knowledge["facilities"]) >= 5
     assert "phq9" in knowledge["quizzes"]
     assert "gad7" in knowledge["quizzes"]
 
@@ -122,4 +124,22 @@ def test_tts_cached_response():
     assert response.status_code == 200
     assert response.headers["content-type"] == "audio/mpeg"
     assert response.content == b"fake_mp3_content_bytes"
+
+
+def test_facilities_endpoint():
+    response = client.get("/api/facilities")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["count"] >= 5
+    assert len(data["data"]) >= 5
+
+    # Filter by bien_hoa location
+    res_bh = client.get("/api/facilities?location=bien_hoa")
+    assert res_bh.status_code == 200
+    data_bh = res_bh.json()
+    assert data_bh["status"] == "success"
+    assert data_bh["count"] >= 5
+    for item in data_bh["data"]:
+        assert item["location"] == "bien_hoa"
 

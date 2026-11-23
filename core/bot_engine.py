@@ -1,6 +1,16 @@
+import glob
 import logging
 import os
+import sys
 from typing import Any, AsyncGenerator, Dict, Generator, List, Optional
+
+# Tự động nạp gói thư viện từ .venv nếu người dùng chạy bằng python hệ thống
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_VENV_DIR = os.path.join(_BASE_DIR, ".venv")
+if os.path.isdir(_VENV_DIR):
+    for _sp in glob.glob(os.path.join(_VENV_DIR, "lib", "python*", "site-packages")):
+        if _sp not in sys.path:
+            sys.path.insert(0, _sp)
 
 from dotenv import load_dotenv
 from google import genai
@@ -16,12 +26,57 @@ if os.path.exists(env_path):
 else:
     load_dotenv()
 
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 FALLBACK_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.1-flash-lite",
     "gemini-3.5-flash-lite",
-    "gemini-3.6-flash",
-    "gemini-flash-latest",
 ]
+
+QUOTA_FALLBACK_MESSAGE = """**An Nhiên xin lỗi bạn nhé.**
+
+Mình đang tạm hết lượt phản hồi do giới hạn sử dụng của dịch vụ AI trong lúc này. Đây không phải lỗi ở tin nhắn của bạn; bạn có thể thử lại sau ít phút, hoặc quay lại mục Thư Giãn & Tĩnh Tâm để nghỉ ngơi trong lúc chờ nhé.
+
+Nếu bạn cần hỗ trợ khẩn cấp, hãy liên hệ 115 hoặc dịch vụ cấp cứu phù hợp tại khu vực của bạn."""
+
+MISSING_KEY_MESSAGE = "An Nhiên hiện chưa thể kết nối vì hệ thống chưa cấu hình API Key hợp lệ. Bạn vui lòng thử lại sau khi quản trị viên cập nhật kết nối nhé."
+AUTH_FAILURE_MESSAGE = "An Nhiên hiện chưa thể kết nối an toàn vì thông tin API Key cần được cập nhật. Bạn vui lòng thử lại sau ít phút nhé."
+TEMPORARY_FALLBACK_MESSAGE = "Mình đang gặp một chút gián đoạn nhỏ trong lúc phản hồi. Bạn gửi lại hoặc nhấn gửi một lần nữa nhé, mình vẫn ở đây để tiếp tục cùng bạn."
+PARTIAL_REPLY_FALLBACK = "Mình vừa dừng phần còn lại của câu trả lời do kết nối không ổn định. Hãy gửi lại câu hỏi này, hoặc nhấn gửi lại lần nữa để mình phản hồi hoàn chỉnh nhé."
+STREAM_STOP_MESSAGE = "Mình vẫn ở đây. Hãy gửi lại câu hỏi hoặc nhấn gửi lần nữa để mình tiếp tục hoàn chỉnh phần trả lời nhé."
+
+
+def is_quota_error(error: Exception | str) -> bool:
+    err_text = str(error).lower()
+    return any(
+        keyword in err_text
+        for keyword in (
+            "429",
+            "resource_exhausted",
+            "quota",
+            "rate limit",
+            "too many requests",
+            "billing",
+        )
+    )
+
+
+def is_auth_error(error: Exception | str) -> bool:
+    err_text = str(error).lower()
+    return any(
+        keyword in err_text
+        for keyword in (
+            "api_key",
+            "api key",
+            "unauthorized",
+            "permission_denied",
+            "invalid_argument",
+            "invalid key",
+            "401",
+            "403",
+        )
+    )
 
 
 def sanitize_messages_for_gemini(raw_messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
@@ -52,28 +107,64 @@ class CounselorEngine:
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.api_keys = self._get_api_keys(api_key)
         self.client: Optional[genai.Client] = None
         self.active_model: str = DEFAULT_MODEL
         self._init_client()
 
+    @staticmethod
+    def _get_api_keys(explicit_key: Optional[str] = None) -> List[str]:
+        """Nạp danh sách API key dự phòng từ cấu hình môi trường."""
+        raw_keys = os.getenv("GEMINI_API_KEYS") or explicit_key or os.getenv("GEMINI_API_KEY") or ""
+        separators = raw_keys.replace(",", "\n").replace(";", "\n").splitlines()
+        return list(dict.fromkeys(key.strip().strip('"').strip("'") for key in separators if key.strip()))
+
     def _init_client(self) -> None:
-        """Khởi tạo Google GenAI Client (an toàn, không crash server nếu lỗi key ban đầu)."""
-        raw_key = self.api_key or os.getenv("GEMINI_API_KEY") or ""
-        clean_key = raw_key.strip().strip('"').strip('\'')
-        try:
-            if clean_key:
-                self.api_key = clean_key
-                self.client = genai.Client(api_key=clean_key)
+        """Khởi tạo Google GenAI Client an toàn và thử lần lượt các API key."""
+        if not hasattr(self, "api_keys"):
+            self.api_keys = self._get_api_keys(self.api_key)
+
+        for key in self.api_keys:
+            try:
+                candidate = genai.Client(api_key=key)
+                self.api_key = key
+                self.client = candidate
                 logger.info("Khởi tạo Google GenAI Client thành công.")
-            else:
-                self.client = None
-        except Exception as e:
-            self.client = None
-            logger.error(f"Lỗi khởi tạo Google GenAI Client: {e}")
+                return
+            except Exception:
+                logger.warning("Không thể khởi tạo một API key Gemini; thử key dự phòng.")
+
+        self.client = None
+
+    def _try_next_api_key(self) -> bool:
+        """Chuyển sang API key tiếp theo sau khi key hiện tại bị từ chối hoặc hết quota."""
+        if not self.api_keys:
+            return False
+
+        try:
+            current_index = self.api_keys.index(self.api_key)
+        except (ValueError, AttributeError):
+            current_index = -1
+
+        next_index = current_index + 1
+        if next_index >= len(self.api_keys):
+            return False
+
+        next_key = self.api_keys[next_index]
+        try:
+            self.client = genai.Client(api_key=next_key)
+            self.api_key = next_key
+            logger.warning("Đã chuyển sang API key Gemini dự phòng.")
+            return True
+        except Exception as exc:
+            logger.warning("API key Gemini dự phòng không thể khởi tạo: %s", exc)
+            return False
 
     def reload(self) -> bool:
         """Thử nạp lại API key từ môi trường."""
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        raw_keys = os.getenv("GEMINI_API_KEYS") or os.getenv("GEMINI_API_KEY") or ""
+        self.api_key = raw_keys.strip().strip('"').strip("'")
+        self.api_keys = self._get_api_keys(self.api_key)
         self._init_client()
         return self.is_ready()
 
@@ -179,7 +270,7 @@ class CounselorEngine:
                     config=types.GenerateContentConfig(
                         system_instruction=system_instruction,
                         temperature=clamped_temp,
-                        max_output_tokens=800,
+                        max_output_tokens=1600,
                     ),
                     history=history_contents if history_contents else None,
                 )
@@ -197,26 +288,25 @@ class CounselorEngine:
                 logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
                 if has_yielded:
                     logger.error("Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.")
-                    yield "\n\n*(Kết nối gặp gián đoạn tạm thời.)*"
+                    yield STREAM_STOP_MESSAGE
                     return
+                if is_quota_error(exc) or is_auth_error(exc):
+                    if self._try_next_api_key():
+                        continue
                 continue
 
         err_str = str(last_err).lower() if last_err else ""
         logger.error(f"Tất cả model Gemini đều thất bại: {last_err}")
-        if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
-            yield """**An Nhiên xin lỗi bạn nhé.**
-
-Hiện tại mình đang cần vài phút tĩnh dưỡng và nạp lại năng lượng do số lượng cuộc trò chuyện trong phiên vượt quá giới hạn của hệ thống.
-
-Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một ngụm nước ấm hoặc ghé qua mục Thư Giãn & Tĩnh Tâm để thả lỏng một chút nhé. Mình sẽ sớm quay lại cùng bạn."""
-        elif any(kw in err_str for kw in ["api_key", "unauthorized", "400", "invalid"]):
-            yield f"\n\n*(Lỗi API Key: {last_err}. Bạn hãy kiểm tra lại GEMINI_API_KEY trên Render nhé.)*"
+        if is_quota_error(last_err or err_str):
+            yield QUOTA_FALLBACK_MESSAGE
+        elif is_auth_error(last_err or err_str):
+            yield AUTH_FAILURE_MESSAGE
         elif "404" in err_str or "not_found" in err_str or "not found" in err_str:
-            yield f"\n\n*(Lỗi mô hình Gemini: {last_err})*"
+            yield TEMPORARY_FALLBACK_MESSAGE
         elif any(kw in err_str for kw in ["location", "region", "403"]):
-            yield f"\n\n*(Lỗi vùng máy chủ Render: {last_err}. Vùng IP hiện tại của Render bị Google Gemini hạn chế.)*"
+            yield TEMPORARY_FALLBACK_MESSAGE
         else:
-            yield f"\n\n*(An Nhiên gặp sự cố kết nối Gemini API: {last_err})*"
+            yield TEMPORARY_FALLBACK_MESSAGE
 
     def stream_chat(
         self,
@@ -251,7 +341,7 @@ Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một n
                     config=types.GenerateContentConfig(
                         system_instruction=system_instruction,
                         temperature=clamped_temp,
-                        max_output_tokens=800,
+                        max_output_tokens=1600,
                     ),
                     history=history_contents if history_contents else None,
                 )
@@ -267,15 +357,20 @@ Trong lúc chờ đợi, bạn hãy thử hít thở thật sâu, uống một n
             except Exception as exc:
                 last_err = exc
                 if has_yielded:
-                    yield "\n\n*(Kết nối gặp gián đoạn tạm thời.)*"
+                    yield STREAM_STOP_MESSAGE
                     return
+                if is_quota_error(exc) or is_auth_error(exc):
+                    if self._try_next_api_key():
+                        continue
                 continue
 
         err_str = str(last_err).lower() if last_err else ""
-        if any(kw in err_str for kw in ["429", "resource_exhausted", "quota", "rate limit", "too many requests"]):
-            yield "**An Nhiên xin lỗi bạn nhé.**\n\nHiện tại hệ thống đang vượt quá giới hạn tải tạm thời. Bạn hãy thử lại sau giây lát nhé."
+        if is_quota_error(last_err or err_str):
+            yield QUOTA_FALLBACK_MESSAGE
+        elif is_auth_error(last_err or err_str):
+            yield AUTH_FAILURE_MESSAGE
         else:
-            yield "\n\n*(An Nhiên đang gặp gián đoạn kết nối tạm thời. Bạn hãy thử gửi lại sau giây lát nhé.)*"
+            yield TEMPORARY_FALLBACK_MESSAGE
 
     async def async_generate_session_summary(
         self, messages: List[Dict[str, str]], model_name: Optional[str] = None

@@ -1,6 +1,15 @@
 """Unit tests for CounselorEngine, message sanitization, role merging, and prompts."""
 
-from core.bot_engine import CounselorEngine, sanitize_messages_for_gemini
+from core.bot_engine import (
+    AUTH_FAILURE_MESSAGE,
+    QUOTA_FALLBACK_MESSAGE,
+    STREAM_STOP_MESSAGE,
+    TEMPORARY_FALLBACK_MESSAGE,
+    CounselorEngine,
+    is_auth_error,
+    is_quota_error,
+    sanitize_messages_for_gemini,
+)
 from core.prompts import BASE_COUNSELOR_PERSONA, get_time_greeting
 
 
@@ -61,3 +70,16 @@ def test_persona_contains_crisis_instructions():
     assert "111" in BASE_COUNSELOR_PERSONA
     assert "115" in BASE_COUNSELOR_PERSONA
     assert "096 306 1414" in BASE_COUNSELOR_PERSONA
+
+
+def test_quota_and_auth_error_detection():
+    assert is_quota_error("RESOURCE_EXHAUSTED: 429 quota exceeded")
+    assert is_auth_error("401 UNAUTHENTICATED: invalid API key")
+    assert not is_quota_error("network timeout")
+
+
+def test_public_fallback_messages_are_user_friendly():
+    assert "hết lượt" in QUOTA_FALLBACK_MESSAGE
+    assert "API Key" in AUTH_FAILURE_MESSAGE
+    assert "gửi lại" in TEMPORARY_FALLBACK_MESSAGE
+    assert "gửi lại" in STREAM_STOP_MESSAGE

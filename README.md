@@ -5,7 +5,7 @@
 [![Google Gemini](https://img.shields.io/badge/AI%20Model-Gemini%202.5%20Flash-4285F4?logo=google&logoColor=white)](https://aistudio.google.com/)
 [![CI/CD Status](https://img.shields.io/badge/CI%2FCD-Pipeline%20Passing-success?logo=github-actions&logoColor=white)](https://github.com/Slayerblack012/chatbot_tamly/actions)
 [![Code Style](https://img.shields.io/badge/Code%20Style-Ruff%20Compliant-black?logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
-[![Unit Tests](https://img.shields.io/badge/Tests-22%2F22%20Passed-brightgreen?logo=pytest&logoColor=white)](https://pytest.org/)
+[![Unit Tests](https://img.shields.io/badge/Tests-24%2F24%20Passed-brightgreen?logo=pytest&logoColor=white)](https://pytest.org/)
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-059669)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Docker](https://img.shields.io/badge/Docker-Ready%20(Non--root)-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -83,6 +83,15 @@
   - Thân bài & Nhập liệu: **Plus Jakarta Sans** (Độ tương phản cao, nét chữ công thái học).
 - **Chế độ Bảo vệ Riêng tư (Auto-Idle Lock)**: Tự động khóa màn hình sau 1 giờ không hoạt động để bảo mật câu chuyện cá nhân.
 
+### 2.6. Danh Bạ Cơ Sở Khám & Tham Vấn Tâm Lý Uy Tín (Mental Health Directory)
+- **Tích hợp mạng lưới y tế & phòng khám chuyên khoa tại Biên Hòa, Đồng Nai**:
+  - **Bệnh viện Tâm thần Trung ương 2**: Bệnh viện chuyên khoa tâm thần hạng I lớn nhất phía Nam trực thuộc Bộ Y tế.
+  - **Bệnh viện Đa khoa Đồng Nai (Khoa Nội Thần Kinh)**: Thăm khám và tầm soát các rối loạn lo âu, mất ngủ kết hợp bệnh lý cơ thể.
+  - **Bệnh viện Nhi Đồng Đồng Nai (Phòng khám Tâm lý Trẻ em)**: Chuyên biệt về tâm lý học đường, áp lực thi cử, tự kỷ và lo âu vị thành niên.
+  - **Phòng khám Chuyên khoa BSCKII Nguyễn Văn Cầu**: Khám và trị liệu ngoài giờ kín đáo, ân cần.
+  - **Trung tâm Trị liệu Tâm thần Minh Trí**: Đánh giá trắc nghiệm lâm sàng và can thiệp CBT.
+- **Bộ lọc đa chiều & liên kết thông minh**: Lọc nhanh theo nhu cầu (*Tất cả, Tuyến đầu ngành, Khám ngoài giờ, Trẻ em*), nút gọi hotline 1 chạm và phím tắt chuyển sang Chatbot để nhận tư vấn chuẩn bị trước khi đi khám.
+
 ---
 
 ## 3. KIẾN TRÚC HỆ THỐNG (SYSTEM ARCHITECTURE)
@@ -131,7 +140,7 @@
 | **Bảo Mật Frontend** | DOMPurify, Marked.js (Self-hosted) | Lọc sạch mã độc XSS theo cơ chế Fail-Closed an toàn tuyệt đối |
 | **Âm Thanh & Tĩnh Tâm** | Web Audio API, Studio Vietnamese Female Audio | Chuông thiền 432Hz tự tổng hợp + Giọng nữ tiếng Việt chuẩn 100% |
 | **Kiểm Định Mã Nguồn** | Ruff Linter & Formatter | Kiểm tra định dạng và chất lượng code siêu tốc |
-| **Kiểm Thử Tự Động** | Pytest, Pytest-Asyncio, HTTPX | Bộ 22 bài kiểm thử tự động bao phủ API, Engine và Logic |
+| **Kiểm Thử Tự Động** | Pytest, Pytest-Asyncio, HTTPX | Bộ 24 bài kiểm thử tự động bao phủ API, Engine và Logic |
 | **Container & CI/CD** | Docker (Multi-stage, Non-root user), GitHub Actions | Pipeline tự động kiểm tra code, test và build Docker image |
 | **Cloud Hosting** | Render.com | Tự động triển khai từ nhánh `main` qua `render.yaml` |
 
@@ -174,8 +183,8 @@ tamly-chatbot/
 ├── tests/
 │   ├── __init__.py
 │   ├── test_bot_engine.py     # 6 Tests: Prompt building, Context Sanitization, Candidate Models
-│   ├── test_knowledge.py      # 4 Tests: Cấu trúc dữ liệu CBT, GAD-7, PHQ-9, Articles
-│   └── test_server.py         # 12 Tests: API Routes, Base64 Decode, Rate Limit, Proxy IP, TTS Cache
+│   ├── test_knowledge.py      # 5 Tests: Cấu trúc dữ liệu CBT, GAD-7, PHQ-9, Articles, Facilities
+│   └── test_server.py         # 13 Tests: API Routes, Base64 Decode, Rate Limit, Proxy IP, TTS Cache, Facilities
 │
 ├── .dockerignore              # Danh sách loại trừ khi đóng gói container
 ├── .env.example               # Mẫu cấu hình biến môi trường chuẩn
@@ -208,6 +217,7 @@ Hệ thống cung cấp giao diện Swagger UI tương tác tại: `http://local
 | `GET` | `/api/quizzes/results` | **Lấy Lịch Sử Đánh Giá** | Danh sách kết quả trắc nghiệm đã lưu |
 | `POST` | `/api/quizzes/results` | **Lưu Kết Quả Trắc Nghiệm** | Thêm mới một bản ghi điểm số trắc nghiệm |
 | `DELETE`| `/api/quizzes/results/{id}` | **Xóa Kết Quả Trắc Nghiệm** | Xóa bản ghi trắc nghiệm theo ID |
+| `GET` | `/api/facilities` | **Danh Bạ Khám Tâm Lý Uy Tín** | Lấy danh sách bệnh viện, phòng khám chuyên khoa (Hỗ trợ lọc `?location=bien_hoa`) |
 
 ---
 
@@ -281,7 +291,7 @@ ruff check --fix .
 # 3. Kiểm tra tính toàn vẹn gói phụ thuộc
 python -m pip check
 
-# 4. Chạy toàn bộ 22 bài kiểm thử tự động (Unit Test Suite)
+# 4. Chạy toàn bộ 24 bài kiểm thử tự động (Unit Test Suite)
 pytest -v
 ```
 
