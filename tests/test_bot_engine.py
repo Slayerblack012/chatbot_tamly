@@ -8,6 +8,7 @@ from core.bot_engine import (
     CounselorEngine,
     is_auth_error,
     is_quota_error,
+    is_unavailable_error,
     sanitize_messages_for_gemini,
 )
 from core.prompts import BASE_COUNSELOR_PERSONA, get_time_greeting
@@ -75,6 +76,7 @@ def test_persona_contains_crisis_instructions():
 def test_quota_and_auth_error_detection():
     assert is_quota_error("RESOURCE_EXHAUSTED: 429 quota exceeded")
     assert is_auth_error("401 UNAUTHENTICATED: invalid API key")
+    assert is_unavailable_error("503 UNAVAILABLE: high demand")
     assert not is_quota_error("network timeout")
 
 

@@ -26,10 +26,10 @@ if os.path.exists(env_path):
 else:
     load_dotenv()
 
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 FALLBACK_MODELS = [
-    "gemini-3.8-flash",
     "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
     "gemini-3.6-flash",
     "gemini-3.7-flash",
 ]
@@ -75,6 +75,21 @@ def is_auth_error(error: Exception | str) -> bool:
             "invalid key",
             "401",
             "403",
+        )
+    )
+
+
+def is_unavailable_error(error: Exception | str) -> bool:
+    err_text = str(error).lower()
+    return any(
+        keyword in err_text
+        for keyword in (
+            "503",
+            "unavailable",
+            "high demand",
+            "temporarily unavailable",
+            "overloaded",
+            "try again later",
         )
     )
 
@@ -276,10 +291,27 @@ class CounselorEngine:
                 )
 
                 stream = await chat.send_message_stream(message=latest_user_message)
+                buffer: List[str] = []
+                buffer_len = 0
+                MIN_BUFFER_CHARS = 50
+
                 async for chunk in stream:
                     if chunk.text:
-                        has_yielded = True
-                        yield chunk.text
+                        if not has_yielded:
+                            buffer.append(chunk.text)
+                            buffer_len += len(chunk.text)
+                            if buffer_len >= MIN_BUFFER_CHARS:
+                                for piece in buffer:
+                                    yield piece
+                                buffer.clear()
+                                has_yielded = True
+                        else:
+                            yield chunk.text
+
+                # Đẩy nốt phần đệm nếu stream hoàn tất sớm hơn ngưỡng đệm
+                for piece in buffer:
+                    yield piece
+                has_yielded = True
 
                 self.active_model = target_model
                 return
@@ -288,11 +320,13 @@ class CounselorEngine:
                 logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
                 if has_yielded:
                     logger.error("Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.")
-                    yield STREAM_STOP_MESSAGE
+                    yield f"\n\n*({STREAM_STOP_MESSAGE})*"
                     return
                 if is_quota_error(exc) or is_auth_error(exc):
                     if self._try_next_api_key():
                         continue
+                if is_unavailable_error(exc):
+                    continue
                 continue
 
         err_str = str(last_err).lower() if last_err else ""
@@ -301,6 +335,8 @@ class CounselorEngine:
             yield QUOTA_FALLBACK_MESSAGE
         elif is_auth_error(last_err or err_str):
             yield AUTH_FAILURE_MESSAGE
+        elif is_unavailable_error(last_err or err_str):
+            yield TEMPORARY_FALLBACK_MESSAGE
         elif "404" in err_str or "not_found" in err_str or "not found" in err_str:
             yield TEMPORARY_FALLBACK_MESSAGE
         elif any(kw in err_str for kw in ["location", "region", "403"]):
@@ -347,21 +383,39 @@ class CounselorEngine:
                 )
 
                 stream = chat.send_message_stream(message=latest_user_message)
+                buffer: List[str] = []
+                buffer_len = 0
+                MIN_BUFFER_CHARS = 50
+
                 for chunk in stream:
                     if chunk.text:
-                        has_yielded = True
-                        yield chunk.text
+                        if not has_yielded:
+                            buffer.append(chunk.text)
+                            buffer_len += len(chunk.text)
+                            if buffer_len >= MIN_BUFFER_CHARS:
+                                for piece in buffer:
+                                    yield piece
+                                buffer.clear()
+                                has_yielded = True
+                        else:
+                            yield chunk.text
+
+                for piece in buffer:
+                    yield piece
+                has_yielded = True
 
                 self.active_model = target_model
                 return
             except Exception as exc:
                 last_err = exc
                 if has_yielded:
-                    yield STREAM_STOP_MESSAGE
+                    yield f"\n\n*({STREAM_STOP_MESSAGE})*"
                     return
                 if is_quota_error(exc) or is_auth_error(exc):
                     if self._try_next_api_key():
                         continue
+                if is_unavailable_error(exc):
+                    continue
                 continue
 
         err_str = str(last_err).lower() if last_err else ""
@@ -369,6 +423,8 @@ class CounselorEngine:
             yield QUOTA_FALLBACK_MESSAGE
         elif is_auth_error(last_err or err_str):
             yield AUTH_FAILURE_MESSAGE
+        elif is_unavailable_error(last_err or err_str):
+            yield TEMPORARY_FALLBACK_MESSAGE
         else:
             yield TEMPORARY_FALLBACK_MESSAGE
 
