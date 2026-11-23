@@ -321,7 +321,8 @@ a:focus-visible {
   width: 100%;
   margin: 0 auto;
   padding: 0 20px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 760px) auto 44px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -398,8 +399,8 @@ a:focus-visible {
 .nav-tab-btn {
   border: none;
   background: transparent;
-  padding: 8px 16px;
-  font-size: 0.88rem;
+  padding: 8px 10px;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
   border-radius: var(--radius-full);
@@ -1979,6 +1980,7 @@ html.a11y-high-contrast {
 /* ==================== RESPONSIVE MEDIA QUERIES ==================== */
 @media (min-width: 901px) and (max-width: 1200px) {
   .nav-container {
+    grid-template-columns: auto minmax(0, 1fr) 44px 44px;
     gap: 10px;
   }
 
@@ -2003,6 +2005,10 @@ html.a11y-high-contrast {
 }
 
 @media (max-width: 900px) {
+  .nav-container {
+    display: flex;
+  }
+
   .nav-tabs {
     display: none;
   }
