@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="An Nhiên">
-  <meta name="theme-color" content="#F8FAFC" id="theme-color-meta">
+  <meta name="theme-color" content="#F5F5F7" id="theme-color-meta">
   <title>An Nhiên Tâm Lý | Người Bạn Đồng Hành Cảm Xúc</title>
   <meta name="description" content="An Nhiên Tâm Lý - Lắng nghe, thấu cảm và cùng bạn tháo gỡ mọi nút thắt cảm xúc.">
   
@@ -31,6 +31,10 @@
 <body>
   <a class="skip-link" href="#tab-chat">Bỏ qua và đến trò chuyện</a>
   <div id="network-loading-bar" class="network-loading-bar" style="display: none;"></div>
+  <div id="app-toast" class="app-toast" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span class="app-toast-icon" aria-hidden="true"></span>
+    <span class="app-toast-message"></span>
+  </div>
 
   <!-- ==================== TOP NAVIGATION ==================== -->
   <header class="app-navbar">
@@ -52,6 +56,7 @@
         <button class="nav-tab-btn" data-tab="tab-facilities">🏥 Cơ Sở Khám Uy Tín</button>
       </nav>
 
+      <div class="nav-actions">
         <!-- Dynamic Status Header (N4: Khởi đầu bằng trạng thái trung tính Đang Kết Nối...) & Dark Mode Toggle -->
         <div class="status-indicator maintenance" id="status-indicator" title="Trạng thái kết nối máy chủ AI">
           <span class="status-dot" id="status-dot"></span>
@@ -62,6 +67,7 @@
           <span class="theme-toggle-icon" id="theme-toggle-icon">🌙</span>
         </button>
       </div>
+    </div>
   </header>
 
   <!-- ==================== MAIN CONTENT ==================== -->
@@ -243,7 +249,7 @@
       </div>
 
       <!-- 8 CBT Cognitive Distortions Section -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div class="edu-section-heading">
         <h3 style="font-family:var(--font-heading); font-size:1.3rem;">🧠 8 Bẫy Suy Nghĩ Thường Gặp (CBT Distortions)</h3>
         <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">✨ Nhấn vào thẻ để xem phân tích chi tiết</span>
       </div>
@@ -390,7 +396,7 @@
         
         <!-- Breathing Exercise Card -->
         <div class="studio-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div class="studio-card-header">
             <h3 style="font-family:var(--font-heading); font-size:1.25rem;">🌬️ Thở Chậm & Tĩnh Tâm</h3>
             <button class="btn-feature-guide" id="btn-guide-studio">💡 Hướng Dẫn Bài Thở</button>
           </div>
@@ -504,7 +510,7 @@
       <div class="edu-header">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
           <div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div class="facility-heading-line">
               <h2 style="margin:0;">🏥 Nơi Khám & Tham Vấn Tâm Lý Uy Tín</h2>
               <span class="facility-city-badge">📍 Biên Hòa — Đồng Nai & Tuyến Đầu</span>
             </div>

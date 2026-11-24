@@ -1,15 +1,9 @@
-import glob
 import io
-import os
 import sys
 
-# Tự động nạp gói thư viện từ .venv nếu người dùng chạy bằng python hệ thống
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-_VENV_DIR = os.path.join(_BASE_DIR, ".venv")
-if os.path.isdir(_VENV_DIR):
-    for _sp in glob.glob(os.path.join(_VENV_DIR, "lib", "python*", "site-packages")):
-        if _sp not in sys.path:
-            sys.path.insert(0, _sp)
+from core.runtime import add_project_venv_to_path
+
+add_project_venv_to_path()
 
 from core.bot_engine import CounselorEngine
 from core.prompts import get_time_greeting

@@ -1,16 +1,10 @@
-import glob
 import logging
 import os
-import sys
 from typing import Any, AsyncGenerator, Dict, Generator, List, Optional
 
-# Tự động nạp gói thư viện từ .venv nếu người dùng chạy bằng python hệ thống
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_VENV_DIR = os.path.join(_BASE_DIR, ".venv")
-if os.path.isdir(_VENV_DIR):
-    for _sp in glob.glob(os.path.join(_VENV_DIR, "lib", "python*", "site-packages")):
-        if _sp not in sys.path:
-            sys.path.insert(0, _sp)
+from core.runtime import add_project_venv_to_path
+
+add_project_venv_to_path()
 
 from dotenv import load_dotenv
 from google import genai
@@ -26,10 +20,10 @@ if os.path.exists(env_path):
 else:
     load_dotenv()
 
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 FALLBACK_MODELS = [
-    "gemini-3.5-flash-lite",
     "gemini-3.8-flash",
+    "gemini-3.5-flash-lite",
     "gemini-3.6-flash",
     "gemini-3.7-flash",
 ]
@@ -40,11 +34,10 @@ Mình đang tạm hết lượt phản hồi do giới hạn sử dụng của d
 
 Nếu bạn cần hỗ trợ khẩn cấp, hãy liên hệ 115 hoặc dịch vụ cấp cứu phù hợp tại khu vực của bạn."""
 
-MISSING_KEY_MESSAGE = "An Nhiên hiện chưa thể kết nối vì hệ thống chưa cấu hình API Key hợp lệ. Bạn vui lòng thử lại sau khi quản trị viên cập nhật kết nối nhé."
 AUTH_FAILURE_MESSAGE = "An Nhiên hiện chưa thể kết nối an toàn vì thông tin API Key cần được cập nhật. Bạn vui lòng thử lại sau ít phút nhé."
 TEMPORARY_FALLBACK_MESSAGE = "Mình đang gặp một chút gián đoạn nhỏ trong lúc phản hồi. Bạn gửi lại hoặc nhấn gửi một lần nữa nhé, mình vẫn ở đây để tiếp tục cùng bạn."
 PARTIAL_REPLY_FALLBACK = "Mình vừa dừng phần còn lại của câu trả lời do kết nối không ổn định. Hãy gửi lại câu hỏi này, hoặc nhấn gửi lại lần nữa để mình phản hồi hoàn chỉnh nhé."
-STREAM_STOP_MESSAGE = "Mình vẫn ở đây. Hãy gửi lại câu hỏi hoặc nhấn gửi lần nữa để mình tiếp tục hoàn chỉnh phần trả lời nhé."
+CHAT_MAX_OUTPUT_TOKENS = 2048
 
 
 def is_quota_error(error: Exception | str) -> bool:
@@ -79,7 +72,23 @@ def is_auth_error(error: Exception | str) -> bool:
     )
 
 
-def is_unavailable_error(error: Exception | str) -> bool:
+def is_model_unavailable_error(error: Exception | str) -> bool:
+    err_text = str(error).lower()
+    return any(
+        keyword in err_text
+        for keyword in (
+            "model not found",
+            "model_not_found",
+            "not_found",
+            "not found",
+            "unsupported model",
+            "model is not supported",
+            "not supported for generatecontent",
+        )
+    )
+
+
+def is_model_overloaded_error(error: Exception | str) -> bool:
     err_text = str(error).lower()
     return any(
         keyword in err_text
@@ -92,6 +101,14 @@ def is_unavailable_error(error: Exception | str) -> bool:
             "try again later",
         )
     )
+
+
+def get_fallback_message(error: Exception | str | None) -> str:
+    if is_quota_error(error or ""):
+        return QUOTA_FALLBACK_MESSAGE
+    if is_auth_error(error or ""):
+        return AUTH_FAILURE_MESSAGE
+    return TEMPORARY_FALLBACK_MESSAGE
 
 
 def sanitize_messages_for_gemini(raw_messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
@@ -257,7 +274,7 @@ class CounselorEngine:
         mode: str = "empathy",
         mood_context: Optional[Dict[str, Any]] = None,
         model_name: Optional[str] = None,
-        temperature: float = 0.8,
+        temperature: float = 0.65,
     ) -> AsyncGenerator[str, None]:
         """
         Async generator streaming câu trả lời từ Gemini qua client.aio (Non-blocking Event Loop).
@@ -276,6 +293,7 @@ class CounselorEngine:
         models_to_try = self._get_candidate_models(model_name)
         last_err: Optional[Exception] = None
         has_yielded: bool = False
+        overload_fallbacks = 0
 
         for target_model in models_to_try:
             try:
@@ -285,64 +303,51 @@ class CounselorEngine:
                     config=types.GenerateContentConfig(
                         system_instruction=system_instruction,
                         temperature=clamped_temp,
-                        max_output_tokens=1600,
+                        max_output_tokens=CHAT_MAX_OUTPUT_TOKENS,
                     ),
                     history=history_contents if history_contents else None,
                 )
 
                 stream = await chat.send_message_stream(message=latest_user_message)
-                buffer: List[str] = []
-                buffer_len = 0
-                MIN_BUFFER_CHARS = 50
-
                 async for chunk in stream:
                     if chunk.text:
-                        if not has_yielded:
-                            buffer.append(chunk.text)
-                            buffer_len += len(chunk.text)
-                            if buffer_len >= MIN_BUFFER_CHARS:
-                                for piece in buffer:
-                                    yield piece
-                                buffer.clear()
-                                has_yielded = True
-                        else:
-                            yield chunk.text
-
-                # Đẩy nốt phần đệm nếu stream hoàn tất sớm hơn ngưỡng đệm
-                for piece in buffer:
-                    yield piece
-                has_yielded = True
+                        has_yielded = True
+                        yield chunk.text
 
                 self.active_model = target_model
                 return
             except Exception as exc:
                 last_err = exc
-                logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
                 if has_yielded:
-                    logger.error("Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.")
-                    yield f"\n\n*({STREAM_STOP_MESSAGE})*"
+                    if is_model_overloaded_error(exc):
+                        logger.warning(
+                            "Model %s quá tải sau khi đã gửi một phần câu trả lời: %s",
+                            target_model,
+                            exc,
+                        )
+                    else:
+                        logger.error(
+                            "Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.",
+                            exc_info=True,
+                        )
+                    yield PARTIAL_REPLY_FALLBACK
                     return
-                if is_quota_error(exc) or is_auth_error(exc):
-                    if self._try_next_api_key():
-                        continue
-                if is_unavailable_error(exc):
-                    continue
+                logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
+                if is_quota_error(exc):
+                    self._try_next_api_key()
+                elif is_auth_error(exc):
+                    if not self._try_next_api_key():
+                        break
+                elif is_model_overloaded_error(exc):
+                    if overload_fallbacks >= 1:
+                        break
+                    overload_fallbacks += 1
+                elif not is_model_unavailable_error(exc):
+                    break
                 continue
 
-        err_str = str(last_err).lower() if last_err else ""
         logger.error(f"Tất cả model Gemini đều thất bại: {last_err}")
-        if is_quota_error(last_err or err_str):
-            yield QUOTA_FALLBACK_MESSAGE
-        elif is_auth_error(last_err or err_str):
-            yield AUTH_FAILURE_MESSAGE
-        elif is_unavailable_error(last_err or err_str):
-            yield TEMPORARY_FALLBACK_MESSAGE
-        elif "404" in err_str or "not_found" in err_str or "not found" in err_str:
-            yield TEMPORARY_FALLBACK_MESSAGE
-        elif any(kw in err_str for kw in ["location", "region", "403"]):
-            yield TEMPORARY_FALLBACK_MESSAGE
-        else:
-            yield TEMPORARY_FALLBACK_MESSAGE
+        yield get_fallback_message(last_err)
 
     def stream_chat(
         self,
@@ -350,7 +355,7 @@ class CounselorEngine:
         mode: str = "empathy",
         mood_context: Optional[Dict[str, Any]] = None,
         model_name: Optional[str] = None,
-        temperature: float = 0.8,
+        temperature: float = 0.65,
     ) -> Generator[str, None, None]:
         """
         Sync generator streaming câu trả lời (Dành cho CLI main.py).
@@ -369,6 +374,7 @@ class CounselorEngine:
         models_to_try = self._get_candidate_models(model_name)
         last_err: Optional[Exception] = None
         has_yielded = False
+        overload_fallbacks = 0
 
         for target_model in models_to_try:
             try:
@@ -377,56 +383,59 @@ class CounselorEngine:
                     config=types.GenerateContentConfig(
                         system_instruction=system_instruction,
                         temperature=clamped_temp,
-                        max_output_tokens=1600,
+                        max_output_tokens=CHAT_MAX_OUTPUT_TOKENS,
                     ),
                     history=history_contents if history_contents else None,
                 )
 
                 stream = chat.send_message_stream(message=latest_user_message)
-                buffer: List[str] = []
-                buffer_len = 0
-                MIN_BUFFER_CHARS = 50
-
                 for chunk in stream:
                     if chunk.text:
-                        if not has_yielded:
-                            buffer.append(chunk.text)
-                            buffer_len += len(chunk.text)
-                            if buffer_len >= MIN_BUFFER_CHARS:
-                                for piece in buffer:
-                                    yield piece
-                                buffer.clear()
-                                has_yielded = True
-                        else:
-                            yield chunk.text
-
-                for piece in buffer:
-                    yield piece
-                has_yielded = True
+                        has_yielded = True
+                        yield chunk.text
 
                 self.active_model = target_model
                 return
             except Exception as exc:
                 last_err = exc
                 if has_yielded:
-                    yield f"\n\n*({STREAM_STOP_MESSAGE})*"
+                    if is_model_overloaded_error(exc):
+                        logger.warning(
+                            "Model %s quá tải sau khi đã gửi một phần câu trả lời: %s",
+                            target_model,
+                            exc,
+                        )
+                    else:
+                        logger.error(
+                            "Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.",
+                            exc_info=True,
+                        )
+                    yield PARTIAL_REPLY_FALLBACK
                     return
-                if is_quota_error(exc) or is_auth_error(exc):
-                    if self._try_next_api_key():
-                        continue
-                if is_unavailable_error(exc):
-                    continue
+                logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
+                if is_quota_error(exc):
+                    self._try_next_api_key()
+                elif is_auth_error(exc):
+                    if not self._try_next_api_key():
+                        break
+                elif is_model_overloaded_error(exc):
+                    if overload_fallbacks >= 1:
+                        break
+                    overload_fallbacks += 1
+                elif not is_model_unavailable_error(exc):
+                    break
                 continue
 
-        err_str = str(last_err).lower() if last_err else ""
-        if is_quota_error(last_err or err_str):
-            yield QUOTA_FALLBACK_MESSAGE
-        elif is_auth_error(last_err or err_str):
-            yield AUTH_FAILURE_MESSAGE
-        elif is_unavailable_error(last_err or err_str):
-            yield TEMPORARY_FALLBACK_MESSAGE
-        else:
-            yield TEMPORARY_FALLBACK_MESSAGE
+        yield get_fallback_message(last_err)
+
+    @staticmethod
+    def _build_summary_prompt(messages: List[Dict[str, str]]) -> str:
+        clean = sanitize_messages_for_gemini(messages)
+        conversation = "\n".join(
+            f"{'Người dùng' if message['role'] == 'user' else 'An Nhiên'}: {message['content']}"
+            for message in clean
+        )
+        return f"{SUMMARY_PROMPT}\n\n[NỘI DUNG CUỘC TRÒ CHUYỆN]:\n{conversation}"
 
     async def async_generate_session_summary(
         self, messages: List[Dict[str, str]], model_name: Optional[str] = None
@@ -435,13 +444,7 @@ class CounselorEngine:
         if not self.is_ready() or len(messages) < 2:
             return "Phiên trò chuyện còn ngắn, hãy trò chuyện thêm một chút để An Nhiên có thể đúc kết cho bạn nhé!"
 
-        clean = sanitize_messages_for_gemini(messages)
-        conversation_text = ""
-        for m in clean:
-            speaker = "Người dùng" if m["role"] == "user" else "An Nhiên"
-            conversation_text += f"{speaker}: {m['content']}\n"
-
-        prompt = f"{SUMMARY_PROMPT}\n\n[NỘI DUNG CUỘC TRÒ CHUYỆN]:\n{conversation_text}"
+        prompt = self._build_summary_prompt(messages)
         models_to_try = self._get_candidate_models(model_name)
 
         for target_model in models_to_try:
@@ -470,13 +473,7 @@ class CounselorEngine:
         if not self.is_ready() or len(messages) < 2:
             return "Phiên trò chuyện còn ngắn, hãy trò chuyện thêm một chút để An Nhiên có thể đúc kết cho bạn nhé!"
 
-        clean = sanitize_messages_for_gemini(messages)
-        conversation_text = ""
-        for m in clean:
-            speaker = "Người dùng" if m["role"] == "user" else "An Nhiên"
-            conversation_text += f"{speaker}: {m['content']}\n"
-
-        prompt = f"{SUMMARY_PROMPT}\n\n[NỘI DUNG CUỘC TRÒ CHUYỆN]:\n{conversation_text}"
+        prompt = self._build_summary_prompt(messages)
         models_to_try = self._get_candidate_models(model_name)
 
         for target_model in models_to_try:
@@ -492,7 +489,8 @@ class CounselorEngine:
                 if response.text:
                     self.active_model = target_model
                     return response.text
-            except Exception:
+            except Exception as exc:
+                logger.warning("Lỗi khi tạo summary với model %s: %s", target_model, exc)
                 continue
 
         return "Không thể tạo tóm tắt lúc này."

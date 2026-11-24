@@ -25,6 +25,13 @@ def test_b64_decode_invalid():
     assert exc_info.value.status_code == 400
 
 
+def test_b64_decode_rejects_non_object_json():
+    encoded = b64_encode_text(json.dumps(["not", "an object"]))
+    with pytest.raises(HTTPException) as exc_info:
+        b64_decode_json(encoded)
+    assert exc_info.value.status_code == 400
+
+
 def test_security_headers_and_csp():
     response = client.get("/api/health")
     assert response.status_code == 200
@@ -75,6 +82,23 @@ def test_chat_invalid_payload():
 def test_chat_empty_messages():
     payload = b64_encode_text(json.dumps({"messages": []}))
     response = client.post("/api/chat", json={"p": payload})
+    assert response.status_code == 400
+
+
+def test_chat_rejects_non_object_messages():
+    payload = b64_encode_text(json.dumps({"messages": ["invalid"]}))
+    response = client.post("/api/chat", json={"p": payload})
+    assert response.status_code == 400
+
+
+def test_summary_rejects_invalid_conversation_roles():
+    payload = b64_encode_text(json.dumps({
+        "messages": [
+            {"role": "user", "content": "Tin một"},
+            {"role": "user", "content": "Tin hai"},
+        ]
+    }))
+    response = client.post("/api/summary", json={"p": payload})
     assert response.status_code == 400
 
 

@@ -5,7 +5,7 @@
 [![Google Gemini](https://img.shields.io/badge/AI%20Model-Gemini%202.5%20Flash-4285F4?logo=google&logoColor=white)](https://aistudio.google.com/)
 [![CI/CD Status](https://img.shields.io/badge/CI%2FCD-Pipeline%20Passing-success?logo=github-actions&logoColor=white)](https://github.com/Slayerblack012/chatbot_tamly/actions)
 [![Code Style](https://img.shields.io/badge/Code%20Style-Ruff%20Compliant-black?logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
-[![Unit Tests](https://img.shields.io/badge/Tests-24%2F24%20Passed-brightgreen?logo=pytest&logoColor=white)](https://pytest.org/)
+[![Unit Tests](https://img.shields.io/badge/Tests-pytest-brightgreen?logo=pytest&logoColor=white)](https://pytest.org/)
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-059669)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Docker](https://img.shields.io/badge/Docker-Ready%20(Non--root)-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -208,16 +208,20 @@ Hệ thống cung cấp giao diện Swagger UI tương tác tại: `http://local
 
 | Phương Thức | Đường Dẫn (Endpoint) | Chức Năng | Mô Tả & Tham Số |
 | :---: | :--- | :--- | :--- |
-| `POST` | `/api/chat` | **Hội Thoại AI (Streaming)** | Nhận payload Base64 `{"p": "<base64>"}` và trả về stream văn bản Server-Sent Events (SSE) |
-| `GET` | `/api/health` | **Kiểm Tra Trạng Thái** | Trả về trạng thái server, Gemini readiness và phiên bản (`status: ok`) |
-| `GET` | `/api/tts` | **Đọc Giọng Nữ Tiếng Việt** | Trả về file audio stream `audio/mpeg` cho tham số `?text=...` (Kèm bộ đệm in-memory) |
-| `GET` | `/api/knowledge/distortions` | **8 Bẫy Tư Duy CBT** | Danh sách định nghĩa, ví dụ và câu hỏi phản tư cho 8 bẫy nhận thức |
-| `GET` | `/api/knowledge/articles` | **Bài Viết Tâm Lý** | Kho bài đọc giáo dục tâm lý theo danh mục |
-| `GET` | `/api/knowledge/quizzes` | **Dữ Liệu Trắc Nghiệm** | Câu hỏi và thang điểm cho GAD-7, PHQ-9, DASS-21 |
-| `GET` | `/api/quizzes/results` | **Lấy Lịch Sử Đánh Giá** | Danh sách kết quả trắc nghiệm đã lưu |
-| `POST` | `/api/quizzes/results` | **Lưu Kết Quả Trắc Nghiệm** | Thêm mới một bản ghi điểm số trắc nghiệm |
-| `DELETE`| `/api/quizzes/results/{id}` | **Xóa Kết Quả Trắc Nghiệm** | Xóa bản ghi trắc nghiệm theo ID |
-| `GET` | `/api/facilities` | **Danh Bạ Khám Tâm Lý Uy Tín** | Lấy danh sách bệnh viện, phòng khám chuyên khoa (Hỗ trợ lọc `?location=bien_hoa`) |
+| `POST` | `/api/chat` | **Hội thoại AI (streaming)** | Nhận payload Base64 `{"p": "<base64>"}` và trả về Server-Sent Events (SSE) |
+| `POST` | `/api/summary` | **Đúc kết cuộc trò chuyện** | Nhận danh sách tin nhắn đã mã hóa Base64 |
+| `GET` | `/api/health` | **Kiểm tra trạng thái** | Trả về `ready` hoặc `maintenance` |
+| `GET` | `/api/knowledge` | **Dữ liệu tâm lý** | Trả về một payload Base64 chứa bài viết, trắc nghiệm, bẫy nhận thức và cơ sở khám |
+| `GET` | `/api/facilities` | **Danh bạ cơ sở khám** | Hỗ trợ lọc theo `?location=bien_hoa` |
+| `GET`, `POST` | `/api/sessions` | **Danh sách / tạo phiên chat** | Tạo phiên với `title` và `messages` |
+| `GET`, `PUT`, `DELETE` | `/api/sessions/{session_id}` | **Đọc / sửa / xóa phiên chat** | Thao tác theo ID phiên |
+| `GET`, `POST` | `/api/moods` | **Đọc / ghi nhật ký cảm xúc** | Mức áp lực hợp lệ từ 1 đến 10 |
+| `DELETE` | `/api/moods/{mood_id}` | **Xóa nhật ký cảm xúc** | Xóa theo ID |
+| `GET`, `POST` | `/api/quizzes/results` | **Đọc / lưu kết quả trắc nghiệm** | Hỗ trợ GAD-7 và PHQ-9 |
+| `DELETE` | `/api/quizzes/results/{result_id}` | **Xóa kết quả trắc nghiệm** | Xóa theo ID |
+| `GET` | `/api/tts` | **Đọc tiếng Việt** | Trả về `audio/mpeg` cho tham số `?text=...` |
+
+> Các API phiên chat, nhật ký cảm xúc và kết quả trắc nghiệm hiện lưu trong bộ nhớ của tiến trình; dữ liệu sẽ mất khi khởi động lại máy chủ và không được chia sẻ giữa nhiều worker.
 
 ---
 

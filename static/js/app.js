@@ -111,8 +111,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalCloseBtn = document.getElementById("modal-close-btn");
   const modalCancelBtn = document.getElementById("modal-cancel-btn");
   const modalPrimaryBtn = document.getElementById("modal-primary-btn");
+  const appToast = document.getElementById("app-toast");
+  const toastIcon = appToast ? appToast.querySelector(".app-toast-icon") : null;
+  const toastMessage = appToast ? appToast.querySelector(".app-toast-message") : null;
 
   let currentModalAction = null;
+  let toastTimeout = null;
+  let toastHideTimeout = null;
+
+  function showToast(message, type = "success") {
+    if (!appToast || !toastIcon || !toastMessage) return;
+
+    const icons = { success: "✓", error: "!", info: "i" };
+    appToast.className = `app-toast app-toast-${type}`;
+    toastIcon.textContent = icons[type] || icons.info;
+    toastMessage.textContent = message;
+    appToast.hidden = false;
+    requestAnimationFrame(() => appToast.classList.add("is-visible"));
+
+    clearTimeout(toastTimeout);
+    clearTimeout(toastHideTimeout);
+    toastTimeout = setTimeout(() => {
+      appToast.classList.remove("is-visible");
+      toastHideTimeout = setTimeout(() => {
+        appToast.hidden = true;
+      }, 220);
+    }, 3200);
+  }
 
   function openModal({ icon, title, subtitle, bodyHtml, primaryBtnText, onPrimaryClick }) {
     if (modalIcon) modalIcon.textContent = icon || "🌿";
@@ -221,7 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
     if (themeColorMeta) {
-      themeColorMeta.setAttribute("content", theme === "dark" ? "#0F172A" : "#F8FAFC");
+      themeColorMeta.setAttribute("content", theme === "dark" ? "#000000" : "#F5F5F7");
     }
     try {
       localStorage.setItem(THEME_STORAGE_KEY, encryptLocalData(theme));
@@ -405,7 +430,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnThemeToggle) {
     btnThemeToggle.addEventListener("click", (e) => {
+      const nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
       toggleThemeEthereal(e);
+      showToast(`Đã chuyển sang giao diện ${nextTheme === "dark" ? "tối" : "sáng"}.`, "info");
     });
   }
 
@@ -547,6 +574,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.messages = [...DEFAULT_MESSAGES];
     saveStoredMessages(state.messages);
     renderMessages();
+    showToast("Đã tạo cuộc trò chuyện mới.");
   }
 
   function switchChatSession(sessionId) {
@@ -556,6 +584,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(sessionId));
       state.messages = [...target.messages];
       renderMessages();
+      showToast("Đã mở lại cuộc trò chuyện đã lưu.");
     }
   }
 
@@ -570,6 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
         createNewChatSession();
       }
     }
+    showToast("Đã xóa cuộc trò chuyện khỏi lịch sử.");
   }
 
   const state = {
@@ -671,6 +701,8 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           localStorage.setItem(textSizeKey, size);
         } catch (e) {}
+        const labels = { normal: "bình thường", large: "lớn", "x-large": "rất lớn" };
+        showToast(`Đã đổi cỡ chữ thành ${labels[size] || size}.`, "info");
       });
     }
 
@@ -681,6 +713,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           localStorage.setItem(contrastKey, enabled ? "true" : "false");
         } catch (e) {}
+        showToast(enabled ? "Đã bật chế độ tăng tương phản." : "Đã tắt chế độ tăng tương phản.", "info");
       });
     }
   }
@@ -1373,8 +1406,19 @@ document.addEventListener("DOMContentLoaded", () => {
         modalBodyEl.querySelectorAll(".btn-delete-session").forEach(b => {
           b.addEventListener("click", (e) => {
             const sid = e.currentTarget.getAttribute("data-id");
-            deleteChatSession(sid);
-            showInteractiveHistoryModal();
+            openConfirmModal({
+              icon: "🗑️",
+              title: "Xóa cuộc trò chuyện này?",
+              subtitle: "Thao tác này không thể hoàn tác",
+              bodyHtml: "<p>Lịch sử của cuộc trò chuyện sẽ bị xóa khỏi thiết bị này.</p>",
+              confirmText: "Xóa cuộc trò chuyện",
+              cancelText: "Giữ lại",
+              isDanger: true,
+              onConfirm: () => {
+                deleteChatSession(sid);
+                showInteractiveHistoryModal();
+              }
+            });
           });
         });
       }
@@ -1420,6 +1464,9 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredMessages(state.messages);
         renderMessages();
         closeSidebar();
+        showToast("Đã tạo bản đúc kết cho cuộc trò chuyện.");
+      } else {
+        showToast("Chưa thể tạo bản đúc kết. Vui lòng thử lại.", "error");
       }
     } catch (e) {
       openModal({
@@ -1771,6 +1818,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function finishQuiz() {
     quizStepView.style.display = "none";
     quizResultView.style.display = "block";
+    showToast("Đã hoàn thành bài tự đánh giá.");
 
     const totalScore = state.quizState.answers.reduce((a, b) => a + b, 0);
     const qData = state.quizState.quizData;
@@ -2135,13 +2183,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   btnToggleBreathe.addEventListener("click", () => {
-    if (state.breathingActive) stopBreathing();
+    if (state.breathingActive) {
+      stopBreathing();
+      showToast("Bài tập thở đã dừng.", "info");
+    }
     else startBreathing();
   });
 
   if (circleBreathe) {
     circleBreathe.addEventListener("click", () => {
-      if (state.breathingActive) stopBreathing();
+      if (state.breathingActive) {
+        stopBreathing();
+        showToast("Bài tập thở đã dừng.", "info");
+      }
       else startBreathing();
     });
   }
@@ -2188,6 +2242,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initial chime and Vietnamese female voice prompt
     playMindfulnessChime(396, 3.2, 0.45);
     playVietnameseFemaleVoice("intro", "Bắt đầu thả lỏng và hít thở cùng An Nhiên nhé.");
+    showToast("Bài tập thở đã bắt đầu.");
 
     setTimeout(() => {
       if (!state.breathingActive) return;
@@ -2215,6 +2270,7 @@ document.addEventListener("DOMContentLoaded", () => {
       breatheTimerText.textContent = "BẮT ĐẦU";
       playMilestoneCompletedFanfare();
       playVietnameseFemaleVoice("completed", "Phiên tập thở đã hoàn thành. Hãy mở mắt từ từ và giữ trọn sự an yên này nhé.");
+      showToast("Bạn đã hoàn thành bài tập thở.");
     } else {
       breatheActionText.style.display = "none";
       breatheTimerText.classList.remove("countdown-active");
@@ -2328,6 +2384,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveStoredMessages(state.messages);
     renderMessages();
     activateTab("tab-chat");
+    showToast("Phiên trò chuyện mới đã sẵn sàng.");
   }
 
   if (btnWakeUp) {

@@ -2,13 +2,14 @@
 
 from core.bot_engine import (
     AUTH_FAILURE_MESSAGE,
+    PARTIAL_REPLY_FALLBACK,
     QUOTA_FALLBACK_MESSAGE,
-    STREAM_STOP_MESSAGE,
     TEMPORARY_FALLBACK_MESSAGE,
     CounselorEngine,
     is_auth_error,
+    is_model_overloaded_error,
+    is_model_unavailable_error,
     is_quota_error,
-    is_unavailable_error,
     sanitize_messages_for_gemini,
 )
 from core.prompts import BASE_COUNSELOR_PERSONA, get_time_greeting
@@ -76,12 +77,21 @@ def test_persona_contains_crisis_instructions():
 def test_quota_and_auth_error_detection():
     assert is_quota_error("RESOURCE_EXHAUSTED: 429 quota exceeded")
     assert is_auth_error("401 UNAUTHENTICATED: invalid API key")
-    assert is_unavailable_error("503 UNAVAILABLE: high demand")
     assert not is_quota_error("network timeout")
+
+
+def test_model_fallback_only_for_model_availability_errors():
+    assert is_model_unavailable_error("model not found")
+    assert is_model_unavailable_error("404 NOT_FOUND")
+    assert is_model_unavailable_error("Unsupported model")
+    assert not is_model_unavailable_error("network timeout")
+    assert is_model_overloaded_error("503 UNAVAILABLE: high demand")
+    assert is_model_overloaded_error("temporarily unavailable")
+    assert not is_model_overloaded_error("network timeout")
 
 
 def test_public_fallback_messages_are_user_friendly():
     assert "hết lượt" in QUOTA_FALLBACK_MESSAGE
     assert "API Key" in AUTH_FAILURE_MESSAGE
     assert "gửi lại" in TEMPORARY_FALLBACK_MESSAGE
-    assert "gửi lại" in STREAM_STOP_MESSAGE
+    assert "phản hồi hoàn chỉnh" in PARTIAL_REPLY_FALLBACK

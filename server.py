@@ -1,21 +1,16 @@
 import base64
+import binascii
 import datetime
-import glob
 import json
 import logging
 import os
-import sys
 import time
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
-# Tự động nạp gói thư viện từ .venv nếu người dùng chạy bằng python hệ thống
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-_VENV_DIR = os.path.join(_BASE_DIR, ".venv")
-if os.path.isdir(_VENV_DIR):
-    for _sp in glob.glob(os.path.join(_VENV_DIR, "lib", "python*", "site-packages")):
-        if _sp not in sys.path:
-            sys.path.insert(0, _sp)
+from core.runtime import add_project_venv_to_path, find_available_port
+
+add_project_venv_to_path()
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -27,10 +22,8 @@ from pydantic import BaseModel, Field
 
 from core.bot_engine import (
     AUTH_FAILURE_MESSAGE,
-    QUOTA_FALLBACK_MESSAGE,
-    TEMPORARY_FALLBACK_MESSAGE,
     CounselorEngine,
-    is_quota_error,
+    get_fallback_message,
     sanitize_messages_for_gemini,
 )
 from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES, PSYCHOLOGICAL_FACILITIES
@@ -144,11 +137,14 @@ except Exception as exc:
 
 def b64_decode_json(encoded_str: str) -> Dict[str, Any]:
     try:
-        raw_bytes = base64.b64decode(encoded_str.encode("utf-8"))
-        return json.loads(raw_bytes.decode("utf-8"))
-    except Exception as e:
-        logger.warning(f"Lỗi giải mã Base64 payload: {e}")
+        raw_bytes = base64.b64decode(encoded_str, validate=True)
+        payload = json.loads(raw_bytes.decode("utf-8"))
+    except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        logger.warning("Lỗi giải mã Base64 payload: %s", exc)
         raise HTTPException(status_code=400, detail="Dữ liệu truyền tải không hợp lệ.")
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Dữ liệu truyền tải không hợp lệ.")
+    return payload
 
 
 def b64_encode_text(text: str) -> str:
@@ -212,6 +208,8 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
     raw_messages = data.get("messages", [])
     if not isinstance(raw_messages, list) or len(raw_messages) == 0:
         raise HTTPException(status_code=400, detail="Danh sách tin nhắn trống.")
+    if any(not isinstance(message, dict) for message in raw_messages):
+        raise HTTPException(status_code=400, detail="Danh sách tin nhắn không hợp lệ.")
 
     if len(raw_messages) > 30:
         raise HTTPException(status_code=400, detail="Quá nhiều tin nhắn (tối đa 30)")
@@ -235,12 +233,12 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
 
     mode = str(data.get("mode", "empathy"))[:20]
     raw_mood_context = data.get("mood_context")
-    raw_temp = data.get("temperature", 0.8)
+    raw_temp = data.get("temperature", 0.65)
 
     try:
         temperature = max(0.0, min(2.0, float(raw_temp)))
     except (ValueError, TypeError):
-        temperature = 0.8
+        temperature = 0.65
 
     mood_context = None
     if isinstance(raw_mood_context, dict):
@@ -270,11 +268,7 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
             yield f"data: {json.dumps({'d': '', 'f': 1})}\n\n"
         except Exception as exc:
             logger.error(f"Lỗi trong async event_generator: {exc}", exc_info=True)
-            err_str = str(exc).lower()
-            if is_quota_error(err_str):
-                err_msg = b64_encode_text(QUOTA_FALLBACK_MESSAGE)
-            else:
-                err_msg = b64_encode_text(TEMPORARY_FALLBACK_MESSAGE)
+            err_msg = b64_encode_text(get_fallback_message(exc))
             yield f"data: {json.dumps({'d': err_msg, 'f': 1})}\n\n"
 
     return StreamingResponse(
@@ -295,15 +289,19 @@ async def generate_summary(payload: EncryptedPayload, request: Request):
     client_ip = get_client_ip(request)
     check_rate_limit(client_ip)
 
-    if not engine.is_ready():
-        raise HTTPException(status_code=503, detail="Dịch vụ chưa sẵn sàng.")
-
     data = b64_decode_json(payload.p)
     raw_messages = data.get("messages", [])
     if not isinstance(raw_messages, list) or len(raw_messages) < 2:
         raise HTTPException(status_code=400, detail="Cuộc trò chuyện quá ngắn.")
+    if any(not isinstance(message, dict) for message in raw_messages):
+        raise HTTPException(status_code=400, detail="Danh sách tin nhắn không hợp lệ.")
 
     clean_messages = sanitize_messages_for_gemini(raw_messages[-30:])
+    if len(clean_messages) < 2:
+        raise HTTPException(status_code=400, detail="Cuộc trò chuyện quá ngắn.")
+    if not engine.is_ready():
+        raise HTTPException(status_code=503, detail="Dịch vụ chưa sẵn sàng.")
+
     summary_text = await engine.async_generate_session_summary(clean_messages)
     return {"d": b64_encode_text(summary_text)}
 
@@ -490,21 +488,13 @@ async def serve_index():
 
 
 if __name__ == "__main__":
-    import socket
-
     import uvicorn
 
-    def is_port_available(p: int) -> bool:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            return s.connect_ex(("127.0.0.1", p)) != 0
-
     target_port = int(os.getenv("PORT", 8000))
-    if not is_port_available(target_port):
-        logger.warning(f"Cong {target_port} dang bi chiem dung, tu dong chuyen sang cong moi...")
-        for fallback in range(target_port + 1, target_port + 10):
-            if is_port_available(fallback):
-                target_port = fallback
-                break
+    available_port = find_available_port(target_port)
+    if available_port != target_port:
+        logger.warning("Cổng %s đang bị chiếm, chuyển sang cổng %s.", target_port, available_port)
+        target_port = available_port
 
     print("\n============================================================")
     print(f"AN NHIEN SERVER DA SAN SANG TAI: http://localhost:{target_port}")
