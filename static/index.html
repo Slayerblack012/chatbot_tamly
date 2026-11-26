@@ -21,19 +21,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/css/style.css?v=2.6.0">
+  <link rel="stylesheet" href="/static/css/style.css?v=2.8.5">
   
   <!-- Local Self-hosted Markdown & XSS Sanitizer (Hoạt động 100% Offline) -->
   <script defer src="/static/js/vendor/marked.min.js?v=2.6.0"></script>
   <script defer src="/static/js/vendor/purify.min.js?v=2.6.0"></script>
-  <script defer src="/static/js/app.js?v=2.6.0"></script>
+  <script defer src="/static/js/app.js?v=2.7.5"></script>
 </head>
 <body>
   <a class="skip-link" href="#tab-chat">Bỏ qua và đến trò chuyện</a>
   <div id="network-loading-bar" class="network-loading-bar" style="display: none;"></div>
   <div id="app-toast" class="app-toast" role="status" aria-live="polite" aria-atomic="true" hidden>
     <span class="app-toast-icon" aria-hidden="true"></span>
-    <span class="app-toast-message"></span>
+    <span class="app-toast-content">
+      <span class="app-toast-label" aria-hidden="true">THÔNG BÁO HỆ THỐNG</span>
+      <span class="app-toast-message"></span>
+    </span>
   </div>
 
   <!-- ==================== TOP NAVIGATION ==================== -->
@@ -49,21 +52,21 @@
 
       <!-- Desktop Navigation Tabs -->
       <nav class="nav-tabs" aria-label="Điều hướng chính">
-        <button class="nav-tab-btn active" data-tab="tab-chat" aria-current="page">💬 Trò Chuyện</button>
-        <button class="nav-tab-btn" data-tab="tab-edu">📚 Hiểu Về Cảm Xúc</button>
-        <button class="nav-tab-btn" data-tab="tab-quiz">📝 Tự Đánh Giá</button>
-        <button class="nav-tab-btn" data-tab="tab-studio">🧘 Thư Giãn & Tĩnh Tâm</button>
-        <button class="nav-tab-btn" data-tab="tab-facilities">🏥 Cơ Sở Khám Uy Tín</button>
+        <button type="button" class="nav-tab-btn active" data-tab="tab-chat" aria-controls="tab-chat" aria-current="page">💬 Trò Chuyện</button>
+        <button type="button" class="nav-tab-btn" data-tab="tab-edu" aria-controls="tab-edu">📚 Cảm Xúc</button>
+        <button type="button" class="nav-tab-btn" data-tab="tab-quiz" aria-controls="tab-quiz">📝 Tự Đánh Giá</button>
+        <button type="button" class="nav-tab-btn" data-tab="tab-studio" aria-controls="tab-studio">🧘 Tĩnh Tâm</button>
+        <button type="button" class="nav-tab-btn" data-tab="tab-facilities" aria-controls="tab-facilities">🏥 Cơ Sở Khám</button>
       </nav>
 
       <div class="nav-actions">
         <!-- Dynamic Status Header (N4: Khởi đầu bằng trạng thái trung tính Đang Kết Nối...) & Dark Mode Toggle -->
-        <div class="status-indicator maintenance" id="status-indicator" title="Trạng thái kết nối máy chủ AI">
+        <div class="status-indicator maintenance" id="status-indicator" role="status" aria-live="polite" title="Trạng thái kết nối máy chủ AI">
           <span class="status-dot" id="status-dot"></span>
           <span class="status-text" id="status-text">Đang Kết Nối...</span>
         </div>
         <!-- B1: Dark Mode Toggle with Celestial Icon -->
-        <button class="btn-theme-toggle" id="btn-theme-toggle" title="Chuyển đổi Chế độ Tối / Sáng" aria-label="Chuyển đổi giao diện">
+        <button type="button" class="btn-theme-toggle" id="btn-theme-toggle" title="Chuyển đổi Chế độ Tối / Sáng" aria-label="Chuyển đổi giao diện">
           <span class="theme-toggle-icon" id="theme-toggle-icon">🌙</span>
         </button>
       </div>
@@ -74,7 +77,7 @@
   <main class="app-main">
 
     <!-- ==================== CRISIS INTERVENTION BANNER ==================== -->
-    <div id="crisis-alert-banner" class="crisis-banner" style="display: none;">
+    <div id="crisis-alert-banner" class="crisis-banner" style="display: none;" role="alert" aria-live="assertive">
       <div class="crisis-icon">🆘</div>
       <div class="crisis-content">
         <h4 class="crisis-title">Bạn Đang Cần Người Ở Cạnh Hỗ Trợ Khẩn Cấp?</h4>
@@ -82,9 +85,9 @@
           An Nhiên luôn lắng nghe bạn, nhưng trong những khoảnh khắc tuyệt vọng, bạn xứng đáng nhận được sự trợ giúp trực tiếp ngay tức thì từ các chuyên viên cứu hộ tâm lý và y tế:
         </p>
         <div class="crisis-hotlines">
-          <a href="tel:111" class="hotline-chip">📞 111 (Tổng đài Bảo vệ Trẻ em & Thanh thiếu niên - Miễn phí 24/7)</a>
+          <a href="tel:111" class="hotline-chip">📞 111 (Tổng đài Bảo vệ Trẻ em - Miễn phí)</a>
           <a href="tel:115" class="hotline-chip">🚑 115 (Cấp cứu Y tế Khẩn cấp)</a>
-          <a href="tel:0963061414" class="hotline-chip secondary">🌿 096 306 1414 (Đường dây Ngày Mai - Hỗ trợ Trầm cảm)</a>
+          <a href="tel:0963061414" class="hotline-chip secondary">🌿 096 306 1414 (Đường dây Ngày Mai)</a>
         </div>
       </div>
       <button class="btn-dismiss-crisis" id="btn-dismiss-crisis" title="Đóng thông báo">✕</button>
@@ -163,21 +166,35 @@
 
           <!-- Session Actions -->
           <div class="sidebar-actions-box">
-            <div class="accessibility-options" aria-label="Tùy chọn trợ năng">
-              <div class="sidebar-section-title">♿ Truy Cập Dễ Dàng</div>
+            <section class="accessibility-options" aria-labelledby="accessibility-title">
+              <h4 class="sidebar-section-title" id="accessibility-title">♿ Trợ năng</h4>
               <label for="text-size-select">Cỡ chữ</label>
               <select id="text-size-select" class="a11y-select" aria-label="Cỡ chữ giao diện">
                 <option value="normal">Bình thường</option>
                 <option value="large">Lớn</option>
                 <option value="x-large">Rất lớn</option>
               </select>
-              <button type="button" class="chip-btn" id="btn-high-contrast" aria-pressed="false" style="width:100%; margin-top:8px;">
-                🔲 Tăng tương phản
+              <button type="button" class="sidebar-action-btn sidebar-accessibility-toggle" id="btn-high-contrast" aria-pressed="false">
+                <span class="sidebar-action-icon" aria-hidden="true">◐</span>
+                <span class="sidebar-action-label">Tăng tương phản</span>
               </button>
-            </div>
-            <button class="chip-btn" id="btn-summarize" style="width:100%; padding:10px; ">📝 Đúc Kết Lời Nhắn Nhủ</button>
-            <button class="chip-btn" id="btn-export-chat" style="width:100%; padding:10px; ">📜 Lịch Sử Chat</button>
-            <button class="chip-btn" id="btn-clear-chat" style="width:100%; padding:10px; color:#EF4444; border-color:#FCA5A5;">🗑️ Bắt Đầu Lại</button>
+            </section>
+
+            <section class="sidebar-action-group" aria-labelledby="conversation-tools-title">
+              <h4 class="sidebar-action-group-title" id="conversation-tools-title">Công cụ trò chuyện</h4>
+              <button type="button" class="sidebar-action-btn" id="btn-summarize">📝 Đúc kết cuộc trò chuyện</button>
+              <button type="button" class="sidebar-action-btn" id="btn-export-chat">📜 Lịch sử trò chuyện</button>
+              <button type="button" class="sidebar-action-btn sidebar-action-btn--new" id="btn-clear-chat">＋ Cuộc trò chuyện mới</button>
+            </section>
+
+            <section class="sidebar-action-group" aria-labelledby="privacy-tools-title">
+              <h4 class="sidebar-action-group-title" id="privacy-tools-title">Quyền riêng tư</h4>
+              <button type="button" class="sidebar-action-btn" id="btn-privacy-info">🔒 Quyền riêng tư & dữ liệu</button>
+              <button type="button" class="sidebar-action-btn sidebar-action-btn--danger" id="btn-hard-delete-history">
+                <span class="sidebar-action-label">Xóa toàn bộ lịch sử</span>
+                <span class="sidebar-action-description">Chỉ xóa dữ liệu trên thiết bị này</span>
+              </button>
+            </section>
           </div>
 
         </aside>
@@ -188,7 +205,7 @@
           <div class="chat-header">
             <div class="chat-header-info">
               <h3 id="chat-greeting-title">Chào bạn 🌿</h3>
-              <p>Không gian an toàn, chia sẻ chân thành và bảo mật</p>
+              <p>Chia sẻ chân thành; xem rõ cách dữ liệu được xử lý trong Quyền riêng tư</p>
             </div>
             <!-- Guide Button on Chat -->
             <button class="btn-feature-guide" id="btn-guide-chat" title="Xem hướng dẫn sử dụng">
@@ -213,7 +230,7 @@
 
           <!-- Quick Topic Chips -->
           <div class="quick-chips">
-            <button class="chip-btn" data-prompt="Mình đang ở Biên Hòa, Đồng Nai và muốn tìm địa chỉ khám tâm lý uy tín. Hãy tư vấn giúp mình các bệnh viện và phòng khám phù hợp nhé...">🏥 Khám tâm lý Biên Hòa</button>
+            <button class="chip-btn" data-prompt="Mình đang ở Đồng Nai và muốn tìm địa chỉ khám tâm lý phù hợp. Hãy tư vấn giúp mình các bệnh viện và phòng khám phù hợp nhé...">🏥 Khám tâm lý Đồng Nai</button>
             <button class="chip-btn" data-prompt="Dạo này mình thường xuyên cảm thấy bồn chồn lo âu và ngực ngột ngạt, hãy phân tích kỹ giúp mình lý do và cho mình lời khuyên đúng đắn, dứt khoát nhất...">🍃 Lo âu, ngột ngạt</button>
             <button class="chip-btn" data-prompt="Mình cảm thấy kiệt sức vì áp lực học tập và công việc, mất hết động lực. Hãy cho mình lời khuyên cụ thể và thẳng thắn...">💼 Áp lực học tập & thi cử</button>
             <button class="chip-btn" data-prompt="Đêm nào mình cũng nghĩ ngợi miên man không thể ngủ được, nguyên nhân sâu xa từ tâm lý là gì và đâu là giải pháp dứt khoát?">🛌 Khó ngủ, suy nghĩ miên man</button>
@@ -296,6 +313,9 @@
           <button class="quiz-type-btn active" data-quiz-type="gad7">📊 Thang Đo Lo Âu (GAD-7)</button>
           <button class="quiz-type-btn" data-quiz-type="phq9">🌧️ Thang Đo Trầm Cảm (PHQ-9)</button>
         </div>
+        <p class="screening-disclaimer">
+          Đây là công cụ <strong>SÀNG LỌC, KHÔNG PHẢI chẩn đoán y khoa</strong>. Kết quả không thay thế trao đổi với chuyên gia y tế.
+        </p>
 
         <div id="quiz-intro-view">
           <div style="text-align:center; margin-bottom:24px;">
@@ -356,15 +376,15 @@
                 <span class="quiz-level-text" id="quiz-level-text" style="font-size:1.15rem; font-weight:700;">Bình thường</span>
               </div>
               
-              <div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-top:20px;">
-                <button class="btn-send" id="btn-discuss-result" style="width:100%; justify-content:center; padding:12px;">
+              <div class="quiz-result-actions">
+                <button class="btn-send quiz-result-action" id="btn-discuss-result">
                   💬 Trò Chuyện & Tháo Gỡ Với An Nhiên
                 </button>
-                <button class="btn-feature-guide" id="btn-retake-quiz" style="width:100%; justify-content:center; padding:10px;">
+                <button class="btn-feature-guide quiz-result-action" id="btn-retake-quiz">
                   🔄 Làm Lại Bài Tự Đánh Giá
                 </button>
-                <button class="btn-feature-guide" id="btn-view-facilities" style="width:100%; justify-content:center; padding:10px; color:var(--primary); border-color:rgba(13,148,136,0.35);">
-                  🏥 Nơi Khám Tâm Lý Uy Tín Tại Biên Hòa
+                <button class="btn-feature-guide quiz-result-action" id="btn-view-facilities">
+                  🏥 Nơi Khám Tâm Lý Uy Tín Tại Đồng Nai
                 </button>
               </div>
             </div>
@@ -400,8 +420,8 @@
             <h3 style="font-family:var(--font-heading); font-size:1.25rem;">🌬️ Thở Chậm & Tĩnh Tâm</h3>
             <button class="btn-feature-guide" id="btn-guide-studio">💡 Hướng Dẫn Bài Thở</button>
           </div>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:14px;">
-            Thả lỏng đôi vai, nhắm mắt và lắng nghe âm thanh hướng dẫn để tìm lại sự an yên trong từng hơi thở.
+          <p class="studio-description">
+            Chọn kiểu thở và thời lượng phù hợp, sau đó làm theo nhịp trong vòng tròn. Bạn có thể dừng bất cứ lúc nào.
           </p>
 
           <!-- 1. Kiểu Thở (Breathing Modes) -->
@@ -458,48 +478,55 @@
           </div>
         </div>
 
-        <!-- 5-4-3-2-1 Grounding & Ambient Sounds Card -->
-        <div class="studio-card">
-          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:8px;">🎵 Không Gian Âm Thanh Thư Giãn</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">
-            Bật âm thanh thiên nhiên êm dịu để đồng hành cùng bạn khi đọc sách, học bài hay nghỉ ngơi:
-          </p>
-
+        <div class="studio-card ambient-sounds-card" id="ambient-sounds-card" hidden>
+          <div class="studio-card-header">
+            <h3 style="font-family:var(--font-heading); font-size:1.25rem;">🎵 Âm Thanh Thư Giãn</h3>
+          </div>
+          <p class="studio-description">Chọn âm thanh nền đã được xác minh nguồn và giấy phép.</p>
           <div class="sound-list">
-            <div class="sound-item">
+            <div class="sound-item" id="sound-item-rain" hidden>
               <div>
                 <strong>🌧️ Tiếng Mưa Rơi Êm Dịu</strong>
                 <div style="font-size:0.75rem; color:var(--text-muted);">Âm thanh êm dịu giúp dễ ngủ</div>
+                <small id="audio-attribution-rain" hidden></small>
               </div>
-              <audio controls preload="none" src="/static/audio/rain.mp3" style="height:32px; max-width:160px;"></audio>
+              <audio id="audio-rain" preload="none" style="height:32px; max-width:160px;" hidden></audio>
             </div>
 
-            <div class="sound-item">
+            <div class="sound-item" id="sound-item-forest_birds" hidden>
               <div>
                 <strong>🌲 Tiếng Suối Rừng & Chim Hót</strong>
                 <div style="font-size:0.75rem; color:var(--text-muted);">Thanh lọc tâm trí và giảm áp lực</div>
+                <small id="audio-attribution-forest_birds" hidden></small>
               </div>
-              <audio controls preload="none" src="/static/audio/forest_birds.mp3" style="height:32px; max-width:160px;"></audio>
+              <audio id="audio-forest_birds" preload="none" style="height:32px; max-width:160px;" hidden></audio>
             </div>
 
-            <div class="sound-item">
+            <div class="sound-item" id="sound-item-ocean_waves" hidden>
               <div>
                 <strong>🌊 Tiếng Sóng Biển Rì Rào</strong>
                 <div style="font-size:0.75rem; color:var(--text-muted);">Giai điệu vỗ về từng hơi thở</div>
+                <small id="audio-attribution-ocean_waves" hidden></small>
               </div>
-              <audio controls preload="none" src="/static/audio/ocean_waves.mp3" style="height:32px; max-width:160px;"></audio>
+              <audio id="audio-ocean_waves" preload="none" style="height:32px; max-width:160px;" hidden></audio>
             </div>
           </div>
+        </div>
 
-          <div style="margin-top:24px; padding:16px;  border-radius:var(--radius-md); border:1px solid var(--border-color); cursor:pointer;" id="btn-grounding-card" title="Nhấn để xem bài tập 5-4-3-2-1 chi tiết">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <h4 style="font-family:var(--font-heading); font-size:0.95rem;">🌿 Kỹ Thuật Neo Cảm Xúc 5-4-3-2-1</h4>
-              <span style="font-size:0.75rem; color:var(--primary); font-weight:700;">🔍 Xem hướng dẫn</span>
-            </div>
-            <p style="font-size:0.85rem; color:var(--text-muted);">
-              Khi tâm trí bị cuốn đi quá xa, hãy kết nối lại với 5 giác quan: <strong>5</strong> vật nhìn thấy, <strong>4</strong> vật chạm được, <strong>3</strong> âm thanh nghe được, <strong>2</strong> mùi hương và <strong>1</strong> vị nếm được.
-            </p>
+        <div class="studio-card grounding-studio-card">
+          <div class="studio-card-header">
+            <h3 style="font-family:var(--font-heading); font-size:1.25rem;">🌿 Neo Cảm Xúc 5-4-3-2-1</h3>
+            <span class="grounding-tag">Thực hành tại chỗ</span>
           </div>
+          <p class="studio-description">Dùng 5 giác quan để đưa sự chú ý trở lại hiện tại, từng bước một:</p>
+          <ol class="grounding-steps">
+            <li><span class="grounding-step-count">5</span><span><strong>Nhìn</strong><small>Gọi tên 5 vật bạn thấy quanh mình.</small></span></li>
+            <li><span class="grounding-step-count">4</span><span><strong>Cảm nhận</strong><small>Chú ý 4 điều cơ thể đang chạm vào.</small></span></li>
+            <li><span class="grounding-step-count">3</span><span><strong>Lắng nghe</strong><small>Nhận ra 3 âm thanh bạn nghe thấy.</small></span></li>
+            <li><span class="grounding-step-count">2</span><span><strong>Ngửi</strong><small>Tìm 2 mùi hương xung quanh.</small></span></li>
+            <li><span class="grounding-step-count">1</span><span><strong>Nếm</strong><small>Chú ý 1 vị trong miệng.</small></span></li>
+          </ol>
+          <button type="button" class="btn-feature-guide grounding-guide-button" id="btn-grounding-card">📖 Xem hướng dẫn chi tiết</button>
         </div>
 
       </div>
@@ -511,11 +538,11 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
           <div>
             <div class="facility-heading-line">
-              <h2 style="margin:0;">🏥 Nơi Khám & Tham Vấn Tâm Lý Uy Tín</h2>
-              <span class="facility-city-badge">📍 Biên Hòa — Đồng Nai & Tuyến Đầu</span>
+              <h2 style="margin:0;">🏥 Cơ Sở Khám & Hỗ Trợ Sức Khỏe Tâm Thần</h2>
+              <span class="facility-city-badge">📍 Đồng Nai — danh bạ đang xác minh</span>
             </div>
             <p style="color:var(--text-muted); font-size:0.92rem; margin-top:8px;">
-              Mạng lưới cơ sở y tế chuyên khoa tâm thần, tâm lý lâm sàng và phòng khám chuyên gia hàng đầu được thẩm định y khoa chuẩn mực.
+              Danh bạ đang được rà soát. Lịch khám có thể thay đổi; vui lòng xác nhận trực tiếp với cơ sở trước khi đến.
             </p>
           </div>
           <button class="btn-feature-guide" id="btn-guide-facilities" title="Lời khuyên khi đi khám">
@@ -525,18 +552,20 @@
       </div>
 
       <div class="facilities-header-row">
-        <div>
-          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin:0 0 4px 0;">🏥 Danh Sách Cơ Sở Khám Chuyên Khoa</h3>
+        <div class="facilities-header-copy">
+          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin:0 0 4px 0;">🏥 Danh Sách Cơ Sở Tại Đồng Nai</h3>
           <p style="color:var(--text-muted); font-size:0.88rem; margin:0;">
-            Lọc theo phân loại tuyến, xem giờ làm việc chi tiết và gọi điện hoặc hỏi An Nhiên để chuẩn bị trước khi đi.
+            Chọn nhóm dịch vụ để lọc danh sách cơ sở phù hợp.
           </p>
         </div>
-        <!-- Filter chips for facilities -->
-        <div class="facility-filter-chips" id="facility-filter-chips">
-          <button class="chip-btn active" data-filter="all">Tất cả (6)</button>
-          <button class="chip-btn" data-filter="tuyen_dau">Tuyến đầu ngành</button>
-          <button class="chip-btn" data-filter="ngoai_gio">Khám ngoài giờ</button>
-          <button class="chip-btn" data-filter="tre_em">Trẻ em & Học đường</button>
+        <div class="facility-filter-panel">
+          <span class="facility-filter-label">Lọc nhanh</span>
+          <div class="facility-filter-chips" id="facility-filter-chips" role="group" aria-label="Lọc cơ sở khám">
+            <button class="chip-btn active" data-filter="all">Tất cả (6)</button>
+            <button class="chip-btn" data-filter="tuyen_dau">Tuyến đầu ngành</button>
+            <button class="chip-btn" data-filter="ngoai_gio">Khám ngoài giờ</button>
+            <button class="chip-btn" data-filter="tre_em">Trẻ em & Học đường</button>
+          </div>
         </div>
       </div>
 
@@ -560,31 +589,31 @@
   </main>
 
   <!-- ==================== MOBILE BOTTOM NAVIGATION ==================== -->
-  <nav class="mobile-bottom-nav">
-    <button class="mobile-nav-btn active" data-tab="tab-chat">
+  <nav class="mobile-bottom-nav" aria-label="Điều hướng trên thiết bị di động">
+    <button type="button" class="mobile-nav-btn active" data-tab="tab-chat" aria-controls="tab-chat" aria-current="page">
       <span class="nav-icon">💬</span>
       <span class="nav-label">Trò Chuyện</span>
     </button>
-    <button class="mobile-nav-btn" data-tab="tab-edu">
+    <button type="button" class="mobile-nav-btn" data-tab="tab-edu" aria-controls="tab-edu">
       <span class="nav-icon">📚</span>
       <span class="nav-label">Cảm Xúc</span>
     </button>
-    <button class="mobile-nav-btn" data-tab="tab-quiz">
+    <button type="button" class="mobile-nav-btn" data-tab="tab-quiz" aria-controls="tab-quiz">
       <span class="nav-icon">📝</span>
       <span class="nav-label">Đánh Giá</span>
     </button>
-    <button class="mobile-nav-btn" data-tab="tab-studio">
+    <button type="button" class="mobile-nav-btn" data-tab="tab-studio" aria-controls="tab-studio">
       <span class="nav-icon">🧘</span>
       <span class="nav-label">Tĩnh Tâm</span>
     </button>
-    <button class="mobile-nav-btn" data-tab="tab-facilities">
+    <button type="button" class="mobile-nav-btn" data-tab="tab-facilities" aria-controls="tab-facilities">
       <span class="nav-icon">🏥</span>
       <span class="nav-label">Cơ Sở Khám</span>
     </button>
   </nav>
 
   <!-- ==================== UNIVERSAL POPUP MODAL ==================== -->
-  <div id="app-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true">
+  <div id="app-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-subtitle">
     <div class="modal-card" id="modal-card">
       <div class="modal-header">
         <div class="modal-header-left">
@@ -616,7 +645,7 @@
       <div class="sleep-icon">🌙</div>
       <h2 class="sleep-title">An Nhiên Đang Tạm Nghỉ</h2>
       <p class="sleep-desc">
-        Vì bạn đã không thao tác trong hơn 1 giờ, hệ thống đã tự động khóa phiên để bảo vệ sự riêng tư và tối ưu hóa tài nguyên cho bạn.
+        Vì bạn đã không thao tác trong hơn 1 giờ, giao diện được ẩn và phiên hiện tại dừng lại. Lịch sử vẫn còn trên thiết bị cho đến khi bạn xóa.
       </p>
       <div class="sleep-tip">
         🌿 <em>Hãy hít một hơi thật sâu và quay lại bất cứ khi nào bạn sẵn sàng nhé.</em>

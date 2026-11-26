@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Cipher Key Salt for Client Storage Security & Encrypted JSON Persistence
+  // Legacy XOR obfuscation only; this key does not provide cryptographic encryption.
   const STORAGE_SALT = "AnNhien_Secured_v2_9988_Salt";
 
   function xorCipher(text, key) {
@@ -48,28 +48,32 @@ document.addEventListener("DOMContentLoaded", () => {
     return result;
   }
 
-  function encryptLocalData(data) {
+  function obfuscateLocalData(data) {
     try {
       const jsonStr = typeof data === "string" ? data : JSON.stringify(data);
       const obfuscated = xorCipher(jsonStr, STORAGE_SALT);
       return "AN_ENC:" + encodeB64(obfuscated);
     } catch (e) {
-      console.warn("Lỗi mã hóa dữ liệu cục bộ:", e);
+      console.warn("Lỗi làm rối dữ liệu cục bộ:", e);
       return typeof data === "string" ? data : JSON.stringify(data);
     }
   }
 
-  function decryptLocalData(encryptedStr) {
-    if (!encryptedStr) return null;
+  function deobfuscateLocalData(storedValue) {
+    if (!storedValue) return null;
     try {
-      if (typeof encryptedStr === "string" && encryptedStr.startsWith("AN_ENC:")) {
-        const rawCipher = decodeB64(encryptedStr.slice(7));
+      if (typeof storedValue === "string" && storedValue.startsWith("AN_ENC:")) {
+        const rawCipher = decodeB64(storedValue.slice(7));
         const originalJsonStr = xorCipher(rawCipher, STORAGE_SALT);
-        return JSON.parse(originalJsonStr);
+        try {
+          return JSON.parse(originalJsonStr);
+        } catch (e) {
+          return originalJsonStr;
+        }
       }
-      return JSON.parse(encryptedStr);
+      return JSON.parse(storedValue);
     } catch (e) {
-      return encryptedStr;
+      return storedValue;
     }
   }
 
@@ -116,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const toastMessage = appToast ? appToast.querySelector(".app-toast-message") : null;
 
   let currentModalAction = null;
+  let modalReturnFocus = null;
   let toastTimeout = null;
   let toastHideTimeout = null;
 
@@ -140,6 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openModal({ icon, title, subtitle, bodyHtml, primaryBtnText, onPrimaryClick }) {
+    if (!appModal || appModal.style.display !== "flex") {
+      modalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
     if (modalIcon) modalIcon.textContent = icon || "🌿";
     if (modalTitle) modalTitle.textContent = title || "An Nhiên Tâm Lý";
     if (modalSubtitle) modalSubtitle.textContent = subtitle || "";
@@ -153,10 +161,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (appModal) {
       appModal.style.display = "flex";
       document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => modalPrimaryBtn?.focus());
     }
   }
 
   function openConfirmModal({ icon, title, subtitle, bodyHtml, confirmText, cancelText, isDanger, onConfirm }) {
+    if (!appModal || appModal.style.display !== "flex") {
+      modalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
     if (modalIcon) modalIcon.textContent = icon || "❓";
     if (modalTitle) modalTitle.textContent = title || "Xác Nhận";
     if (modalSubtitle) modalSubtitle.textContent = subtitle || "";
@@ -174,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (appModal) {
       appModal.style.display = "flex";
       document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => modalPrimaryBtn?.focus());
     }
   }
 
@@ -182,6 +195,9 @@ document.addEventListener("DOMContentLoaded", () => {
       appModal.style.display = "none";
       document.body.style.overflow = "";
       currentModalAction = null;
+      const returnFocus = modalReturnFocus;
+      modalReturnFocus = null;
+      returnFocus?.focus();
     }
   }
 
@@ -206,6 +222,23 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && appModal && appModal.style.display === "flex") {
       closeModal();
+    }
+
+    if (e.key === "Tab" && appModal && appModal.style.display === "flex") {
+      const focusable = Array.from(appModal.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ));
+      if (focusable.length) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
     }
 
     if (e.altKey && ["1", "2", "3", "4", "5"].includes(e.key)) {
@@ -249,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
       themeColorMeta.setAttribute("content", theme === "dark" ? "#000000" : "#F5F5F7");
     }
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, encryptLocalData(theme));
+      localStorage.setItem(THEME_STORAGE_KEY, obfuscateLocalData(theme));
     } catch (e) {}
   }
 
@@ -422,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let savedTheme = "light";
   try {
     const rawTheme = localStorage.getItem(THEME_STORAGE_KEY);
-    savedTheme = rawTheme ? (decryptLocalData(rawTheme) || "light") : "light";
+    savedTheme = rawTheme ? (deobfuscateLocalData(rawTheme) || "light") : "light";
   } catch (e) {
     savedTheme = "light";
   }
@@ -440,16 +473,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // 3. CRISIS KEYWORD DETECTION
   // =========================================================================
   const CRISIS_KEYWORDS = [
-    "tự tử", "tu tu", "muốn chết", "muon chet", "kết thúc cuộc sống", "ket thuc cuoc song",
-    "tự hại", "tu hai", "tự làm đau", "tu lam dau", "không muốn sống", "khong muon song",
-    "muốn biến mất", "muon bien mat", "chết đi cho xong", "chet di cho xong", 
-    "tuyệt vọng muốn chết", "suicide", "kill myself", "cắt tay", "cat tay"
+    "ngu khong day nua", "ngoi khong day nua", "khong muon ton tai nua", "muon bien mat",
+    "khong muon song nua", "khong muon song",
+    "ket thuc cuoc doi", "ket thuc cuoc song", "muon chet", "tu tu", "tu hai",
+    "tu lam dau", "cat tay", "tu lam ton thuong", "tu lam hai ban than",
+    "khong o day nua", "khong o day", "khong co minh", "i wish i were dead", "i want to disappear",
+    "kill myself", "suicid"
+  ];
+  const CRISIS_DENIALS = [
+    "khong co y dinh tu tu", "khong co y dinh tu hai",
+    "khong nghi den viec tu tu", "khong nghi den viec tu hai",
+    "khong muon tu tu", "khong muon tu hai"
   ];
 
   function checkCrisisKeywords(text) {
     if (!text) return false;
-    const lower = text.toLowerCase();
-    return CRISIS_KEYWORDS.some(kw => lower.includes(kw));
+    const normalized = text.toLowerCase().normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+    const remaining = CRISIS_DENIALS.reduce((value, phrase) => value.replaceAll(phrase, " "), normalized);
+    return CRISIS_KEYWORDS.some(kw => remaining.includes(kw));
   }
 
   const crisisAlertBanner = document.getElementById("crisis-alert-banner");
@@ -460,8 +502,37 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function crisisSupportMarkup() {
+    return `
+      <div class="crisis-modal-content">
+        <p><strong>Hỗ trợ ngay:</strong></p>
+        <ul>
+          <li><a href="tel:111">111 — Tổng đài Bảo vệ Trẻ em</a> (miễn phí).</li>
+          <li><a href="tel:115">115 — cấp cứu y tế</a> nếu bạn đang gặp nguy hiểm ngay lúc này.</li>
+          <li><a href="tel:0963061414">096 306 1414 — Đường dây Ngày Mai</a>.</li>
+        </ul>
+        <p><strong>Bạn có đang định làm đau mình ngay lúc này, hoặc đã chuẩn bị cách thực hiện chưa? Bạn đang ở một mình không?</strong></p>
+        <p>Nếu nguy hiểm đang ở ngay trước mắt, hãy gọi 115 hoặc đến khoa cấp cứu gần nhất, đồng thời báo cho một người lớn đáng tin cậy ở cạnh bạn. Bạn có thể trả lời ngắn gọn: “đang nguy hiểm” hoặc “đang an toàn”.</p>
+      </div>
+    `;
+  }
+
+  function showCrisisSupport() {
+    if (crisisAlertBanner) {
+      crisisAlertBanner.style.display = "flex";
+    }
+    openModal({
+      icon: "!",
+      title: "Hỗ trợ khẩn cấp",
+      subtitle: "Bạn không cần phải tự xoay xở một mình.",
+      bodyHtml: crisisSupportMarkup(),
+      primaryBtnText: "Mình sẽ trả lời",
+      onPrimaryClick: () => chatInput?.focus()
+    });
+  }
+
   // =========================================================================
-  // 4. APP STATE & PERSISTENCE (ENCRYPTED MULTI-SESSION CHAT ENGINE)
+  // 4. APP STATE & PERSISTENCE (OBFUSCATED LOCAL CHAT HISTORY)
   // =========================================================================
   const SESSIONS_KEY = "an_nhien_all_sessions_v2";
   const CURRENT_SESS_ID_KEY = "an_nhien_current_session_id_v2";
@@ -470,7 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DEFAULT_MESSAGES = [
     {
       role: "model",
-      content: "Chào bạn, mình là **An Nhiên Tâm Lý**. Không gian ở đây hoàn toàn an toàn và riêng tư. Dù bạn đang gặp áp lực học tập, chuyện tình cảm hay những băn khoăn khó nói, mình luôn ở đây để lắng nghe và cùng bạn tháo gỡ dứt khoát. Hôm nay bạn đang bận lòng chuyện gì, hãy chia sẻ cùng mình nhé."
+      content: "Chào bạn, mình là **An Nhiên**. Bạn có thể chia sẻ điều đang làm mình bận lòng; mình sẽ lắng nghe và cùng bạn tìm một bước nhỏ phù hợp. Hạn chế gửi tên thật, địa chỉ hoặc thông tin nhận dạng nhé."
     }
   ];
 
@@ -478,7 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const raw = localStorage.getItem(SESSIONS_KEY);
       if (raw) {
-        const parsed = decryptLocalData(raw);
+        const parsed = deobfuscateLocalData(raw);
         if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
@@ -488,7 +559,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const oldSingle = localStorage.getItem(OLD_STORAGE_KEY);
       if (oldSingle) {
-        const parsedOld = decryptLocalData(oldSingle);
+        const parsedOld = deobfuscateLocalData(oldSingle);
         if (Array.isArray(parsedOld) && parsedOld.length > 1) {
           const firstUser = parsedOld.find(m => m.role === "user");
           const title = firstUser ? (firstUser.content.trim().slice(0, 32) + "...") : "Cuộc trò chuyện cũ";
@@ -499,8 +570,8 @@ document.addEventListener("DOMContentLoaded", () => {
             updatedAt: new Date().toISOString(),
             messages: parsedOld
           };
-          localStorage.setItem(SESSIONS_KEY, encryptLocalData([migratedSess]));
-          localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(migratedId));
+          localStorage.setItem(SESSIONS_KEY, obfuscateLocalData([migratedSess]));
+          localStorage.setItem(CURRENT_SESS_ID_KEY, obfuscateLocalData(migratedId));
           return [migratedSess];
         }
       }
@@ -510,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveAllSessions(sessions) {
     try {
-      localStorage.setItem(SESSIONS_KEY, encryptLocalData(sessions));
+      localStorage.setItem(SESSIONS_KEY, obfuscateLocalData(sessions));
     } catch (e) {
       console.warn("Lưu danh sách cuộc hội thoại thất bại:", e);
     }
@@ -518,10 +589,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getCurrentSessionId() {
     const raw = localStorage.getItem(CURRENT_SESS_ID_KEY);
-    let id = raw ? decryptLocalData(raw) : null;
+    let id = raw ? deobfuscateLocalData(raw) : null;
     if (!id || typeof id !== "string") {
       id = "sess_" + Date.now();
-      localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(id));
+      localStorage.setItem(CURRENT_SESS_ID_KEY, obfuscateLocalData(id));
     }
     return id;
   }
@@ -538,7 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveStoredMessages(messages) {
     try {
-      localStorage.setItem(OLD_STORAGE_KEY, encryptLocalData(messages));
+      localStorage.setItem(OLD_STORAGE_KEY, obfuscateLocalData(messages));
     } catch (e) {}
 
     const sessions = getAllSessions();
@@ -568,9 +639,17 @@ document.addEventListener("DOMContentLoaded", () => {
     saveAllSessions(sessions);
   }
 
+  function deleteAllLocalHistory() {
+    for (const key of [SESSIONS_KEY, CURRENT_SESS_ID_KEY, OLD_STORAGE_KEY]) {
+      localStorage.removeItem(key);
+    }
+    state.messages = [...DEFAULT_MESSAGES];
+    renderMessages();
+  }
+
   function createNewChatSession() {
     const newId = "sess_" + Date.now();
-    localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(newId));
+    localStorage.setItem(CURRENT_SESS_ID_KEY, obfuscateLocalData(newId));
     state.messages = [...DEFAULT_MESSAGES];
     saveStoredMessages(state.messages);
     renderMessages();
@@ -581,7 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sessions = getAllSessions();
     const target = sessions.find(s => s.id === sessionId);
     if (target) {
-      localStorage.setItem(CURRENT_SESS_ID_KEY, encryptLocalData(sessionId));
+      localStorage.setItem(CURRENT_SESS_ID_KEY, obfuscateLocalData(sessionId));
       state.messages = [...target.messages];
       renderMessages();
       showToast("Đã mở lại cuộc trò chuyện đã lưu.");
@@ -687,7 +766,12 @@ document.addEventListener("DOMContentLoaded", () => {
       document.documentElement.classList.toggle("a11y-high-contrast", enabled);
       if (highContrastBtn) {
         highContrastBtn.setAttribute("aria-pressed", enabled ? "true" : "false");
-        highContrastBtn.textContent = enabled ? "🔲 Tắt tăng tương phản" : "🔲 Tăng tương phản";
+        const label = highContrastBtn.querySelector(".sidebar-action-label");
+        if (label) {
+          label.textContent = enabled ? "Tắt tăng tương phản" : "Tăng tương phản";
+        } else {
+          highContrastBtn.textContent = enabled ? "🔲 Tắt tăng tương phản" : "🔲 Tăng tương phản";
+        }
       }
     };
 
@@ -918,23 +1002,23 @@ document.addEventListener("DOMContentLoaded", () => {
       openModal({
         icon: "📝",
         title: "Ý Nghĩa Thang Đo Tự Đánh Giá (GAD-7 & PHQ-9)",
-        subtitle: "Bộ công cụ trắc nghiệm chuẩn hóa y khoa quốc tế",
+        subtitle: "Công cụ tự sàng lọc, không phải chẩn đoán y khoa",
         bodyHtml: `
           <div style="display:flex; flex-direction:column; gap:14px;">
             <div style="background:var(--bg-page); padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <strong>📊 Thang đo GAD-7 (Generalized Anxiety Disorder 7):</strong>
               <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
-                Đo lường mức độ lo âu, bồn chồn và căng thẳng trong 2 tuần qua qua 7 câu hỏi tiêu chuẩn.
+                Sàng lọc triệu chứng lo âu tự báo cáo trong 2 tuần qua.
               </p>
             </div>
             <div style="background:var(--bg-page); padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <strong>🌧️ Thang đo PHQ-9 (Patient Health Questionnaire 9):</strong>
               <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
-                Sàng lọc mức độ trầm cảm và suy giảm năng lượng với 9 câu hỏi lâm sàng.
+                Sàng lọc triệu chứng tự báo cáo trong 2 tuần qua; không dùng để tự chẩn đoán.
               </p>
             </div>
             <div style="background:#FEF2F2; border:1px solid #FCA5A5; padding:12px 14px; border-radius:var(--radius-md); color:#991B1B; font-size:0.85rem;">
-              ⚠️ <em>Lưu ý quan trọng:</em> Bảng tự đánh giá mang tính chất tham khảo và phản tư cảm xúc, không thay thế chẩn đoán y khoa chính thức của bác sĩ chuyên khoa tâm thần.
+              ⚠️ <strong>Đây là công cụ SÀNG LỌC, KHÔNG PHẢI chẩn đoán y khoa.</strong> Nếu lo lắng về câu trả lời, hãy trao đổi với chuyên gia y tế.
             </div>
           </div>
         `,
@@ -953,15 +1037,15 @@ document.addEventListener("DOMContentLoaded", () => {
         bodyHtml: `
           <div style="display:flex; flex-direction:column; gap:14px;">
             <div>
-              <strong>🌬️ Phương Pháp Thở 4-7-8 (Tiến sĩ Andrew Weil):</strong>
+              <strong>🌬️ Phương Pháp Thở 4-7-8:</strong>
               <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
-                <strong>Hít vào 4 giây</strong> qua mũi ➔ <strong>Giữ hơi thở 7 giây</strong> ➔ <strong>Thở ra êm 8 giây</strong> qua miệng. Kỹ thuật này giúp hạ nhịp tim, giảm lượng cortisol và đưa não bộ vào trạng thái thư thái sâu.
+                Có thể thử hít vào 4 giây, giữ 7 giây, thở ra 8 giây theo hướng dẫn của Andrew Weil. Đây chỉ là bài tập thư giãn; hãy dừng nếu thấy chóng mặt hoặc khó chịu.
               </p>
             </div>
             <div>
-              <strong>📦 Kỹ Thuật Thở Vuông (Box Breathing - Navy SEALs):</strong>
+              <strong>📦 Kỹ Thuật Thở Vuông (Box Breathing):</strong>
               <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
-                <strong>Hít 4s - Giữ 4s - Thở 4s - Nghỉ 4s</strong>. Giúp tái tạo sự tập trung sắc bén và làm chủ tâm trí khi chịu áp lực cao.
+                Hít 4 giây, giữ 4 giây, thở 4 giây, nghỉ 4 giây. Điều chỉnh nhịp hoặc dừng nếu không thoải mái.
               </p>
             </div>
             <div>
@@ -969,6 +1053,14 @@ document.addEventListener("DOMContentLoaded", () => {
               <p style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
                 Bạn có thể nhắm mắt thư giãn hoàn toàn nhờ <strong>giọng đọc tiếng Việt</strong> và <strong>tiếng chuông thiền Tây Tạng</strong> hướng dẫn từng nhịp chuyển. Đồng thời chọn linh hoạt các mốc thời gian từ 1 đến 10 phút phù hợp với lịch trình của bạn.
               </p>
+            </div>
+            <div>
+              <strong>Nguồn tham khảo:</strong>
+              <ul>
+                <li><a href="https://www.drweil.com/videos-features/videos/breathing-exercises-4-7-8-breath/" target="_blank" rel="noopener">Andrew Weil — 4-7-8 breathing</a></li>
+                <li><a href="https://health.clevelandclinic.org/box-breathing-benefits" target="_blank" rel="noopener">Cleveland Clinic — Box breathing</a></li>
+                <li><a href="https://www.who.int/publications/i/item/9789240003927" target="_blank" rel="noopener">WHO — Doing What Matters in Times of Stress</a></li>
+              </ul>
             </div>
           </div>
         `,
@@ -1143,9 +1235,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const trimmedText = text.trim();
     closeSidebar();
 
-    if (checkCrisisKeywords(trimmedText) && crisisAlertBanner) {
-      crisisAlertBanner.style.display = "flex";
-      crisisAlertBanner.scrollIntoView({ behavior: "smooth" });
+    if (checkCrisisKeywords(trimmedText)) {
+      showCrisisSupport();
     }
 
     state.messages.push({ role: "user", content: trimmedText });
@@ -1324,7 +1415,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Interactive Gemini / ChatGPT Chat History Modal Engine
+  // Interactive chat history modal
   function showInteractiveHistoryModal() {
     const sessions = getAllSessions();
     const currId = getCurrentSessionId();
@@ -1379,7 +1470,7 @@ document.addEventListener("DOMContentLoaded", () => {
     openModal({
       icon: "📜",
       title: "Lịch Sử Trò Chuyện",
-      subtitle: "Danh sách tất cả cuộc trò chuyện đã lưu trữ (ChatGPT / Gemini Style)",
+      subtitle: "Danh sách các cuộc trò chuyện đã lưu trên thiết bị này",
       bodyHtml: modalBodyHtml,
       primaryBtnText: "Đóng ✨"
     });
@@ -1429,6 +1520,69 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnExportChat) {
     btnExportChat.addEventListener("click", () => {
       showInteractiveHistoryModal();
+    });
+  }
+
+  const btnPrivacyInfo = document.getElementById("btn-privacy-info");
+  if (btnPrivacyInfo) {
+    btnPrivacyInfo.addEventListener("click", () => {
+      openModal({
+        icon: "i",
+        title: "Quyền riêng tư & dữ liệu",
+        subtitle: "Thông tin hiện tại · cần rà soát pháp lý",
+        bodyHtml: `
+          <div class="privacy-notice">
+            <p><strong>Dữ liệu có được công khai không?</strong> Ứng dụng không đăng tải công khai nội dung trò chuyện, cảm xúc hoặc kết quả sàng lọc. Khi trò chuyện hoặc yêu cầu tóm tắt, nội dung liên quan được chuyển qua máy chủ ứng dụng đến dịch vụ xử lý trí tuệ nhân tạo bên ngoài. Khi yêu cầu đọc thành tiếng, nội dung cần đọc có thể được chuyển đến dịch vụ giọng nói bên ngoài.</p>
+            <p><strong>Lưu ở đâu và trong bao lâu?</strong> Lịch sử trò chuyện được lưu trên trình duyệt của thiết bị này cho đến khi bạn xóa. Máy chủ ứng dụng không lưu lịch sử trò chuyện, cảm xúc hay kết quả sàng lọc. Địa chỉ kết nối và thời điểm truy cập được giữ tạm thời để bảo vệ dịch vụ; hệ thống lưu trữ của đơn vị vận hành có thể giữ bản ghi riêng. Thời hạn lưu của dịch vụ bên ngoài và hệ thống vận hành hiện chưa được xác minh.</p>
+            <p><strong>Ai có thể truy cập?</strong> Người có quyền truy cập thiết bị này có thể xem lịch sử chưa xóa. Dịch vụ bên ngoài nhận phần nội dung cần thiết để thực hiện yêu cầu; nhân sự được cấp quyền có thể truy cập thông tin vận hành cần thiết. Lịch sử trên thiết bị không được mã hóa bảo mật.</p>
+            <p><strong>Xóa:</strong> “Xóa toàn bộ lịch sử” xóa lịch sử khỏi trình duyệt trên thiết bị hiện tại. Thao tác này không xóa bản sao lưu, bản ghi vận hành hoặc bản sao mà dịch vụ bên ngoài đã nhận.</p>
+            <p><a href="/static/privacy-policy.html?v=1.1" target="_blank" rel="noopener">Đọc chính sách quyền riêng tư</a> · <a href="/static/terms-of-use.html" target="_blank" rel="noopener">Điều khoản sử dụng</a></p>
+          </div>
+        `,
+        primaryBtnText: "Đã hiểu"
+      });
+    });
+  }
+
+  const btnHardDeleteHistory = document.getElementById("btn-hard-delete-history");
+  if (btnHardDeleteHistory) {
+    btnHardDeleteHistory.addEventListener("click", () => {
+      openConfirmModal({
+        icon: "!",
+        title: "Xóa toàn bộ lịch sử trên thiết bị này?",
+        subtitle: "Thao tác này không thể hoàn tác.",
+        bodyHtml: "<p>Lịch sử trò chuyện của ứng dụng sẽ bị xóa khỏi trình duyệt trên thiết bị hiện tại. Thao tác này không thể xóa bản sao mà dịch vụ bên ngoài đã nhận hoặc bản sao lưu của trình duyệt.</p>",
+        confirmText: "Xóa toàn bộ lịch sử",
+        cancelText: "Hủy",
+        isDanger: true,
+        onConfirm: async () => {
+          let localDeleted = false;
+          try {
+            deleteAllLocalHistory();
+            localDeleted = true;
+          } catch (error) {
+            console.error("Không thể xóa lịch sử cục bộ:", error);
+          }
+
+          let serverConfirmed = false;
+          try {
+            const response = await fetch("/api/privacy/data", { method: "DELETE" });
+            if (!response.ok) throw new Error(`Privacy endpoint returned ${response.status}`);
+            const result = await response.json();
+            serverConfirmed = result.server_retains_health_records === false;
+          } catch (error) {
+            console.error("Không thể xác nhận trạng thái dữ liệu máy chủ:", error);
+          }
+
+          if (localDeleted && serverConfirmed) {
+            showToast("Đã xóa lịch sử khỏi thiết bị; máy chủ ứng dụng không lưu bản sao.", "success");
+          } else if (localDeleted) {
+            showToast("Đã xóa lịch sử khỏi thiết bị; chưa xác nhận được trạng thái máy chủ.", "error");
+          } else {
+            showToast("Không thể xóa lịch sử khỏi thiết bị này.", "error");
+          }
+        }
+      });
     });
   }
 
@@ -1492,6 +1646,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const dataJson = await res.json();
       const data = JSON.parse(decodeB64(dataJson.d));
       state.allQuizzes = data.quizzes;
+      configureAudioTracks(data.audio_tracks || []);
 
       // Render Distortion Cards with Clickable Popup Details
       const grid = document.getElementById("distortion-grid");
@@ -1582,6 +1737,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="background:var(--bg-page); padding:16px; border-radius:var(--radius-md); font-size:0.9rem; line-height:1.7;">
               ${renderSafeMarkdown(a.content)}
             </div>
+            ${renderReferences(a.references)}
           </div>
         `).join("");
 
@@ -1602,6 +1758,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   <div style="font-size:0.95rem; line-height:1.8;">
                     ${renderSafeMarkdown(art.content)}
                   </div>
+                  ${renderReferences(art.references)}
                 </div>
               `,
               primaryBtnText: "💬 Thảo Luận Bài Viết Này",
@@ -1617,7 +1774,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Setup initial Quiz Data
       selectQuizType(state.activeQuizType);
 
-      // Render Reputable Psychological Facilities (Biên Hòa - Đồng Nai)
+      // Render psychological facilities in Đồng Nai
       state.facilities = data.facilities || [];
       renderFacilities(state.facilities, state.facilityFilter);
       setupFacilityFilters();
@@ -1626,6 +1783,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   loadKnowledge();
+
+  function configureAudioTracks(tracks) {
+    let enabledCount = 0;
+    tracks.forEach(track => {
+      const audio = document.getElementById(`audio-${track.id}`);
+      const item = document.getElementById(`sound-item-${track.id}`);
+      if (!audio || !item || !track.publishable || !track.source_url || !track.license) return;
+      audio.src = `/static/audio/${encodeURIComponent(track.file)}`;
+      audio.controls = true;
+      audio.hidden = false;
+      item.hidden = false;
+      const attribution = document.getElementById(`audio-attribution-${track.id}`);
+      if (attribution) {
+        attribution.textContent = `Nguồn: ${track.source_title || track.source_url}. Giấy phép: ${track.license}.`;
+        attribution.hidden = false;
+      }
+      enabledCount++;
+    });
+    const audioCard = document.getElementById("ambient-sounds-card");
+    if (audioCard) audioCard.hidden = enabledCount === 0;
+  }
+
+  function renderReferences(references) {
+    if (!Array.isArray(references) || references.length === 0) return "";
+    return `<div class="content-references"><strong>Tài liệu tham khảo</strong><ul>${references.map(reference => `
+      <li><a href="${escapeHTML(reference.url)}" target="_blank" rel="noopener">${escapeHTML(reference.title)}</a></li>
+    `).join("")}</ul></div>`;
+  }
 
   // --- Reputable Facilities Rendering & Filter Engine ---
   function renderFacilities(facilitiesList, filter = "all") {
@@ -1640,16 +1825,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filter === "tuyen_dau") {
       filtered = facilitiesList.filter(f => f.badge && (f.badge.includes("Tuyến") || f.category.includes("Trung ương") || f.category.includes("Tuyến Tỉnh")));
     } else if (filter === "ngoai_gio") {
-      filtered = facilitiesList.filter(f => (f.timing && f.timing.includes("ngoài giờ")) || (f.badge && f.badge.includes("Ngoài Giờ")) || (f.timing && f.timing.includes("17:00")) || (f.timing && f.timing.includes("24/7")));
+      filtered = facilitiesList.filter(f => (f.timing && f.timing.toLowerCase().includes("ngoài giờ")) || (f.badge && f.badge.toLowerCase().includes("ngoài giờ")) || (f.timing && f.timing.includes("17:00")) || (f.timing && f.timing.includes("24/7")));
     } else if (filter === "tre_em") {
       filtered = facilitiesList.filter(f => (f.category && f.category.includes("Nhi")) || (f.badge && f.badge.includes("Trẻ Em")) || (f.specialties && f.specialties.some(s => s.toLowerCase().includes("trẻ em") || s.toLowerCase().includes("học đường") || s.toLowerCase().includes("vị thành niên"))));
     }
 
-    grid.innerHTML = filtered.map(f => `
+    grid.innerHTML = filtered.map(f => {
+      const sources = Array.isArray(f.verification?.sources) ? f.verification.sources : [];
+      const sourceLinks = sources.map(source => `<a href="${escapeHTML(source.url)}" target="_blank" rel="noopener">${escapeHTML(source.label)}</a>`).join(" · ");
+      const websiteLabel = f.verification?.website_verified ? "Website chính thức" : "Website (chưa xác minh)";
+      return `
       <article class="facility-card" data-facility-id="${escapeHTML(f.id)}">
         <div class="facility-card-top">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-            <span class="facility-badge-tag">${escapeHTML(f.badge || "Uy Tín")}</span>
+          <div>
             <span class="facility-category-label">${escapeHTML(f.category)}</span>
           </div>
           <h4 class="facility-card-title">${escapeHTML(f.name)}</h4>
@@ -1657,22 +1845,52 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="facility-info-list">
               <div class="facility-info-item">
                 <span class="item-icon">📍</span>
-                <span><strong>Địa chỉ:</strong> ${escapeHTML(f.address)}</span>
+                <span><strong>Địa chỉ:</strong> ${f.address ? escapeHTML(f.address) : "Đang xác minh theo đơn vị hành chính hiện hành."}</span>
               </div>
               <div class="facility-info-item">
                 <span class="item-icon">⏰</span>
-                <span><strong>Thời gian:</strong> ${escapeHTML(f.timing)}</span>
+                <span><strong>Giờ làm:</strong> ${f.timing
+                  ? escapeHTML(f.timing)
+                  : f.reported_timing
+                    ? escapeHTML(f.reported_timing)
+                    : "Chưa được xác minh; vui lòng kiểm tra với cơ sở."}</span>
               </div>
               <div class="facility-info-item">
                 <span class="item-icon">📞</span>
-                <span><strong>Hotline/SĐT:</strong> <a href="tel:${escapeHTML(f.phone.replace(/[^0-9]/g, ''))}" style="color:var(--primary); font-weight:700;">${escapeHTML(f.phone)}</a></span>
+                <span><strong>${escapeHTML(f.phone_label || "Điện thoại")}:</strong> ${f.phone ? `<a href="tel:${escapeHTML(f.phone.replace(/[^0-9]/g, ''))}" style="color:var(--primary); font-weight:700;">${escapeHTML(f.phone)}</a>` : "Chưa được xác minh; không hiển thị số cũ."}</span>
               </div>
+              ${f.hotline ? `
+                <div class="facility-info-item">
+                  <span class="item-icon">📞</span>
+                  <span><strong>Hotline:</strong> <a href="tel:${escapeHTML(f.hotline.replace(/[^0-9]/g, ''))}" style="color:var(--primary); font-weight:700;">${escapeHTML(f.hotline)}</a></span>
+                </div>
+              ` : ""}
+              ${f.email ? `
+                <div class="facility-info-item">
+                  <span class="item-icon">✉️</span>
+                  <span><strong>Email:</strong> <a href="mailto:${escapeHTML(f.email)}">${escapeHTML(f.email)}</a></span>
+                </div>
+              ` : ""}
+              ${f.website ? `
+                <div class="facility-info-item">
+                  <span class="item-icon">🌐</span>
+                  <span><strong>${websiteLabel}:</strong> <a href="${escapeHTML(f.website)}" target="_blank" rel="noopener">${escapeHTML(f.website.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a></span>
+                </div>
+              ` : ""}
+              ${sourceLinks ? `
+                <div class="facility-info-item">
+                  <span class="item-icon">↗</span>
+                  <span><strong>Nguồn đối chiếu:</strong> ${sourceLinks}</span>
+                </div>
+              ` : ""}
             </div>
 
             <div class="facility-specialties-box">
               <div class="facility-specialties-title">Lĩnh vực & Thế mạnh chuyên sâu:</div>
               <div class="facility-tags-wrap">
-                ${(f.specialties || []).map(s => `<span class="facility-tag">${escapeHTML(s)}</span>`).join("")}
+                ${(f.specialties || []).length
+                  ? f.specialties.map(s => `<span class="facility-tag">${escapeHTML(s)}</span>`).join("")
+                  : `<span class="facility-tag">Chưa được xác minh</span>`}
               </div>
             </div>
 
@@ -1688,15 +1906,14 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="facility-actions-bar">
-          <a href="tel:${escapeHTML(f.phone.replace(/[^0-9]/g, ''))}" class="btn-facility-call">
-            📞 Gọi Tư Vấn
-          </a>
+          ${f.phone ? `<a href="tel:${escapeHTML(f.phone.replace(/[^0-9]/g, ''))}" class="btn-facility-call">Gọi cơ sở</a>` : `<span class="btn-facility-call facility-call-disabled" aria-disabled="true">Điện thoại chưa xác minh</span>`}
           <button class="btn-facility-ask" data-name="${escapeHTML(f.name)}">
             💬 Hỏi An Nhiên
           </button>
         </div>
       </article>
-    `).join("");
+    `;
+    }).join("");
 
     grid.querySelectorAll(".facility-expand-btn").forEach(btn => {
       btn.addEventListener("click", (event) => {
@@ -1712,7 +1929,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", () => {
         const name = btn.getAttribute("data-name");
         activateTab("tab-chat");
-        sendMessage(`Mình đang tìm hiểu về "${name}" tại Biên Hòa để đi khám tâm lý. An Nhiên có thể tư vấn giúp mình cần chuẩn bị những gì trước khi đi và những lưu ý quan trọng không?`);
+        sendMessage(`Mình đang tìm hiểu về "${name}" tại Đồng Nai để đi khám tâm lý. An Nhiên có thể tư vấn giúp mình cần chuẩn bị những gì trước khi đi và những lưu ý quan trọng không?`);
       });
     });
   }
@@ -1828,9 +2045,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const isPHQ9 = state.activeQuizType === "phq9" || (qData.id === "phq9");
     const item9Score = (isPHQ9 && state.quizState.answers.length >= 9) ? state.quizState.answers[8] : 0;
 
-    if (item9Score >= 1 && crisisAlertBanner) {
-      crisisAlertBanner.style.display = "flex";
-      crisisAlertBanner.scrollIntoView({ behavior: "smooth" });
+    if (item9Score > 0) {
+      showCrisisSupport();
     }
 
     let bracket = qData.brackets[0];
@@ -1845,10 +2061,10 @@ document.addEventListener("DOMContentLoaded", () => {
     badge.textContent = totalScore;
     const maxValEl = document.getElementById("quiz-score-max-val");
     if (maxValEl) maxValEl.textContent = maxScore;
-    badge.style.color = (item9Score >= 1 && bracket.color === "#10B981") ? "#EA580C" : bracket.color;
+    badge.style.color = item9Score > 0 && bracket.color === "#10B981" ? "#EA580C" : bracket.color;
 
-    document.getElementById("quiz-level-text").textContent = bracket.level;
-    document.getElementById("quiz-level-text").style.color = (item9Score >= 1 && bracket.color === "#10B981") ? "#EA580C" : bracket.color;
+    document.getElementById("quiz-level-text").textContent = item9Score > 0 ? "Cần hỗ trợ ngay" : bracket.level;
+    document.getElementById("quiz-level-text").style.color = item9Score > 0 ? "#EA580C" : bracket.color;
 
     // Render Real Clinical Symptom Radar Chart
     try {
@@ -1857,18 +2073,25 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("[Radar] Error rendering radar chart:", e);
     }
 
-    let adviceHtml = `
-      <div style="margin-bottom: 10px;">
-        <strong style="color:var(--primary); font-size:1.05rem;">🌿 Lời khuyên & Định hướng dành cho bạn:</strong>
-        <p style="margin-top:6px; line-height:1.7; color:var(--text-color);">${escapeHTML(bracket.advice)}</p>
-      </div>
-    `;
-    if (item9Score >= 1 || totalScore >= (maxScore * 0.65)) {
-      adviceHtml += `
-        <div style="margin-top:12px; padding:10px 14px; background:rgba(0,0,0,0.02); border-left:3px solid var(--primary); border-radius:4px; font-size:0.84rem; color:var(--text-muted); line-height:1.6;">
-          📌 <em><strong>Lưu ý thêm:</strong> Nếu bạn cảm thấy cần thêm người lắng nghe hoặc hỗ trợ trực tiếp, bạn luôn có thể tâm sự với người thân hoặc liên hệ Tổng đài Quốc gia <strong>111</strong> (miễn phí), <strong>115</strong> hoặc Đường dây Ngày Mai <strong>096 306 1414</strong> bất cứ lúc nào nhé.</em>
+    let adviceHtml = item9Score > 0
+      ? `<section role="alert" class="phq9-crisis-result"><h4>Câu trả lời này cần được quan tâm ngay</h4>${crisisSupportMarkup()}</section>`
+      : `
+        <div style="margin-bottom: 10px;">
+          <strong style="color:var(--primary); font-size:1.05rem;">Gợi ý tham khảo:</strong>
+          <p style="margin-top:6px; line-height:1.7; color:var(--text-color);">${escapeHTML(bracket.advice)}</p>
         </div>
       `;
+    if (item9Score === 0 && totalScore >= (maxScore * 0.65)) {
+      adviceHtml += `
+        <div style="margin-top:12px; padding:10px 14px; background:rgba(0,0,0,0.02); border-left:3px solid var(--primary); border-radius:4px; font-size:0.84rem; color:var(--text-muted); line-height:1.6;">
+          Nếu bạn cần hỗ trợ trực tiếp, hãy nói với người lớn đáng tin cậy hoặc liên hệ một cơ sở y tế.
+        </div>
+      `;
+    }
+    adviceHtml += `<p class="screening-disclaimer"><strong>${escapeHTML(qData.disclaimer || "Đây là công cụ SÀNG LỌC, KHÔNG PHẢI chẩn đoán y khoa.")}</strong></p>`;
+    if (isPHQ9 && qData.translation_note) {
+      adviceHtml += `<p class="screening-source-note">${escapeHTML(qData.translation_note)}</p>`;
+      adviceHtml += `<ul class="screening-sources">${(qData.sources || []).map(source => `<li><a href="${escapeHTML(source.url)}" target="_blank" rel="noopener">${escapeHTML(source.title)}</a></li>`).join("")}</ul>`;
     }
     document.getElementById("quiz-advice-text").innerHTML = adviceHtml;
 
@@ -2112,6 +2335,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function playTtsFallback(text) {
+    let objectUrl = null;
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+      if (!response.ok) throw new Error(`TTS request failed with status ${response.status}`);
+      objectUrl = URL.createObjectURL(await response.blob());
+      const fallbackAudio = new Audio(objectUrl);
+      activeVoiceAudio = fallbackAudio;
+      fallbackAudio.addEventListener("ended", () => URL.revokeObjectURL(objectUrl), { once: true });
+      await fallbackAudio.play();
+    } catch (error) {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      console.warn("Không thể phát giọng đọc dự phòng.");
+      showToast("Không thể phát giọng đọc lúc này.", "error");
+    }
+  }
+
   function playVietnameseFemaleVoice(audioKey, fallbackText = "") {
     if (state.breathingSoundMode !== "voice_bell") return;
     stopAllVoiceAudio();
@@ -2124,17 +2368,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const p = audioObj.play();
       if (p !== undefined) {
         p.catch(() => {
-          if (fallbackText) {
-            const fallbackAudio = new Audio(`/api/tts?text=${encodeURIComponent(fallbackText)}`);
-            activeVoiceAudio = fallbackAudio;
-            fallbackAudio.play().catch(() => {});
-          }
+          if (fallbackText) void playTtsFallback(fallbackText);
         });
       }
     } else if (fallbackText) {
-      const fallbackAudio = new Audio(`/api/tts?text=${encodeURIComponent(fallbackText)}`);
-      activeVoiceAudio = fallbackAudio;
-      fallbackAudio.play().catch(() => {});
+      void playTtsFallback(fallbackText);
     }
   }
 

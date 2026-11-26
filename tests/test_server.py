@@ -136,18 +136,36 @@ def test_get_client_ip_proxy_header(monkeypatch):
     assert get_client_ip(req) == "203.0.113.195"
 
 
-def test_tts_empty_query():
-    response = client.get("/api/tts?text=")
+def test_tts_rejects_empty_text():
+    response = client.post("/api/tts", json={"text": ""})
     assert response.status_code == 400
 
 
-def test_tts_cached_response():
-    import server
-    server.tts_cache["test_phrase"] = b"fake_mp3_content_bytes"
-    response = client.get("/api/tts?text=test_phrase")
+def test_tts_response_is_not_cached(monkeypatch):
+    import httpx
+
+    class FakeResponse:
+        status_code = 200
+        content = b"fake_mp3_content_bytes" * 30
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def get(self, *args, **kwargs):
+            return FakeResponse()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    response = client.post("/api/tts", json={"text": "test phrase"})
     assert response.status_code == 200
     assert response.headers["content-type"] == "audio/mpeg"
-    assert response.content == b"fake_mp3_content_bytes"
+    assert response.content == FakeResponse.content
 
 
 def test_facilities_endpoint():
@@ -155,15 +173,74 @@ def test_facilities_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
-    assert data["count"] >= 5
-    assert len(data["data"]) >= 5
+    assert data["count"] == 6
+    assert len(data["data"]) == 6
 
     # Filter by bien_hoa location
     res_bh = client.get("/api/facilities?location=bien_hoa")
     assert res_bh.status_code == 200
     data_bh = res_bh.json()
     assert data_bh["status"] == "success"
-    assert data_bh["count"] >= 5
+    assert data_bh["count"] == 6
     for item in data_bh["data"]:
         assert item["location"] == "bien_hoa"
+        verification = item["verification"]
+        if verification["address_verified"]:
+            assert item["address"] is not None
+        else:
+            assert item["address"] is None
+        if verification["phone_verified"]:
+            assert item["phone"] is not None
+        else:
+            assert item["phone"] is None
+
+    minh_tri = next(item for item in data_bh["data"] if item["id"] == "pk_tamly_minhtri")
+    assert minh_tri["phone"] == "0251 3685 676"
+    assert minh_tri["email"] == "minhtricare@gmail.com"
+
+    central_hospital = next(item for item in data_bh["data"] if item["id"] == "bv_tamthan_tw2")
+    assert central_hospital["address"].startswith("Số 1310")
+    assert central_hospital["phone"] == "0251 3822 965"
+    assert central_hospital["timing"] is None
+    assert central_hospital["reported_timing"] == "Khám ngoại trú theo lịch bác sĩ, thứ Hai - thứ Sáu"
+
+
+def test_crisis_chat_bypasses_ai_and_returns_safety_response(monkeypatch):
+    import server
+    from core.crisis import CRISIS_RESPONSE
+
+    async def forbidden_provider_call(*args, **kwargs):
+        raise AssertionError("Crisis responses must not call the AI provider")
+
+    monkeypatch.setattr(server.engine, "async_stream_chat", forbidden_provider_call)
+    payload = b64_encode_text(json.dumps({
+        "messages": [{"role": "user", "content": "Mọi người sẽ nhẹ nhõm khi không có mình"}]
+    }))
+    response = client.post("/api/chat", json={"p": payload})
+    assert response.status_code == 200
+    assert "text/event-stream" in response.headers["content-type"]
+    assert b64_encode_text(CRISIS_RESPONSE) in response.text
+
+
+def test_privacy_delete_receipt_and_shared_data_apis_removed():
+    response = client.delete("/api/privacy/data")
+    assert response.status_code == 200
+    assert response.json()["server_records_deleted"] == 0
+    assert response.json()["server_retains_health_records"] is False
+
+    assert client.get("/api/sessions").status_code == 404
+    assert client.get("/api/moods").status_code == 404
+    assert client.get("/api/quizzes/results").status_code == 404
+
+
+def test_unlicensed_audio_is_not_served():
+    response = client.get("/static/audio/rain.mp3")
+    assert response.status_code == 404
+
+
+def test_accessibility_and_privacy_controls_are_present():
+    response = client.get("/")
+    assert 'role="alert" aria-live="assertive"' in response.text
+    assert 'id="btn-hard-delete-history"' in response.text
+    assert 'id="audio-rain" preload="none"' in response.text
 

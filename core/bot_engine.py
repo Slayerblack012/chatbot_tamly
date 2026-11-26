@@ -37,7 +37,7 @@ Nếu bạn cần hỗ trợ khẩn cấp, hãy liên hệ 115 hoặc dịch v�
 AUTH_FAILURE_MESSAGE = "An Nhiên hiện chưa thể kết nối an toàn vì thông tin API Key cần được cập nhật. Bạn vui lòng thử lại sau ít phút nhé."
 TEMPORARY_FALLBACK_MESSAGE = "Mình đang gặp một chút gián đoạn nhỏ trong lúc phản hồi. Bạn gửi lại hoặc nhấn gửi một lần nữa nhé, mình vẫn ở đây để tiếp tục cùng bạn."
 PARTIAL_REPLY_FALLBACK = "Mình vừa dừng phần còn lại của câu trả lời do kết nối không ổn định. Hãy gửi lại câu hỏi này, hoặc nhấn gửi lại lần nữa để mình phản hồi hoàn chỉnh nhé."
-CHAT_MAX_OUTPUT_TOKENS = 2048
+CHAT_MAX_OUTPUT_TOKENS = 450
 
 
 def is_quota_error(error: Exception | str) -> bool:
@@ -189,7 +189,10 @@ class CounselorEngine:
             logger.warning("Đã chuyển sang API key Gemini dự phòng.")
             return True
         except Exception as exc:
-            logger.warning("API key Gemini dự phòng không thể khởi tạo: %s", exc)
+            logger.warning(
+                "API key Gemini dự phòng không thể khởi tạo (%s).",
+                type(exc).__name__,
+            )
             return False
 
     def reload(self) -> bool:
@@ -321,18 +324,20 @@ class CounselorEngine:
                 if has_yielded:
                     if is_model_overloaded_error(exc):
                         logger.warning(
-                            "Model %s quá tải sau khi đã gửi một phần câu trả lời: %s",
+                            "Model %s quá tải sau khi đã gửi một phần câu trả lời (%s).",
                             target_model,
-                            exc,
+                            type(exc).__name__,
                         )
                     else:
                         logger.error(
-                            "Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.",
-                            exc_info=True,
+                            "Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu (%s).",
+                            type(exc).__name__,
                         )
                     yield PARTIAL_REPLY_FALLBACK
                     return
-                logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
+                logger.warning(
+                    "Lỗi khi gọi model %s (%s).", target_model, type(exc).__name__
+                )
                 if is_quota_error(exc):
                     self._try_next_api_key()
                 elif is_auth_error(exc):
@@ -346,7 +351,9 @@ class CounselorEngine:
                     break
                 continue
 
-        logger.error(f"Tất cả model Gemini đều thất bại: {last_err}")
+        logger.error(
+            "Tất cả model Gemini đều thất bại (%s).", type(last_err).__name__
+        )
         yield get_fallback_message(last_err)
 
     def stream_chat(
@@ -401,18 +408,20 @@ class CounselorEngine:
                 if has_yielded:
                     if is_model_overloaded_error(exc):
                         logger.warning(
-                            "Model %s quá tải sau khi đã gửi một phần câu trả lời: %s",
+                            "Model %s quá tải sau khi đã gửi một phần câu trả lời (%s).",
                             target_model,
-                            exc,
+                            type(exc).__name__,
                         )
                     else:
                         logger.error(
-                            "Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu.",
-                            exc_info=True,
+                            "Sự cố stream ngắt quãng giữa chừng khi đã gửi dữ liệu (%s).",
+                            type(exc).__name__,
                         )
                     yield PARTIAL_REPLY_FALLBACK
                     return
-                logger.warning(f"Lỗi khi gọi model {target_model}: {exc}")
+                logger.warning(
+                    "Lỗi khi gọi model %s (%s).", target_model, type(exc).__name__
+                )
                 if is_quota_error(exc):
                     self._try_next_api_key()
                 elif is_auth_error(exc):
@@ -461,7 +470,11 @@ class CounselorEngine:
                     self.active_model = target_model
                     return response.text
             except Exception as e:
-                logger.warning(f"Lỗi khi tạo summary với model {target_model}: {e}")
+                logger.warning(
+                    "Lỗi khi tạo summary với model %s (%s).",
+                    target_model,
+                    type(e).__name__,
+                )
                 continue
 
         return "Không thể tạo tóm tắt lúc này."
@@ -490,7 +503,11 @@ class CounselorEngine:
                     self.active_model = target_model
                     return response.text
             except Exception as exc:
-                logger.warning("Lỗi khi tạo summary với model %s: %s", target_model, exc)
+                logger.warning(
+                    "Lỗi khi tạo summary với model %s (%s).",
+                    target_model,
+                    type(exc).__name__,
+                )
                 continue
 
         return "Không thể tạo tóm tắt lúc này."

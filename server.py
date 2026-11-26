@@ -1,6 +1,5 @@
 import base64
 import binascii
-import datetime
 import json
 import logging
 import os
@@ -26,7 +25,15 @@ from core.bot_engine import (
     get_fallback_message,
     sanitize_messages_for_gemini,
 )
-from core.knowledge_base import ASSESSMENT_QUIZZES, COGNITIVE_DISTORTIONS, PSYCHOEDU_ARTICLES, PSYCHOLOGICAL_FACILITIES
+from core.crisis import CRISIS_RESPONSE, is_crisis_message, latest_user_message
+from core.knowledge_base import (
+    ASSESSMENT_QUIZZES,
+    AUDIO_TRACKS,
+    BREATHING_REFERENCES,
+    COGNITIVE_DISTORTIONS,
+    PSYCHOEDU_ARTICLES,
+    PSYCHOLOGICAL_FACILITIES,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -54,7 +61,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -108,10 +115,13 @@ def get_client_ip(request: Request) -> str:
 
 def check_rate_limit(client_ip: str) -> None:
     now = time.time()
+    for known_ip, timestamps in list(request_history.items()):
+        if not timestamps or now - timestamps[-1] >= RATE_LIMIT_WINDOW:
+            request_history.pop(known_ip, None)
     valid_timestamps = [t for t in request_history[client_ip] if now - t < RATE_LIMIT_WINDOW]
     if len(valid_timestamps) >= MAX_REQUESTS_PER_WINDOW:
         request_history[client_ip] = valid_timestamps
-        logger.warning(f"Rate limit triggered for IP: {client_ip}")
+        logger.warning("Rate limit triggered.")
         raise HTTPException(
             status_code=429,
             detail="Yêu cầu quá nhanh. Vui lòng thử lại sau giây lát."
@@ -131,8 +141,8 @@ def check_rate_limit(client_ip: str) -> None:
 try:
     engine = CounselorEngine()
 except Exception as exc:
-    logger.error(f"Lỗi khởi tạo CounselorEngine: {exc}", exc_info=True)
-    raise RuntimeError("GEMINI_API_KEY không hợp lệ hoặc thiếu. Kiểm tra file .env") from exc
+    logger.error("Lỗi khởi tạo CounselorEngine (%s).", type(exc).__name__)
+    raise RuntimeError("GEMINI_API_KEY không hợp lệ hoặc thiếu. Kiểm tra file .env") from None
 
 
 def b64_decode_json(encoded_str: str) -> Dict[str, Any]:
@@ -140,7 +150,7 @@ def b64_decode_json(encoded_str: str) -> Dict[str, Any]:
         raw_bytes = base64.b64decode(encoded_str, validate=True)
         payload = json.loads(raw_bytes.decode("utf-8"))
     except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        logger.warning("Lỗi giải mã Base64 payload: %s", exc)
+        logger.warning("Lỗi giải mã Base64 payload (%s).", type(exc).__name__)
         raise HTTPException(status_code=400, detail="Dữ liệu truyền tải không hợp lệ.")
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Dữ liệu truyền tải không hợp lệ.")
@@ -151,8 +161,12 @@ def b64_encode_text(text: str) -> str:
     return base64.b64encode(text.encode("utf-8")).decode("utf-8")
 
 
-class EncryptedPayload(BaseModel):
+class Base64Payload(BaseModel):
     p: str = Field(..., min_length=1, max_length=150000)
+
+
+class TTSRequest(BaseModel):
+    text: str = Field(..., max_length=200)
 
 
 @app.get("/api/health")
@@ -174,7 +188,9 @@ async def get_knowledge():
         "distortions": COGNITIVE_DISTORTIONS,
         "articles": PSYCHOEDU_ARTICLES,
         "quizzes": ASSESSMENT_QUIZZES,
-        "facilities": PSYCHOLOGICAL_FACILITIES
+        "facilities": PSYCHOLOGICAL_FACILITIES,
+        "audio_tracks": AUDIO_TRACKS,
+        "breathing_references": BREATHING_REFERENCES,
     }
     encoded = b64_encode_text(json.dumps(payload_data, ensure_ascii=False))
     return {"d": encoded}
@@ -182,13 +198,15 @@ async def get_knowledge():
 
 @app.get("/api/facilities", tags=["Psychological Facilities Directory"])
 async def get_facilities(location: Optional[str] = None):
-    """[READ] Lấy danh bạ cơ sở khám & tham vấn tâm lý uy tín theo địa phương (mặc định: Biên Hòa, Đồng Nai)."""
+    """Return directory entries with field-level verification; unverified details remain withheld."""
     facilities = PSYCHOLOGICAL_FACILITIES
     if location:
         loc = location.strip().lower()
         facilities = [
             f for f in facilities
-            if f.get("location") == loc or loc in f.get("city", "").lower() or loc in f.get("province", "").lower()
+            if f.get("location") == loc
+            or loc in str(f.get("city") or "").lower()
+            or loc in str(f.get("province") or "").lower()
         ]
     return {
         "status": "success",
@@ -199,8 +217,8 @@ async def get_facilities(location: Optional[str] = None):
 
 
 @app.post("/api/chat")
-async def chat_stream(payload: EncryptedPayload, request: Request):
-    """Xử lý chat thời gian thực qua Base64 Encoded Async SSE Stream (Non-blocking)."""
+async def chat_stream(payload: Base64Payload, request: Request):
+    """Stream chat responses and intercept configured crisis phrases before provider use."""
     client_ip = get_client_ip(request)
     check_rate_limit(client_ip)
 
@@ -221,6 +239,18 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
     clean_messages = sanitize_messages_for_gemini(recent_raw)
     if not clean_messages:
         raise HTTPException(status_code=400, detail="Nội dung tin nhắn không hợp lệ.")
+
+    if is_crisis_message(latest_user_message(recent_raw)):
+        async def crisis_event_generator():
+            encoded = b64_encode_text(CRISIS_RESPONSE)
+            yield f"data: {json.dumps({'d': encoded, 'f': 0})}\n\n"
+            yield f"data: {json.dumps({'d': '', 'f': 1})}\n\n"
+
+        return StreamingResponse(
+            crisis_event_generator(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
+        )
 
     if not engine.is_ready():
         engine.reload()
@@ -267,7 +297,7 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
 
             yield f"data: {json.dumps({'d': '', 'f': 1})}\n\n"
         except Exception as exc:
-            logger.error(f"Lỗi trong async event_generator: {exc}", exc_info=True)
+            logger.error("Lỗi trong async event_generator (%s).", type(exc).__name__)
             err_msg = b64_encode_text(get_fallback_message(exc))
             yield f"data: {json.dumps({'d': err_msg, 'f': 1})}\n\n"
 
@@ -284,8 +314,8 @@ async def chat_stream(payload: EncryptedPayload, request: Request):
 
 
 @app.post("/api/summary")
-async def generate_summary(payload: EncryptedPayload, request: Request):
-    """Tạo bản đúc kết lời nhắn nhủ (được mã hóa Base64)."""
+async def generate_summary(payload: Base64Payload, request: Request):
+    """Generate a summary from Base64-encoded conversation data."""
     client_ip = get_client_ip(request)
     check_rate_limit(client_ip)
 
@@ -307,147 +337,23 @@ async def generate_summary(payload: EncryptedPayload, request: Request):
 
 
 
-db_sessions: Dict[str, Dict[str, Any]] = {}
-db_moods: List[Dict[str, Any]] = []
-db_quiz_results: List[Dict[str, Any]] = []
-
-class SessionCreateRequest(BaseModel):
-    title: str = Field(default="Cuộc trò chuyện mới", max_length=100)
-    messages: List[Dict[str, Any]] = Field(default_factory=list)
-
-class SessionUpdateRequest(BaseModel):
-    title: Optional[str] = Field(None, max_length=100)
-    messages: Optional[List[Dict[str, Any]]] = None
-
-class MoodCreateRequest(BaseModel):
-    mood: str = Field(..., max_length=50)
-    stress_level: int = Field(..., ge=1, le=10)
-    note: Optional[str] = Field(None, max_length=500)
-
-class QuizResultCreateRequest(BaseModel):
-    quiz_type: str = Field(..., max_length=20)
-    score: int = Field(..., ge=0, le=30)
-    severity: str = Field(..., max_length=100)
-    advice: Optional[str] = Field(None, max_length=1000)
-
-
-@app.get("/api/sessions", tags=["Chat Sessions CRUD"])
-async def get_all_sessions():
-    """[READ ALL] Lấy danh sách tất cả các cuộc trò chuyện đã lưu."""
-    sessions_list = list(db_sessions.values())
-    sessions_list.sort(key=lambda x: x.get("updatedAt", ""), reverse=True)
-    return {"status": "success", "count": len(sessions_list), "data": sessions_list}
-
-@app.post("/api/sessions", tags=["Chat Sessions CRUD"], status_code=201)
-async def create_session(req: SessionCreateRequest):
-    """[CREATE] Tạo một phiên trò chuyện mới."""
-    session_id = f"sess_{int(time.time() * 1000)}"
-    now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    session_data = {
-        "id": session_id,
-        "title": req.title,
-        "createdAt": now_str,
-        "updatedAt": now_str,
-        "messages": req.messages if req.messages else []
+@app.delete("/api/privacy/data", tags=["Privacy"])
+async def delete_server_data():
+    """Confirm that no chat, mood, or assessment records are retained by this application server."""
+    return {
+        "status": "complete",
+        "server_records_deleted": 0,
+        "server_retains_health_records": False,
+        "note": "The app server does not store user chat, mood, or quiz records. Data already sent to the AI provider is outside this endpoint's control."
     }
-    db_sessions[session_id] = session_data
-    return {"status": "success", "message": "Đã tạo phiên chat mới thành công", "data": session_data}
-
-@app.get("/api/sessions/{session_id}", tags=["Chat Sessions CRUD"])
-async def get_session_by_id(session_id: str):
-    """[READ ONE] Lấy thông tin chi tiết một phiên trò chuyện theo ID."""
-    if session_id not in db_sessions:
-        raise HTTPException(status_code=404, detail="Không tìm thấy phiên trò chuyện.")
-    return {"status": "success", "data": db_sessions[session_id]}
-
-@app.put("/api/sessions/{session_id}", tags=["Chat Sessions CRUD"])
-async def update_session(session_id: str, req: SessionUpdateRequest):
-    """[UPDATE] Cập nhật tiêu đề hoặc tin nhắn của phiên chat."""
-    if session_id not in db_sessions:
-        raise HTTPException(status_code=404, detail="Không tìm thấy phiên trò chuyện.")
-    sess = db_sessions[session_id]
-    if req.title is not None:
-        sess["title"] = req.title
-    if req.messages is not None:
-        sess["messages"] = req.messages
-    sess["updatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    return {"status": "success", "message": "Đã cập nhật phiên chat", "data": sess}
-
-@app.delete("/api/sessions/{session_id}", tags=["Chat Sessions CRUD"])
-async def delete_session(session_id: str):
-    """[DELETE] Xóa một phiên trò chuyện khỏi hệ thống."""
-    if session_id not in db_sessions:
-        raise HTTPException(status_code=404, detail="Không tìm thấy phiên trò chuyện.")
-    del db_sessions[session_id]
-    return {"status": "success", "message": f"Đã xóa thành công phiên chat {session_id}"}
 
 
-@app.get("/api/moods", tags=["Mood Logs CRUD"])
-async def get_all_mood_logs():
-    """[READ ALL] Lấy toàn bộ nhật ký cảm xúc & mức độ áp lực."""
-    return {"status": "success", "count": len(db_moods), "data": db_moods}
-
-@app.post("/api/moods", tags=["Mood Logs CRUD"], status_code=201)
-async def create_mood_log(req: MoodCreateRequest):
-    """[CREATE] Ghi nhận nhật ký tâm trạng mới."""
-    mood_id = f"mood_{int(time.time() * 1000)}"
-    entry = {
-        "id": mood_id,
-        "mood": req.mood,
-        "stressLevel": req.stress_level,
-        "note": req.note,
-        "createdAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
-    }
-    db_moods.insert(0, entry)
-    return {"status": "success", "message": "Đã ghi nhận nhật ký cảm xúc", "data": entry}
-
-@app.delete("/api/moods/{mood_id}", tags=["Mood Logs CRUD"])
-async def delete_mood_log(mood_id: str):
-    """[DELETE] Xóa một bản ghi nhật ký cảm xúc."""
-    global db_moods
-    db_moods = [m for m in db_moods if m.get("id") != mood_id]
-    return {"status": "success", "message": f"Đã xóa bản ghi tâm trạng {mood_id}"}
-
-
-@app.get("/api/quizzes/results", tags=["Quiz Results CRUD"])
-async def get_all_quiz_results():
-    """[READ ALL] Lấy lịch sử kết quả trắc nghiệm tâm lý (GAD-7 / PHQ-9)."""
-    return {"status": "success", "count": len(db_quiz_results), "data": db_quiz_results}
-
-@app.post("/api/quizzes/results", tags=["Quiz Results CRUD"], status_code=201)
-async def create_quiz_result(req: QuizResultCreateRequest):
-    """[CREATE] Lưu bản ghi kết quả đánh giá trắc nghiệm mới."""
-    result_id = f"quiz_{int(time.time() * 1000)}"
-    record = {
-        "id": result_id,
-        "quizType": req.quiz_type,
-        "score": req.score,
-        "severity": req.severity,
-        "advice": req.advice,
-        "createdAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
-    }
-    db_quiz_results.insert(0, record)
-    return {"status": "success", "message": "Đã lưu kết quả trắc nghiệm", "data": record}
-
-@app.delete("/api/quizzes/results/{result_id}", tags=["Quiz Results CRUD"])
-async def delete_quiz_result(result_id: str):
-    """[DELETE] Xóa một kết quả trắc nghiệm."""
-    global db_quiz_results
-    db_quiz_results = [q for q in db_quiz_results if q.get("id") != result_id]
-    return {"status": "success", "message": f"Đã xóa kết quả trắc nghiệm {result_id}"}
-
-
-tts_cache: Dict[str, bytes] = {}
-
-@app.get("/api/tts", tags=["Voice Engine"])
-async def get_vietnamese_tts(text: str):
-    """Phục vụ giọng đọc nữ tiếng Việt chất lượng cao chuẩn ngữ điệu."""
-    if not text or len(text.strip()) == 0:
+@app.post("/api/tts", tags=["Voice Engine"])
+async def get_vietnamese_tts(payload: TTSRequest):
+    """Request Vietnamese speech from the external TTS service without caching the text."""
+    cleaned_text = payload.text.strip()
+    if not cleaned_text:
         raise HTTPException(status_code=400, detail="Vui lòng cung cấp văn bản cần đọc")
-
-    cleaned_text = text.strip()[:200]
-    if cleaned_text in tts_cache:
-        return Response(content=tts_cache[cleaned_text], media_type="audio/mpeg")
 
     try:
         import httpx
@@ -458,10 +364,9 @@ async def get_vietnamese_tts(text: str):
                 headers={"User-Agent": "Mozilla/5.0"}
             )
             if resp.status_code == 200 and len(resp.content) > 500:
-                tts_cache[cleaned_text] = resp.content
                 return Response(content=resp.content, media_type="audio/mpeg")
-    except Exception as e:
-        logger.warning(f"Lỗi khi tải TTS: {e}")
+    except Exception:
+        logger.warning("Không thể tải TTS từ nhà cung cấp.")
 
     raise HTTPException(status_code=502, detail="Không thể tạo giọng đọc lúc này")
 
@@ -473,6 +378,16 @@ static_dir = os.path.join(BASE_DIR, "static")
 if not os.path.exists(static_dir):
     static_dir = os.path.join(os.path.dirname(BASE_DIR), "static")
 os.makedirs(static_dir, exist_ok=True)
+
+
+@app.get("/static/audio/{audio_name}", tags=["Audio Attribution"])
+async def get_attributed_audio(audio_name: str):
+    track = next((item for item in AUDIO_TRACKS if item["file"] == audio_name), None)
+    if not track or not track["publishable"]:
+        raise HTTPException(status_code=404, detail="Tệp âm thanh đang bị chặn do chưa xác minh nguồn và giấy phép.")
+    return FileResponse(os.path.join(static_dir, "audio", track["file"]), media_type="audio/mpeg")
+
+
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 

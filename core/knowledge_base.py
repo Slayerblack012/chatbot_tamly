@@ -52,8 +52,8 @@ COGNITIVE_DISTORTIONS = [
         "name": "Khái quát hóa quá mức (Overgeneralization)",
         "icon": "🌐",
         "description": "Xem một biến cố tiêu cực đơn lẻ là khuôn mẫu thất bại vĩnh viễn không thể thay đổi.",
-        "example": "'Mình vừa rớt phỏng vấn, từ nay chắc mình chẳng bao giờ xin được việc đâu.'",
-        "reframing": "Một lần từ chối chỉ là một trải nghiệm học hỏi, không định nghĩa tương lai của bạn."
+        "example": "'Mình vừa làm bài kiểm tra không tốt, chắc mình sẽ luôn học kém.'",
+        "reframing": "Một bài kiểm tra chỉ cho biết phần nào cần ôn thêm; nó không quyết định năng lực hay tương lai của bạn."
     },
     {
         "id": "mental_filter",
@@ -73,14 +73,20 @@ PSYCHOEDU_ARTICLES = [
         "readTime": "3 phút đọc",
         "summary": "Hiểu rõ mối quan hệ mật thiết giữa Suy nghĩ -> Cảm xúc -> Hành vi để làm chủ tâm trạng.",
         "content": """
-Trong Liệu pháp Nhận thức - Hành vi (CBT), các nhà tâm lý học phát hiện ra rằng **không phải sự việc bên ngoài khiến bạn đau khổ, mà chính cách bạn diễn giải (suy nghĩ về) sự việc đó tạo nên cảm xúc của bạn.**
+Trong liệu pháp Nhận thức - Hành vi (CBT), **cách mình diễn giải một tình huống có thể ảnh hưởng đến cảm xúc và hành động**. Điều đó không có nghĩa cảm xúc của bạn là sai hay bạn phải luôn suy nghĩ tích cực.
 
 1. **Suy nghĩ (Thoughts)**: Những câu thoại nội tâm bạn tự nói với chính mình khi gặp một tình huống.
 2. **Cảm xúc (Emotions)**: Cảm giác phát sinh (lo âu, thất vọng, vui mừng, bình an).
 3. **Hành vi (Behaviors)**: Phản ứng thực tế (trì hoãn, thu mình, hành động đối phó hoặc đối mặt).
 
-*Quy luật chuyển dịch*: Khi bạn thay đổi **Suy nghĩ** thành góc nhìn thực tế và tích cực hơn, **Cảm xúc** sẽ dịu đi và **Hành vi** sẽ trở nên hiệu quả hơn.
-"""
+Thử tự hỏi: “Có cách giải thích nào khác hợp lý hơn không?” Bạn không cần ép mình phải thấy ổn ngay.
+""",
+        "references": [
+            {
+                "title": "National Health Service (NHS) — Cognitive behavioural therapy (CBT)",
+                "url": "https://www.nhs.uk/mental-health/talking-therapies-medicine-treatments/talking-therapies-and-counselling/cognitive-behavioural-therapy-cbt/"
+            }
+        ]
     },
     {
         "id": "study_stress_coping",
@@ -100,7 +106,13 @@ Trong Liệu pháp Nhận thức - Hành vi (CBT), các nhà tâm lý học phá
 
 3. **Tách Biệt Điểm Số & Giá Trị Bản Thân**:
    - Điểm số chỉ phản ánh mức độ nắm kiến thức ở một thời điểm, không phản ánh phẩm giá của bạn.
-"""
+""",
+        "references": [
+            {
+                "title": "World Health Organization — Doing What Matters in Times of Stress",
+                "url": "https://www.who.int/publications/i/item/9789240003927"
+            }
+        ]
     },
     {
         "id": "panic_and_overthinking",
@@ -109,13 +121,19 @@ Trong Liệu pháp Nhận thức - Hành vi (CBT), các nhà tâm lý học phá
         "readTime": "3 phút đọc",
         "summary": "Tại sao não bộ lại liên tục nghĩ ngợi vào ban đêm và cách ngắt mạch suy nghĩ lặp lại.",
         "content": """
-Hạch hạnh nhân (Amygdala) - trung tâm cảnh báo nguy hiểm trong não - bị kích hoạt quá mức, khiến não hiểu nhầm các suy nghĩ tưởng tượng là mối đe dọa thực tế.
+Khi lo lắng, suy nghĩ có thể lặp đi lặp lại và khiến bạn khó tập trung hoặc khó nghỉ ngơi. Cảm giác đó có thật, nhưng không nhất thiết mọi điều mình lo đều sẽ xảy ra.
 
 **3 Bước Ngắt Mạch Suy Nghĩ:**
 1. **Ghi nhận**: Tự nhủ 'Tâm trí mình đang bật chế độ lo xa.'
 2. **Kỹ thuật 5-4-3-2-1**: Đưa sự chú ý về các giác quan thực tại xung quanh.
-3. **Viết xả (Brain Dump)**: Viết toàn bộ suy nghĩ trong đầu ra một tờ giấy rồi gấp lại, hẹn sáng mai xem xét.
-"""
+3. **Ghi chú**: Viết một điều đang lo và một việc nhỏ có thể làm tiếp theo. Có thể bỏ qua bước này nếu không thấy phù hợp.
+""",
+        "references": [
+            {
+                "title": "World Health Organization — Doing What Matters in Times of Stress",
+                "url": "https://www.who.int/publications/i/item/9789240003927"
+            }
+        ]
     }
 ]
 
@@ -170,8 +188,20 @@ ASSESSMENT_QUIZZES = {
     "phq9": {
         "id": "phq9",
         "title": "Bảng Đánh Giá Nguy Cơ Trầm Cảm (PHQ-9)",
-        "subtitle": "Thang đo chuẩn hóa quốc tế Patient Health Questionnaire 9-item",
+        "subtitle": "Công cụ tự báo cáo PHQ-9; bản tiếng Việt trong ứng dụng chưa được thẩm định.",
         "description": "Trong 2 tuần qua, bạn bị làm phiền bởi bất kỳ vấn đề nào sau đây với tần suất như thế nào?",
+        "disclaimer": "Đây là công cụ SÀNG LỌC, KHÔNG PHẢI chẩn đoán y khoa.",
+        "translation_note": "Câu chữ tiếng Việt trong ứng dụng là bản diễn đạt lại; chưa có bằng chứng xác nhận đây là bản dịch chuẩn hóa hoặc đã được thẩm định cho học sinh Việt Nam.",
+        "sources": [
+            {
+                "title": "Kroenke K, Spitzer RL, Williams JBW. The PHQ-9: Validity of a Brief Depression Severity Measure (2001)",
+                "url": "https://doi.org/10.1046/j.1525-1497.2001.016009606.x"
+            },
+            {
+                "title": "Nguyen et al. PHQ-9 as a depressive symptom severity measure for sexual minority women in Viet Nam (2016)",
+                "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5019570/"
+            }
+        ],
         "options": [
             {"label": "Hoàn toàn không", "score": 0},
             {"label": "Vài ngày", "score": 1},
@@ -185,7 +215,7 @@ ASSESSMENT_QUIZZES = {
             "Cảm thấy mệt mỏi, kiệt sức hoặc thiếu năng lượng hoạt động.",
             "Ăn không ngon miệng hoặc ăn uống quá mức không kiểm soát.",
             "Cảm thấy tồi tệ về bản thân — tự cho mình là kẻ thất bại hoặc làm gia đình thất vọng.",
-            "Gặp khó khăn trong việc tập trung khi học tập, làm việc, đọc sách hoặc xem tivi.",
+            "Gặp khó khăn trong việc tập trung khi học tập, đọc sách hoặc xem tivi.",
             "Cử động hoặc nói năng chậm chạp; hoặc ngược lại bồn chồn, di chuyển không yên.",
             "Có suy nghĩ rằng thà mình chết đi hoặc có ý định tự làm tổn thương bản thân.",
         ],
@@ -194,7 +224,7 @@ ASSESSMENT_QUIZZES = {
                 "range": [0, 4],
                 "level": "Không có / Tối thiểu (Bình thường)",
                 "color": "#10B981",
-                "advice": "Bạn không có biểu hiện trầm cảm đáng kể. Hãy tiếp tục duy trì kết nối xã hội tích cực và chăm sóc sức khỏe tinh thần mỗi ngày."
+                "advice": "Điểm sàng lọc thấp không khẳng định bạn không gặp khó khăn. Hãy chú ý cảm nhận của mình và tìm người đáng tin cậy để trao đổi nếu cần."
             },
             {
                 "range": [5, 9],
@@ -227,132 +257,287 @@ ASSESSMENT_QUIZZES = {
 PSYCHOLOGICAL_FACILITIES = [
     {
         "id": "bv_tamthan_tw2",
-        "name": "Bệnh Viện Tâm Thần Trung Ương 2",
-        "category": "Bệnh viện Chuyên khoa Tuyến Trung ương (Bộ Y tế)",
+        "name": "Bệnh viện Tâm thần Trung ương 2",
+        "category": "Bệnh viện chuyên khoa tâm thần Trung ương",
         "location": "bien_hoa",
         "province": "Đồng Nai",
-        "city": "TP. Biên Hòa",
-        "address": "Đường Nguyễn Ái Quốc, KP. 7, P. Tân Phong, TP. Biên Hòa, Đồng Nai",
-        "phone": "0251 3822 932",
-        "hotline": "0251 3822 932",
-        "timing": "Thứ 2 - Thứ 6: 07:00 - 16:30 | Cấp cứu tâm thần: 24/7",
+        "city": "Thành phố Đồng Nai",
+        "address": "Số 1310 đường Nguyễn Ái Quốc, khu phố 7, phường Tân Triều, thành phố Đồng Nai",
+        "phone": "0251 3822 965",
+        "hotline": None,
+        "email": None,
+        "phone_label": "Điện thoại",
+        "website": "https://tamthantw2.gov.vn/",
+        "timing": None,
+        "reported_timing": "Khám ngoại trú theo lịch bác sĩ, thứ Hai - thứ Sáu",
         "specialties": [
-            "Khám & trị liệu tâm lý lâm sàng",
-            "Trầm cảm & Rối loạn cảm xúc lưỡng cực",
-            "Rối loạn lo âu lan tỏa (GAD), ám ảnh cưỡng chế (OCD), hoảng sợ",
-            "Mất ngủ kinh niên & Rối loạn giấc ngủ",
-            "Tâm lý học đường, trẻ em & vị thành niên",
-            "Tâm thần phân liệt & Các rối loạn do nghiện chất / rượu"
+            "Khám, chẩn đoán và điều trị bệnh lý tâm thần; nội trú và ngoại trú",
+            "Tâm lý lâm sàng, tham vấn và trị liệu tâm lý",
+            "Phục hồi chức năng tâm thần"
         ],
-        "highlights": "Cơ sở điều trị và nghiên cứu sức khỏe tâm thần tuyến cuối lớn nhất khu vực phía Nam. Đầy đủ các chuyên khoa chuyên sâu: Khoa Tâm lý lâm sàng, Khoa Rối loạn cảm xúc, Khoa Tâm căn, Khoa Trẻ em, Khoa Người cao tuổi.",
-        "advice": "Bệnh viện tuyến cuối nên lượng bệnh nhân đông, bạn nên đến sớm từ 6:30 - 7:00 để làm thủ tục. Có tiếp nhận thẻ BHYT theo quy định.",
-        "badge": "Tuyến Đầu Ngành Miền Nam"
+        "advice": "Lịch khám ngoại trú cụ thể chưa được xác minh; vui lòng gọi bệnh viện trước khi đến.",
+        "badge": "Chưa xác minh",
+        "verification": {
+            "status": "partially_verified",
+            "address_verified": True,
+            "phone_verified": True,
+            "hotline_verified": False,
+            "email_verified": False,
+            "hours_verified": False,
+            "specialties_verified": True,
+            "website_verified": True,
+            "last_verified_at": "2026-11-27",
+            "sources": [
+                {"label": "Trang chính thức và thông tin liên hệ", "url": "https://tamthantw2.gov.vn/"},
+                {"label": "Khoa khám bệnh Tâm thần", "url": "https://tamthantw2.gov.vn/khoa_khamtamthan.asp"},
+                {"label": "Khoa Tâm lý lâm sàng", "url": "https://tamthantw2.gov.vn/khoa_tamly.asp"},
+                {"label": "Khoa Phục hồi chức năng", "url": "https://tamthantw2.gov.vn/khoa_phuchoi.asp"}
+            ],
+            "compliance_flag": "partial"
+        }
     },
     {
         "id": "bvdsk_dongnai_thankinh",
-        "name": "Bệnh Viện Đa Khoa Đồng Nai — Khoa Nội Thần Kinh",
-        "category": "Bệnh viện Đa khoa Tuyến Tỉnh (Hạng 1)",
+        "name": "Bệnh viện Đa khoa Đồng Nai — Khoa Nội Thần kinh",
+        "category": "Bệnh viện đa khoa tuyến tỉnh — Khoa Nội Thần kinh",
         "location": "bien_hoa",
         "province": "Đồng Nai",
-        "city": "TP. Biên Hòa",
-        "address": "Số 2 đường Đồng Khởi, P. Tam Hòa, TP. Biên Hòa, Đồng Nai",
-        "phone": "1900 5199",
-        "hotline": "0933 029 999",
-        "timing": "Thứ 2 - Thứ 7: 07:00 - 16:30 | Cấp cứu: 24/7",
-        "specialties": [
-            "Rối loạn lo âu, stress kéo dài, suy nhược thần kinh",
-            "Trầm cảm mức độ nhẹ đến vừa",
-            "Mất ngủ, đau nửa đầu (Migraine), rối loạn tiền đình",
-            "Đo điện não đồ (EEG), tầm soát thực thể toàn diện"
-        ],
-        "highlights": "Bệnh viện đa khoa chuẩn quốc tế quy mô lớn. Thích hợp cho người bệnh có biểu hiện tâm lý kèm theo triệu chứng cơ thể (hồi hộp, tức ngực, run rẩy, mất ngủ) cần kiểm tra tổng quát loại trừ bệnh lý tim mạch/thần kinh.",
-        "advice": "Đăng ký khám tại Khoa Khám bệnh và yêu cầu chuyên khoa Nội Thần kinh. Hỗ trợ khám bảo hiểm y tế và dịch vụ theo yêu cầu.",
-        "badge": "Đa Khoa Hiện Đại"
+        "city": "Thành phố Đồng Nai",
+        "address": "02 Đồng Khởi, phường Tam Hiệp, thành phố Đồng Nai",
+        "phone": "0251 8825 609",
+        "hotline": "0967 901 717",
+        "email": None,
+        "phone_label": "Điện thoại",
+        "website": "https://benhviendakhoadongnai.com/",
+        "timing": None,
+        "specialties": ["Khoa Nội Thần kinh"],
+        "advice": "Lịch khám chuyên khoa chưa được xác nhận; vui lòng liên hệ bệnh viện trước khi đến.",
+        "badge": "Một phần đã đối chiếu",
+        "verification": {
+            "status": "partially_verified",
+            "address_verified": True,
+            "phone_verified": True,
+            "hotline_verified": True,
+            "email_verified": False,
+            "hours_verified": False,
+            "specialties_verified": True,
+            "website_verified": True,
+            "last_verified_at": "2026-11-27",
+            "sources": [
+                {"label": "Thông tin liên hệ", "url": "https://benhviendakhoadongnai.com/lien-he"},
+                {"label": "Trang chính thức của bệnh viện", "url": "https://benhviendakhoadongnai.com/"}
+            ],
+            "compliance_flag": "partial"
+        }
     },
     {
         "id": "bv_nhidong_dongnai_tamly",
-        "name": "Bệnh Viện Nhi Đồng Đồng Nai — Phòng Khám Tâm Lý Trẻ Em",
-        "category": "Bệnh viện Chuyên khoa Nhi Tuyến Tỉnh",
+        "name": "Bệnh viện Nhi đồng Đồng Nai — Phòng Tâm lý trị liệu Nhi",
+        "category": "Bệnh viện chuyên khoa Nhi",
         "location": "bien_hoa",
         "province": "Đồng Nai",
-        "city": "TP. Biên Hòa",
-        "address": "Khu phố 5, P. Tân Hiệp, TP. Biên Hòa, Đồng Nai",
+        "city": "Thành phố Đồng Nai",
+        "address": "Quốc lộ 1A, phường Tam Hiệp, thành phố Đồng Nai",
         "phone": "0251 3891 483",
-        "hotline": "0251 3891 483",
-        "timing": "Thứ 2 - Thứ 6: Giờ hành chính | Thứ 7: Buổi sáng",
+        "hotline": None,
+        "email": None,
+        "phone_label": "Điện thoại",
+        "website": "https://benhviennhidongnai.org.vn/",
+        "timing": None,
         "specialties": [
-            "Áp lực học đường, khủng hoảng tuổi dậy thì & lo âu thi cử",
-            "Trầm cảm học đường, tự hại hoặc rút lui xã hội",
-            "Rối loạn tăng động giảm chú ý (ADHD)",
-            "Rối loạn phổ tự kỷ (ASD) & Chậm phát triển ngôn ngữ",
-            "Trắc nghiệm tâm lý trẻ em (Denver, WISC, CARS)"
+            "Lượng giá phát triển và nhận thức",
+            "Tham vấn tâm lý cho trẻ và phụ huynh",
+            "Can thiệp trị liệu cá nhân và nhóm"
         ],
-        "highlights": "Địa chỉ chuyên biệt hàng đầu tại Đồng Nai dành cho trẻ em và thanh thiếu niên (dưới 18 tuổi). Đội ngũ chuyên viên tâm lý giàu kinh nghiệm, môi trường thân thiện giúp các bạn trẻ mở lòng.",
-        "advice": "Phụ huynh nên đặt lịch trước hoặc đưa con đến khám vào buổi sáng để có đủ thời gian làm các bài trắc nghiệm tâm lý chuyên sâu.",
-        "badge": "Chuyên Nhi & Học Đường"
+        "advice": "Lịch khám phòng Tâm lý trị liệu Nhi chưa được xác nhận; vui lòng liên hệ bệnh viện trước khi đến.",
+        "badge": "Trẻ em · một phần đã đối chiếu",
+        "verification": {
+            "status": "partially_verified",
+            "address_verified": True,
+            "phone_verified": True,
+            "hotline_verified": False,
+            "email_verified": False,
+            "hours_verified": False,
+            "specialties_verified": True,
+            "website_verified": True,
+            "last_verified_at": "2026-11-27",
+            "sources": [
+                {"label": "Thông tin liên hệ", "url": "https://benhviennhidongnai.org.vn/lien-he/"},
+                {"label": "Thông tin Phòng Tâm lý trị liệu Nhi", "url": "https://benhviennhidongnai.org.vn/khanh-thanh-phong-tam-ly-tri-lieu-thuoc-khoa-phuc-hoi-chuc-nang-benh-vien-nhi-dong-dong-nai/"}
+            ],
+            "compliance_flag": "partial"
+        }
     },
     {
         "id": "pk_bs_nguyen_van_cau",
-        "name": "Phòng Khám Chuyên Khoa Tâm Lý — BSCKII Nguyễn Văn Cầu",
-        "category": "Phòng khám Chuyên khoa Chuyên gia Ngoài giờ",
+        "name": "Phòng khám Chuyên khoa Tâm lý, Tâm thần BSCKII Nguyễn Văn Cầu",
+        "category": "Phòng khám chuyên khoa Tâm lý, Tâm thần",
         "location": "bien_hoa",
         "province": "Đồng Nai",
-        "city": "TP. Biên Hòa",
-        "address": "Số 382B (số mới 1501) Nguyễn Ái Quốc, KP. 5, P. Tân Tiến, TP. Biên Hòa, Đồng Nai",
-        "phone": "0913 941 381",
-        "hotline": "0913 941 381",
-        "timing": "Thứ 2 - Chủ Nhật: 17:00 - 20:00 (Thứ 7 - CN có thêm ca sáng 08:00 - 11:30)",
+        "city": None,
+        "address": None,
+        "phone": "0765 221 221",
+        "hotline": None,
+        "email": None,
+        "phone_label": "Điện thoại",
+        "website": "https://bacsicau.vn/",
+        "timing": "Thứ Hai - Thứ Năm: 08:00 - 12:00, 15:00 - 20:00; Thứ Sáu nghỉ; Thứ Bảy - Chủ Nhật: 07:00 - 12:30, 15:00 - 20:00",
         "specialties": [
-            "Tham vấn & Trị liệu tâm lý chuyên sâu",
-            "Điều trị Rối loạn lo âu, Trầm cảm, Stress mạn tính",
-            "Mất ngủ kinh niên, đau đầu suy nhược cơ thể",
-            "Đo điện não vi tính kỹ thuật số",
-            "Tâm lý vị thành niên & Can thiệp khủng hoảng cảm xúc"
+            "Chuyên khoa Tâm lý, Tâm thần",
+            "Tham vấn và điều trị tâm lý",
+            "Đo điện não"
         ],
-        "highlights": "BSCKII Nguyễn Văn Cầu là chuyên gia đầu ngành, nguyên Trưởng khoa tại Bệnh viện Tâm thần Trung ương 2. Không gian khám riêng tư, kín đáo, lắng nghe tận tình, thích hợp cho người đi làm hoặc học sinh bận ban ngày.",
-        "advice": "Nên liên hệ điện thoại trước khi đến để hẹn giờ, tránh phải chờ đợi vì phòng khám ngoài giờ khá đông.",
-        "badge": "Chuyên Gia Ngoài Giờ"
+        "advice": "Địa chỉ chưa được xác minh; vui lòng gọi phòng khám để xác nhận địa chỉ và lịch hẹn trước khi đến.",
+        "badge": "Ngoài giờ · một phần đã đối chiếu",
+        "verification": {
+            "status": "partially_verified",
+            "address_verified": False,
+            "phone_verified": True,
+            "hotline_verified": False,
+            "email_verified": False,
+            "hours_verified": True,
+            "specialties_verified": True,
+            "website_verified": True,
+            "last_verified_at": "2026-11-27",
+            "sources": [
+                {"label": "Trang chính thức của phòng khám", "url": "https://bacsicau.vn/"}
+            ],
+            "compliance_flag": "partial"
+        }
     },
     {
         "id": "pk_tamly_minhtri",
-        "name": "Phòng Khám & Trị Liệu Tâm Thần Minh Trí (Mental Health Care)",
-        "category": "Trung tâm Tham vấn & Đánh giá Tâm lý",
+        "name": "Trung tâm Chăm sóc Sức khỏe tinh thần Minh Trí",
+        "category": "Trung tâm chăm sóc sức khỏe tinh thần",
         "location": "bien_hoa",
         "province": "Đồng Nai",
-        "city": "TP. Biên Hòa",
-        "address": "Đường Phan Trung / Nguyễn Ái Quốc, TP. Biên Hòa, Tỉnh Đồng Nai",
-        "phone": "0946 720 079",
-        "hotline": "0946 720 079",
-        "timing": "Thứ 2 - Thứ 7: 08:00 - 19:30",
+        "city": "Biên Hòa",
+        "address": "Lô BN2-LK24, đường N1, Khu dân cư D2D, KP7, phường Thống Nhất, TP. Biên Hòa, Đồng Nai",
+        "phone": "0251 3685 676",
+        "hotline": None,
+        "email": "minhtricare@gmail.com",
+        "phone_label": "Điện thoại",
+        "website": "https://mentalhealthcare.vn/",
+        "timing": None,
         "specialties": [
-            "Đánh giá & Trắc nghiệm tâm lý lâm sàng chuẩn hóa",
-            "Trị liệu Nhận thức - Hành vi (CBT) cá nhân",
-            "Tham vấn lo âu, kiệt sức tinh thần (burnout), tự ti",
-            "Can thiệp tâm lý học đường và tâm lý gia đình"
+            "Khám chuyên khoa tâm thần",
+            "Đánh giá tâm lý trẻ em",
+            "Tham vấn và trị liệu tâm lý",
+            "Trị liệu ngôn ngữ cho trẻ em"
         ],
-        "highlights": "Định hướng trị liệu tâm lý trò chuyện chuyên sâu, chú trọng kết hợp giữa kiểm tra tâm lý khoa học và các liệu pháp can thiệp tự nhiên không lạm dụng thuốc.",
-        "advice": "Rất phù hợp cho người muốn tìm nơi chia sẻ cảm xúc kín đáo, thực hiện trắc nghiệm tâm lý chuyên sâu.",
-        "badge": "Trị Liệu CBT & Trắc Nghiệm"
+        "advice": "Giờ làm việc chưa được xác nhận; vui lòng liên hệ trước khi đến.",
+        "badge": "Một phần đã đối chiếu",
+        "verification": {
+            "status": "partially_verified",
+            "address_verified": True,
+            "phone_verified": True,
+            "hotline_verified": False,
+            "email_verified": True,
+            "hours_verified": False,
+            "specialties_verified": True,
+            "website_verified": True,
+            "last_verified_at": "2026-11-27",
+            "sources": [
+                {"label": "Giới thiệu và thông tin liên hệ", "url": "https://mentalhealthcare.vn/gioi-thieu/"},
+                {"label": "Trang chính thức của Minh Trí", "url": "https://mentalhealthcare.vn/"}
+            ],
+            "compliance_flag": "partial"
+        }
     },
     {
         "id": "vien_phapy_tamthan_bienhoa",
-        "name": "Viện Pháp Y Tâm Thần Trung Ương Biên Hòa — Khoa Khám & Điều Trị Theo Yêu Cầu",
-        "category": "Viện Chuyên Khoa Tuyến Trung Ương",
+        "name": "Viện Pháp y Tâm thần Trung ương Biên Hòa",
+        "category": "Viện chuyên khoa pháp y tâm thần Trung ương",
         "location": "bien_hoa",
         "province": "Đồng Nai",
-        "city": "TP. Biên Hòa",
-        "address": "Số 1310A đường Nguyễn Ái Quốc, TP. Biên Hòa, Tỉnh Đồng Nai",
-        "phone": "0251 3822 841",
-        "hotline": "0251 3822 841",
-        "timing": "Thứ 2 - Thứ 6: Giờ hành chính",
-        "specialties": [
-            "Khám & tư vấn tâm lý, đánh giá tâm thần theo yêu cầu",
-            "Tư vấn giải tỏa sang chấn tâm lý sau biến cố",
-            "Thẩm định và xác định mức độ rối loạn nhận thức, cảm xúc"
-        ],
-        "highlights": "Quy tụ đội ngũ giám định viên, tiến sĩ, thạc sĩ tâm thần học có trình độ chuyên môn cao. Cung cấp dịch vụ khám tự nguyện theo yêu cầu trong môi trường y khoa chuẩn mực.",
-        "advice": "Liên hệ trước qua số điện thoại để được hướng dẫn quy trình khám bệnh tự nguyện theo yêu cầu.",
-        "badge": "Tuyến Trung Ương"
+        "city": "Thành phố Đồng Nai",
+        "address": "1310A Nguyễn Ái Quốc, phường Tân Triều, thành phố Đồng Nai",
+        "phone": "0251 3816 584",
+        "hotline": "0985 434 500",
+        "email": "contact@phapytamthanbienhoa.vn",
+        "phone_label": "Phòng Kế hoạch tổng hợp",
+        "website": "https://phapytamthanbienhoa.vn/",
+        "timing": None,
+        "specialties": ["Giám định pháp y tâm thần"],
+        "advice": "Vui lòng liên hệ Viện để xác nhận phạm vi dịch vụ khám và giờ tiếp nhận trước khi đến.",
+        "badge": "Một phần đã đối chiếu",
+        "verification": {
+            "status": "partially_verified",
+            "address_verified": True,
+            "phone_verified": True,
+            "hotline_verified": True,
+            "email_verified": True,
+            "hours_verified": False,
+            "specialties_verified": True,
+            "website_verified": True,
+            "last_verified_at": "2026-11-27",
+            "sources": [
+                {"label": "Thông tin liên hệ", "url": "https://phapytamthanbienhoa.vn/lien-he"},
+                {"label": "Trang chính thức của Viện", "url": "https://phapytamthanbienhoa.vn/"}
+            ],
+            "compliance_flag": "partial"
+        }
+    }
+]
+
+for facility in PSYCHOLOGICAL_FACILITIES:
+    verification = facility["verification"]
+    for field, verification_key in (
+        ("address", "address_verified"),
+        ("phone", "phone_verified"),
+        ("hotline", "hotline_verified"),
+        ("email", "email_verified"),
+        ("timing", "hours_verified"),
+        ("specialties", "specialties_verified"),
+    ):
+        if not verification[verification_key]:
+            facility[field] = [] if field == "specialties" else None
+
+AUDIO_TRACKS = [
+    {
+        "id": "rain",
+        "file": "rain.mp3",
+        "source_title": None,
+        "source_url": None,
+        "license": None,
+        "verified_at": None,
+        "publishable": False,
+        "compliance_status": "blocked_unverified_license"
+    },
+    {
+        "id": "forest_birds",
+        "file": "forest_birds.mp3",
+        "source_title": None,
+        "source_url": None,
+        "license": None,
+        "verified_at": None,
+        "publishable": False,
+        "compliance_status": "blocked_unverified_license"
+    },
+    {
+        "id": "ocean_waves",
+        "file": "ocean_waves.mp3",
+        "source_title": None,
+        "source_url": None,
+        "license": None,
+        "verified_at": None,
+        "publishable": False,
+        "compliance_status": "blocked_unverified_license"
+    }
+]
+
+BREATHING_REFERENCES = [
+    {
+        "title": "Andrew Weil, MD — 4-7-8 Breathing Exercise",
+        "url": "https://www.drweil.com/videos-features/videos/breathing-exercises-4-7-8-breath/"
+    },
+    {
+        "title": "Cleveland Clinic — Box Breathing",
+        "url": "https://health.clevelandclinic.org/box-breathing-benefits"
+    },
+    {
+        "title": "World Health Organization — Doing What Matters in Times of Stress",
+        "url": "https://www.who.int/publications/i/item/9789240003927"
     }
 ]
 

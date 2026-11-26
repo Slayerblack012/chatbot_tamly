@@ -1,5 +1,7 @@
 """Unit tests for CounselorEngine, message sanitization, role merging, and prompts."""
 
+import asyncio
+
 from core.bot_engine import (
     AUTH_FAILURE_MESSAGE,
     PARTIAL_REPLY_FALLBACK,
@@ -49,7 +51,7 @@ def test_counselor_engine_system_instruction():
             "note": "Áp lực thi tốt nghiệp"
         }
     )
-    assert "An Nhiên Tâm Lý" in inst
+    assert "Bạn là An Nhiên" in inst
     assert "Lo âu" in inst
     assert "8/10" in inst
     assert "Áp lực thi tốt nghiệp" in inst
@@ -68,10 +70,44 @@ def test_time_greeting():
     assert len(greeting) > 0
 
 
-def test_persona_contains_crisis_instructions():
-    assert "111" in BASE_COUNSELOR_PERSONA
-    assert "115" in BASE_COUNSELOR_PERSONA
-    assert "096 306 1414" in BASE_COUNSELOR_PERSONA
+def test_persona_is_short_nonjudgmental_and_non_diagnostic():
+    assert "150 từ" in BASE_COUNSELOR_PERSONA
+    assert "không phán xét" in BASE_COUNSELOR_PERSONA
+    assert "Không khuyên nghỉ học 1-2 ngày" in BASE_COUNSELOR_PERSONA
+    assert "không chẩn đoán" in BASE_COUNSELOR_PERSONA
+
+
+def test_provider_exception_content_is_not_logged(caplog):
+    private_marker = "PRIVATE_MESSAGE_FOR_LOG_TEST"
+
+    class FakeChat:
+        async def send_message_stream(self, message):
+            raise RuntimeError(private_marker)
+
+    class FakeChats:
+        def create(self, **kwargs):
+            return FakeChat()
+
+    class FakeAio:
+        chats = FakeChats()
+
+    class FakeClient:
+        aio = FakeAio()
+
+    engine = CounselorEngine(api_key="TEST_DUMMY_KEY")
+    engine.client = FakeClient()
+
+    async def collect_response():
+        return [
+            chunk
+            async for chunk in engine.async_stream_chat(
+                [{"role": "user", "content": private_marker}]
+            )
+        ]
+
+    asyncio.run(collect_response())
+
+    assert private_marker not in caplog.text
 
 
 def test_quota_and_auth_error_detection():
