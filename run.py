@@ -38,4 +38,3 @@ if __name__ == "__main__":
     threading.Thread(target=open_browser, args=(port,), daemon=True).start()
     uvicorn.run("server:app", host="0.0.0.0", port=port, reload=True, log_level="info", server_header=False)
 
-
