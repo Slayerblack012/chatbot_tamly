@@ -470,28 +470,172 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 3. CRISIS KEYWORD DETECTION
+  // 3. CRISIS KEYWORD DETECTION (Aligned with 180-benchmark standard)
   // =========================================================================
-  const CRISIS_KEYWORDS = [
-    "ngu khong day nua", "ngoi khong day nua", "khong muon ton tai nua", "muon bien mat",
-    "khong muon song nua", "khong muon song",
-    "ket thuc cuoc doi", "ket thuc cuoc song", "muon chet", "tu tu", "tu hai",
-    "tu lam dau", "cat tay", "tu lam ton thuong", "tu lam hai ban than",
-    "khong o day nua", "khong o day", "khong co minh", "i wish i were dead", "i want to disappear",
-    "kill myself", "suicid"
-  ];
   const CRISIS_DENIALS = [
-    "khong co y dinh tu tu", "khong co y dinh tu hai",
-    "khong nghi den viec tu tu", "khong nghi den viec tu hai",
-    "khong muon tu tu", "khong muon tu hai"
+    /\bkhong co y dinh tu tu\b/g,
+    /\bkhong co y dinh tu hai\b/g,
+    /\bkhong nghi den viec tu tu\b/g,
+    /\bkhong nghi den viec tu hai\b/g,
+    /\bkhong muon tu tu\b/g,
+    /\bkhong muon tu hai\b/g
   ];
+
+  const SAFE_PATTERNS = [
+    /kho muon chet/,
+    /doi muon chet/,
+    /cuoi chet/,
+    /nao chet luon/,
+    /chet chac roi/,
+    /chet hoai khong qua/,
+    /co giet minh qua/,
+    /phong chong tu tu/,
+    /bai thuyet trinh ve.*tu tu/,
+    /poster ve.*suc khoe/,
+    /nhan vat chinh.*mat/,
+    /phim.*mat/,
+    /truyen.*mat/,
+    /ngu mot giac that da/,
+    /ngu bu.*suong/,
+    /di tu qua/,
+    /muon tron khoi thanh pho/,
+    /het pin.*cham het/,
+    /muon don tho/,
+    /doi xiu/,
+    /tuc muon xiu/,
+    /met muon xiu/,
+    /tieu doi.*quen lam bai/
+  ];
+
+  const CRISIS_PATTERNS = [
+    /\bkhong muon song\b/,
+    /\bchua tung muon song\b/,
+    /\bsong chi nua\b/,
+    /\bsong lam gi nua\b/,
+    /\bchet di cho roi\b/,
+    /\bchet di la xong\b/,
+    /\bmuon chet that\b/,
+    /\bmuon chet\b/,
+    /\bchet di\b/,
+    /\btu tu\b/,
+    /\btu sat\b/,
+    /\bkhong con ly do gi de song\b/,
+    /\bmuon ket thuc tat ca\b/,
+    /\bket thuc moi thu\b/,
+    /\bket thuc cuoc doi\b/,
+    /\bket thuc cuoc song\b/,
+    /\bthu tuyet menh\b/,
+    /\bdung tren san thuong\b/,
+    /\blam dieu dai dot\b/,
+    /\btung thu tu tu\b/,
+    /\bk muon song\b/,
+    /\bko muon song\b/,
+    /\buong thuoc ngu\b/,
+    /\bngu luon khong day\b/,
+    /\bngu khong day\b/,
+    /\bngu 1 giac that dai.*mai mai\b/,
+    /\bngu mot giac.*bien mat\b/,
+    /\bnham mat la mong khong phai mo ra\b/,
+    /\bmoi nguoi se on hon khi khong co minh\b/,
+    /\bse nhe nhom khi khong co minh\b/,
+    /\bkhong co minh\b/,
+    /\bchi la ganh nang\b/,
+    /\bla ganh nang cho\b/,
+    /\bneu mai minh khong con nua\b/,
+    /\bneu ngay mai khong thay minh online\b/,
+    /\bdung tim minh\b/,
+    /\bneu minh chet thi\b/,
+    /\bviet thu tam biet\b/,
+    /\bdem do quy cho het\b/,
+    /\bcho het ban be.*khong can nua\b/,
+    /\bxoa het tai khoan.*don dep\b/,
+    /\bmuon di dau that xa.*khong bao gio quay ve\b/,
+    /\bdi luon cho ranh\b/,
+    /\bmet moi voi cuoc doi nay lam roi\b/,
+    /\bkhong muon ton tai nua\b/,
+    /\bcha muon ton tai\b/,
+    /\bmuon bien mat\b/,
+    /\bneu minh bien mat\b/,
+    /\bchua tung duoc sinh ra\b/,
+    /\bkhong ai can minh het\b/,
+    /\bkhong ai can minh\b/,
+    /\bco hay khong co cung vay\b/,
+    /\bkhong o day nua\b/,
+    /\bkhong o day\b/,
+    /\bkhong con loi thoat\b/,
+    /\blan cuoi minh noi chuyen\b/,
+    /\bchac day la lan cuoi\b/,
+    /\bcam on vi da nghe minh.*tam biet\b/,
+    /\bdung lai mai mai\b/,
+    /\bmai la ngay cuoi minh di hoc\b/,
+    /\bnghi toi cai chet.*binh yen\b/,
+    /\bsap duoc gap lai.*da mat\b/,
+    /\bgap lai.*ong.*mat\b/,
+    /\bmoi chuyen se som ket thuc thoi\b/,
+    /\bdua thua trong nha\b/,
+    /\bdem nguoc toi ngay minh ra di\b/,
+    /\bdem nay la dem cuoi\b/,
+    /\btoi nay la dem cuoi\b/,
+    /\bcuoc song vo nghia.*khong muon co gang\b/,
+    /\bsong met qua.*dung lai\b/,
+    /\btat ca dung lai\b/,
+    /\btu lam dau\b/,
+    /\btu lam minh bi thuong\b/,
+    /\btu lam ton thuong\b/,
+    /\btu hai\b/,
+    /\brach tay\b/,
+    /\bcat tay\b/,
+    /\bvua lam dieu dai dot\b/,
+    /\bdoa tung anh\b/,
+    /\bbat.*gui anh nhay cam\b/,
+    /\bchup anh nhay cam\b/,
+    /\bba.*say ruou.*danh\b/,
+    /\bbi danh dap\b/,
+    /\bchan duong danh\b/,
+    /\bhen.*gap rieng.*dung noi\b/,
+    /\bhen minh ra gap rieng\b/,
+    /\bdung cham co the\b/,
+    /\bdoa giet\b/,
+    /\bban than.*muon tu tu\b/,
+    /\bem minh.*nhot trong phong.*muon chet\b/,
+    /\bban minh dang story tam biet\b/,
+    /\bi wish i were dead\b/,
+    /\bi want to disappear\b/,
+    /\bkill myself\b/,
+    /\bsuicid/
+  ];
+
+  function normalizeCrisisText(text) {
+    let t = text.toLowerCase().normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+    const slangMap = [
+      [/\bk\b/g, "khong"],
+      [/\bko\b/g, "khong"],
+      [/\bkhg\b/g, "khong"],
+      [/\bnx\b/g, "nua"],
+      [/\bmun\b/g, "muon"],
+      [/\bmik\b/g, "minh"],
+      [/\bmk\b/g, "minh"],
+      [/\btui\b/g, "toi"],
+      [/\bwa\b/g, "qua"],
+      [/\br\b/g, "roi"]
+    ];
+    slangMap.forEach(([pat, rep]) => {
+      t = t.replace(pat, rep);
+    });
+    return t;
+  }
 
   function checkCrisisKeywords(text) {
     if (!text) return false;
-    const normalized = text.toLowerCase().normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
-    const remaining = CRISIS_DENIALS.reduce((value, phrase) => value.replaceAll(phrase, " "), normalized);
-    return CRISIS_KEYWORDS.some(kw => remaining.includes(kw));
+    let normalized = normalizeCrisisText(text);
+    CRISIS_DENIALS.forEach(pat => {
+      normalized = normalized.replace(pat, " ");
+    });
+    for (const sp of SAFE_PATTERNS) {
+      if (sp.test(normalized)) return false;
+    }
+    return CRISIS_PATTERNS.some(cp => cp.test(normalized));
   }
 
   const crisisAlertBanner = document.getElementById("crisis-alert-banner");
@@ -653,7 +797,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.messages = [...DEFAULT_MESSAGES];
     saveStoredMessages(state.messages);
     renderMessages();
-    showToast("Đã tạo cuộc trò chuyện mới.");
+    showToast("Đã bắt đầu cuộc trò chuyện mới 🌿", "success");
   }
 
   function switchChatSession(sessionId) {
@@ -678,7 +822,7 @@ document.addEventListener("DOMContentLoaded", () => {
         createNewChatSession();
       }
     }
-    showToast("Đã xóa cuộc trò chuyện khỏi lịch sử.");
+    showToast("Đã xóa cuộc trò chuyện khỏi lịch sử 🗑️", "info");
   }
 
   const state = {
@@ -1153,6 +1297,53 @@ document.addEventListener("DOMContentLoaded", () => {
     forceScrollToBottom();
   }
 
+  function attachAssistantActions(bubble, content) {
+    const plainText = String(content).replace(/[#*_`>\[\]()]/g, "").replace(/\s+/g, " ").trim();
+    if (!plainText) return;
+
+    let actions = bubble.querySelector(".msg-a11y-actions");
+    if (!actions) {
+      actions = document.createElement("div");
+      actions.className = "msg-a11y-actions";
+      bubble.appendChild(actions);
+    } else {
+      actions.innerHTML = "";
+    }
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "read-message-btn copy-message-btn";
+    copyBtn.textContent = "📋 Sao chép";
+    copyBtn.setAttribute("aria-label", "Sao chép câu trả lời vào bộ nhớ tạm");
+    copyBtn.addEventListener("click", async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(plainText);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = plainText;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        showToast("Đã sao chép câu trả lời vào bộ nhớ tạm ✨", "info");
+      } catch (err) {
+        showToast("Chưa thể sao chép tự động, bạn hãy chọn văn bản để chép nhé.", "error");
+      }
+    });
+
+    const readBtn = document.createElement("button");
+    readBtn.type = "button";
+    readBtn.className = "read-message-btn";
+    readBtn.textContent = "🔊 Đọc";
+    readBtn.setAttribute("aria-label", "Đọc câu trả lời bằng giọng nói");
+    readBtn.addEventListener("click", () => speakText(plainText));
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(readBtn);
+  }
+
   function appendMessageToDOM(role, content) {
     const isUser = role === "user";
     const wrapper = document.createElement("div");
@@ -1167,19 +1358,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bubble.innerHTML = renderSafeMarkdown(content);
 
     if (!isUser) {
-      const plainText = String(content).replace(/[#*_`>\[\]()]/g, "").replace(/\s+/g, " ").trim();
-      if (plainText) {
-        const actions = document.createElement("div");
-        actions.className = "msg-a11y-actions";
-        const readBtn = document.createElement("button");
-        readBtn.type = "button";
-        readBtn.className = "read-message-btn";
-        readBtn.textContent = "🔊 Đọc";
-        readBtn.setAttribute("aria-label", "Đọc câu trả lời bằng giọng nói");
-        readBtn.addEventListener("click", () => speakText(plainText));
-        actions.appendChild(readBtn);
-        bubble.appendChild(actions);
-      }
+      attachAssistantActions(bubble, content);
     }
 
     wrapper.appendChild(avatar);
@@ -1311,6 +1490,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (fullText.trim()) {
+        assistantBubble.innerHTML = renderSafeMarkdown(fullText);
+        attachAssistantActions(assistantBubble, fullText);
         state.messages.push({ role: "model", content: fullText });
         saveStoredMessages(state.messages);
       } else {
@@ -1373,6 +1554,8 @@ document.addEventListener("DOMContentLoaded", () => {
       item.classList.add("active");
       item.setAttribute("aria-pressed", "true");
       state.mode = item.getAttribute("data-mode");
+      const modeName = item.querySelector("h4") ? item.querySelector("h4").textContent.trim() : item.textContent.trim();
+      showToast(`Đã chuyển sang chế độ: ${modeName}`, "info");
     });
   });
 
@@ -1385,12 +1568,17 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.classList.add("active");
       btn.setAttribute("aria-pressed", "true");
       state.currentMood = btn.getAttribute("data-mood");
+      showToast(`Đã chọn tâm trạng: ${state.currentMood}`, "info");
     });
   });
 
   stressSlider.addEventListener("input", (e) => {
     state.stressLevel = parseInt(e.target.value);
     stressValDisplay.textContent = `${state.stressLevel} / 10`;
+  });
+
+  stressSlider.addEventListener("change", (e) => {
+    showToast(`Mức độ căng thẳng: ${e.target.value}/10`, "info");
   });
 
   // Clear Chat / Start New Chat Session
@@ -1411,6 +1599,7 @@ document.addEventListener("DOMContentLoaded", () => {
         createNewChatSession();
         if (crisisAlertBanner) crisisAlertBanner.style.display = "none";
         closeSidebar();
+        showToast("Đã làm mới phiên trò chuyện 🌿", "success");
       }
     });
   });

@@ -1576,6 +1576,7 @@ input[type=range] {
 .msg-a11y-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 6px;
 }
 
